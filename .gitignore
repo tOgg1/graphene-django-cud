@@ -124,3 +124,6 @@ dmypy.json
 
 # idea
 .idea
+
+*.sqlite
+static/

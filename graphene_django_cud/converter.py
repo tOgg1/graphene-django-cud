@@ -26,21 +26,29 @@ from graphene import (
     DateTime,
     Date,
     Time,
+    Union,
+    InputField,
+    Dynamic,
 )
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
 from graphene_file_upload.scalars import Upload
-from graphql import assert_valid_name
+from graphql import assert_valid_name, GraphQLError
 
 from graphene_django.compat import ArrayField, HStoreField, JSONField, RangeField
 
+from graphene_django_cud.types import TimeDelta
 
 
-def is_required(field, required=None):
+def is_required(field, required=None, is_many_to_many=False):
     if required is not None:
         return required
 
-    if getattr(field, 'default', None) is not None:
+    field_default = getattr(field, "default", None)
+    if field_default is not None and field_default != models.fields.NOT_PROVIDED:
+        return False
+
+    if is_many_to_many and getattr(field, "blank", False):
         return False
 
     return not field.null
@@ -70,149 +78,218 @@ def get_choices(choices):
             yield name, value, description
 
 
-def convert_django_field_with_choices(field, registry=None, required=None):
+def convert_choices_field(field, choices, required=None):
+    meta = field.model._meta
+    name = to_camel_case("{}_{}".format(meta.object_name, field.name))
+    choices = list(get_choices(choices))
+    named_choices = [(c[0], c[1]) for c in choices]
+    named_choices_descriptions = {c[0]: c[2] for c in choices}
+
+    class EnumWithDescriptionsType(object):
+        @property
+        def description(self):
+            return named_choices_descriptions[self.name]
+
+    enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
+    return enum(description=field.help_text, required=required)
+
+
+def convert_django_field_with_choices(
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+):
     choices = getattr(field, "choices", None)
     if choices:
-        meta = field.model._meta
-        name = to_camel_case("{}_{}".format(meta.object_name, field.name))
-        choices = list(get_choices(choices))
-        named_choices = [(c[0], c[1]) for c in choices]
-        named_choices_descriptions = {c[0]: c[2] for c in choices}
-
-        class EnumWithDescriptionsType(object):
-            @property
-            def description(self):
-                return named_choices_descriptions[self.name]
-
-        enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
-        converted = enum(description=field.help_text, required=required)
+        converted = convert_choices_field(field, choices, required)
     else:
-        converted = convert_django_field_extended(field, registry, required)
+        converted = convert_django_field_to_input(
+            field,
+            registry,
+            required,
+            field_many_to_many_extras,
+            field_foreign_key_extras
+        )
     return converted
 
 
 @singledispatch
-def convert_django_field_extended(field, registry=None, required=None):
+def convert_django_field_to_input(
+        field,
+        registry=None,
+        required=None,
+        field_many_to_many_extras=None,
+        field_foreign_key_extras=None
+):
     raise Exception(
         "Don't know how to convert the Django field %s (%s)" % (field, field.__class__)
     )
 
 
-@convert_django_field_extended.register(models.CharField)
-@convert_django_field_extended.register(models.TextField)
-@convert_django_field_extended.register(models.EmailField)
-@convert_django_field_extended.register(models.SlugField)
-@convert_django_field_extended.register(models.URLField)
-@convert_django_field_extended.register(models.GenericIPAddressField)
-@convert_django_field_extended.register(models.FileField)
-@convert_django_field_extended.register(models.FilePathField)
-def convert_field_to_string_extended(field, registry=None, required=None):
+@convert_django_field_to_input.register(models.CharField)
+@convert_django_field_to_input.register(models.TextField)
+@convert_django_field_to_input.register(models.EmailField)
+@convert_django_field_to_input.register(models.SlugField)
+@convert_django_field_to_input.register(models.URLField)
+@convert_django_field_to_input.register(models.GenericIPAddressField)
+@convert_django_field_to_input.register(models.FileField)
+@convert_django_field_to_input.register(models.FilePathField)
+def convert_field_to_string_extended(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
     return String(description=field.help_text, required=is_required(field, required))
 
 
-@convert_django_field_extended.register(models.AutoField)
-@convert_django_field_extended.register(models.OneToOneField)
-@convert_django_field_extended.register(models.OneToOneRel)
-@convert_django_field_extended.register(models.ForeignKey)
-def convert_field_to_id(field, registry=None, required=None):
-    return ID(description=field.help_text, required=is_required(field, required))
+@convert_django_field_to_input.register(models.AutoField)
+@convert_django_field_to_input.register(models.OneToOneField)
+@convert_django_field_to_input.register(models.OneToOneRel)
+@convert_django_field_to_input.register(models.ForeignKey)
+def convert_field_to_id(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
+    id_type = ID(description=field.help_text, required=is_required(field, required))
+
+    # Use the Input type node from registry in a dynamic type, and create a union with that
+    # and the ID
+    def dynamic_type():
+        _type_name = (field_foreign_key_extras or {}).get(
+            'type',
+            "ID"
+        )
+        if _type_name == "ID":
+            return id_type
+
+        _type = registry.get_converted_field(_type_name)
+
+        if not _type:
+            raise GraphQLError(f"The type {_type_name} does not exist.")
+
+        return InputField(_type, description=field.help_text, required=is_required(field, required))
+
+    return Dynamic(dynamic_type)
 
 
-@convert_django_field_extended.register(models.UUIDField)
-def convert_field_to_uuid(field, registry=None, required=None):
+@convert_django_field_to_input.register(models.UUIDField)
+def convert_field_to_uuid(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
     return UUID(description=field.help_text, required=is_required(field, required))
 
 
-@convert_django_field_extended.register(models.PositiveIntegerField)
-@convert_django_field_extended.register(models.PositiveSmallIntegerField)
-@convert_django_field_extended.register(models.SmallIntegerField)
-@convert_django_field_extended.register(models.BigIntegerField)
-@convert_django_field_extended.register(models.IntegerField)
-def convert_field_to_int(field, registry=None, required=None):
+@convert_django_field_to_input.register(models.PositiveIntegerField)
+@convert_django_field_to_input.register(models.PositiveSmallIntegerField)
+@convert_django_field_to_input.register(models.SmallIntegerField)
+@convert_django_field_to_input.register(models.BigIntegerField)
+@convert_django_field_to_input.register(models.IntegerField)
+def convert_field_to_int(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
     return Int(description=field.help_text, required=is_required(field, required))
 
 
-@convert_django_field_extended.register(models.BooleanField)
-def convert_field_to_boolean(field, registry=None, required=None):
+@convert_django_field_to_input.register(models.BooleanField)
+def convert_field_to_boolean(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
     return NonNull(Boolean, description=field.help_text)
 
 
-@convert_django_field_extended.register(models.NullBooleanField)
-def convert_field_to_nullboolean(field, registry=None, required=None):
+@convert_django_field_to_input.register(models.NullBooleanField)
+def convert_field_to_nullboolean(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
     return Boolean(description=field.help_text, required=is_required(field, required))
 
 
-@convert_django_field_extended.register(models.DecimalField)
-@convert_django_field_extended.register(models.FloatField)
-def convert_field_to_float(field, registry=None, required=None):
+@convert_django_field_to_input.register(models.DecimalField)
+@convert_django_field_to_input.register(models.FloatField)
+def convert_field_to_float(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
     return Float(description=field.help_text, required=is_required(field, required))
 
 
-@convert_django_field_extended.register(models.DurationField)
-def convert_field_to_time_delta(field, registry=None, required=None):
-    from common.graphql import TimeDelta
+@convert_django_field_to_input.register(models.DurationField)
+def convert_field_to_time_delta(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
     return TimeDelta(description=field.help_text, required=is_required(field, required))
 
 
-@convert_django_field_extended.register(models.DateTimeField)
-def convert_datetime_to_string(field, registry=None, required=None):
+@convert_django_field_to_input.register(models.DateTimeField)
+def convert_datetime_to_string(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
     # We only render DateTimeFields with auto_now[_add] if they are explicitly required or not
-    if required is None and (getattr(field, 'auto_now', None) or getattr(field, 'auto_now_add', None)):
+    if required is None and (
+        getattr(field, "auto_now", None) or getattr(field, "auto_now_add", None)
+    ):
         return
 
     return DateTime(description=field.help_text, required=is_required(field, required))
 
 
-@convert_django_field_extended.register(models.DateField)
-def convert_date_to_string(field, registry=None, required=None):
+@convert_django_field_to_input.register(models.DateField)
+def convert_date_to_string(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
     # We only render DateFields with auto_now[_add] if they are explicitly required or not
-    if required is None and (getattr(field, 'auto_now', None) or getattr(field, 'auto_now_add', None)):
+    if required is None and (
+        getattr(field, "auto_now", None) or getattr(field, "auto_now_add", None)
+    ):
         return
 
     return Date(description=field.help_text, required=is_required(field, required))
 
 
-@convert_django_field_extended.register(models.TimeField)
-def convert_time_to_string(field, registry=None, required=None):
+@convert_django_field_to_input.register(models.TimeField)
+def convert_time_to_string(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
     return Time(description=field.help_text, required=is_required(field, required))
 
 
-@convert_django_field_extended.register(models.OneToOneRel)
-def convert_onetoone_field_to_djangomodel(field, registry=None, required=None):
+@convert_django_field_to_input.register(models.OneToOneRel)
+def convert_onetoone_field_to_djangomodel(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
     return List(ID, description=field.help_text, required=is_required(field, required))
 
 
-@convert_django_field_extended.register(models.ManyToManyField)
-@convert_django_field_extended.register(models.ManyToManyRel)
-@convert_django_field_extended.register(models.ManyToOneRel)
-def convert_field_to_list_or_connection(field, registry=None, required=None):
-    return List(ID, required=is_required(field, required))
+@convert_django_field_to_input.register(models.ManyToManyField)
+@convert_django_field_to_input.register(models.ManyToManyRel)
+@convert_django_field_to_input.register(models.ManyToOneRel)
+def convert_many_to_many_field(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
+    # Use getattr on help_text here as ManyToOnRel does not possess this.
+    list_id_type = List(ID, description=getattr(field, 'help_text', ''), required=is_required(field, required, True))
+
+    # Use the Input type node from registry in a dynamic type, and create a union with that
+    # and the ID
+    def dynamic_type():
+        _type_name = (field_many_to_many_extras or {}).get(
+            'type',
+            "ID"
+        )
+        if _type_name == "ID":
+            return list_id_type
+
+        _type = registry.get_converted_field(_type_name)
+
+        if not _type:
+            raise GraphQLError(f"The type {_type_name} does not exist.")
+
+        return List(_type, description=getattr(field, 'help_text', ''), required=is_required(field, required, True))
+
+    return Dynamic(dynamic_type)
 
 
-@convert_django_field_extended.register(ArrayField)
-def convert_postgres_array_to_list(field, registry=None, required=None):
-    base_type = convert_django_field_extended(field.base_field)
+@convert_django_field_to_input.register(ArrayField)
+def convert_postgres_array_to_list(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
+    base_type = convert_django_field_to_input(field.base_field)
     if not isinstance(base_type, (List, NonNull)):
         base_type = type(base_type)
-    return List(base_type, description=field.help_text, required=is_required(field, required))
+    return List(
+        base_type, description=field.help_text, required=is_required(field, required)
+    )
 
 
-@convert_django_field_extended.register(HStoreField)
-@convert_django_field_extended.register(JSONField)
-def convert_posgres_field_to_string(field, registry=None, required=None):
-    return JSONString(description=field.help_text, required=is_required(field, required))
+@convert_django_field_to_input.register(HStoreField)
+@convert_django_field_to_input.register(JSONField)
+def convert_posgres_field_to_string(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
+    return JSONString(
+        description=field.help_text, required=is_required(field, required)
+    )
 
 
-@convert_django_field_extended.register(RangeField)
-def convert_postgres_range_to_string(field, registry=None, required=None):
-    inner_type = convert_django_field_extended(field.base_field)
+@convert_django_field_to_input.register(RangeField)
+def convert_postgres_range_to_string(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
+    inner_type = convert_django_field_to_input(field.base_field)
     if not isinstance(inner_type, (List, NonNull)):
         inner_type = type(inner_type)
-    return List(inner_type, description=field.help_text, required=is_required(field, required))
+    return List(
+        inner_type, description=field.help_text, required=is_required(field, required)
+    )
 
 
-@convert_django_field_extended.register(FileField)
-@convert_django_field_extended.register(ImageField)
-def convert_file_field_to_upload(field, registry=None, required=None):
+@convert_django_field_to_input.register(FileField)
+@convert_django_field_to_input.register(ImageField)
+def convert_file_field_to_upload(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
     return Upload(required=is_required(field, required))
-

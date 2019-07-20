@@ -15,7 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from graphene_file_upload.django import FileUploadGraphQLView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('graphql', FileUploadGraphQLView(graphiql=True).as_view())
 ]
