@@ -104,7 +104,6 @@ class DjangoCudBase(Mutation):
                 )
                 model_field_values[name] = related_obj
 
-        print(model_field_values)
         # Foreign keys are added, we are ready to create our object
         obj = Model.objects.create(**model_field_values)
 
