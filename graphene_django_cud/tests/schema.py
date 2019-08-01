@@ -50,6 +50,16 @@ class Query(graphene.ObjectType):
 class CreateUserMutation(DjangoCreateMutation):
     class Meta:
         model = User
+        many_to_one_extras = {
+            "cats": {"add": {"type": "CreateCatInput"}},
+            "dogs": {
+                "add": {
+                    "many_to_many_extras": {
+                        "friends": {"add": {"type": "CreateMouseInput"}}
+                    },
+                }
+            },
+        }
 
 
 class PatchUserMutation(DjangoPatchMutation):

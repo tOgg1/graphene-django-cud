@@ -26,7 +26,6 @@ from graphene import (
     DateTime,
     Date,
     Time,
-    Union,
     InputField,
     Dynamic,
 )

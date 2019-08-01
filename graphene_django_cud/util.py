@@ -1,6 +1,8 @@
 from collections import OrderedDict
 
+import graphene
 from django.db import models
+from graphene import InputObjectType
 from graphene_django.registry import get_global_registry
 from graphene_django.utils import get_model_fields
 from graphql import GraphQLError
@@ -8,7 +10,8 @@ from graphql_relay import from_global_id
 from typing import Union
 
 from graphene_django_cud.converter import convert_django_field_with_choices, convert_many_to_many_field
-from graphene_django_cud.registry import get_input_registry
+from graphene_django_cud.registry import get_type_meta_registry
+from graphene_django_cud.tests.models import User
 
 
 def disambiguate_id(ambiguous_id: Union[int, float, str]):
@@ -67,14 +70,17 @@ def get_input_fields_for_model(
     optional_fields=(),
     required_fields=(),
     many_to_many_extras=None,
-    foreign_key_extras=None
+    foreign_key_extras=None,
+    many_to_one_extras=None
 ) -> OrderedDict:
 
     registry = get_global_registry()
+    meta_registry = get_type_meta_registry()
     model_fields = get_model_fields(model)
 
     many_to_many_extras = many_to_many_extras or {}
     foreign_key_extras = foreign_key_extras or {}
+    many_to_one_extras = many_to_one_extras or {}
 
     fields = OrderedDict()
     fields_lookup = {}
@@ -143,6 +149,58 @@ def get_input_fields_for_model(
             # operation = data.get('operation') or get_likely_operation_from_name(extra_name)
             fields[name + "_" + extra_name] = _field
 
+    for name, extras in many_to_one_extras.items():
+        field = fields_lookup.get(name)
+        if field is None:
+            raise GraphQLError(f"Error adding extras for {name} in model f{model}. Field {name} does not exist.")
+
+        for extra_name, data in extras.items():
+
+            # This is handled above
+            if extra_name == "exact":
+                continue
+
+            if isinstance(data, bool):
+                data = {"type": 'ID'}
+
+            _type = data.get('type')
+            if not _type or _type == "auto":
+                # Create new type.
+                _type_name = data.get('type_name', f"Create{model.__name__}{name.capitalize()}")
+                converted_fields = get_input_fields_for_model(
+                    field.related_model,
+                    data.get('only_fields', ()),
+                    data.get('exclude_fields', (field.field.name,)),  # Exclude the field referring back to the foreign key
+                    data.get('optional_fields', ()),
+                    data.get('required_fields', ()),
+                    data.get('many_to_many_extras'),
+                    data.get('foreign_key_extras'),
+                    data.get('many_to_one_extras'),
+                )
+                InputType = type(_type_name, (InputObjectType,), converted_fields)
+                meta_registry.register(_type_name, {
+                    'auto_context_fields': data.get('auto_context_fields', {}),
+                    'optional_fields': data.get('optional_fields', ()),
+                    'required_fields': data.get('required_fields', ()),
+                    'many_to_many_extras': data.get('many_to_many_extras', {}),
+                    'many_to_one_extras': data.get('many_to_one_extras', {}),
+                    'foreign_key_extras': data.get('auto_context_fields', {}),
+                })
+                _field = graphene.List(
+                    type(_type_name, (InputObjectType,), converted_fields),
+                    required=False
+                )
+            else:
+                _field = convert_many_to_many_field(
+                    field,
+                    registry,
+                    False,
+                    data,
+                    None
+                )
+
+            fields[name + "_" + extra_name] = _field
+
     return fields
 
 
@@ -151,13 +209,16 @@ def get_all_optional_input_fields_for_model(
         only_fields,
         exclude_fields,
         many_to_many_extras=None,
-        foreign_key_extras=None
+        foreign_key_extras=None,
+        many_to_one_extras=None
 ):
     registry = get_global_registry()
+    meta_registry = get_type_meta_registry()
     model_fields = get_model_fields(model)
 
     many_to_many_extras = many_to_many_extras or {}
     foreign_key_extras = foreign_key_extras or {}
+    many_to_one_extras = many_to_one_extras or {}
 
     fields = OrderedDict()
     fields_lookup = {}
@@ -220,6 +281,60 @@ def get_all_optional_input_fields_for_model(
 
             # operation = data.get('operation') or get_likely_operation_from_name(extra_name)
             fields[name + "_" + extra_name] = _field
+
+
+    for name, extras in many_to_one_extras.items():
+        field = fields_lookup.get(name)
+        if field is None:
+            raise GraphQLError(f"Error adding extras for {name} in model f{model}. Field {name} does not exist.")
+
+        for extra_name, data in extras.items():
+
+            # This is handled above
+            if extra_name == "exact":
+                continue
+
+            if isinstance(data, bool):
+                data = {"type": 'ID'}
+
+            _type = data.get('type')
+            if not _type or _type == "auto":
+                # Create new type.
+                _type_name = data.get('type_name', f"Create{model.__name__}{name.capitalize()}")
+                converted_fields = get_input_fields_for_model(
+                    field.related_model,
+                    data.get('only_fields', ()),
+                    data.get('exclude_fields', (field.field.name,)),  # Exclude the field referring back to the foreign key
+                    data.get('optional_fields', ()),
+                    data.get('required_fields', ()),
+                    data.get('many_to_many_extras'),
+                    data.get('foreign_key_extras'),
+                    data.get('many_to_one_extras'),
+                )
+                InputType = type(_type_name, (InputObjectType,), converted_fields)
+                meta_registry.register(_type_name, {
+                    'auto_context_fields': data.get('auto_context_fields', {}),
+                    'optional_fields': data.get('optional_fields', ()),
+                    'required_fields': data.get('required_fields', ()),
+                    'many_to_many_extras': data.get('many_to_many_extras', {}),
+                    'many_to_one_extras': data.get('many_to_one_extras', {}),
+                    'foreign_key_extras': data.get('auto_context_fields', {}),
+                })
+                _field = graphene.List(
+                    type(_type_name, (InputObjectType,), converted_fields),
+                    required=False
+                )
+            else:
+                _field = convert_many_to_many_field(
+                    field,
+                    registry,
+                    False,
+                    data,
+                    None
+                )
+
+            fields[name + "_" + extra_name] = _field
+
 
     return fields
 

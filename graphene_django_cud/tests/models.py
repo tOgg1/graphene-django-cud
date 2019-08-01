@@ -1,4 +1,7 @@
 from django.db import models
+from django.db.models import ManyToOneRel
+
+ManyToOneRel
 
 
 class User(models.Model):
