@@ -258,9 +258,9 @@ class DjangoCudBase(Mutation):
 
                 if len(objs) > 0:
                     if operation == "add":
-                        many_to_many_to_add[name].append(*objs)
+                        many_to_many_to_add[name] += objs
                     else:
-                        many_to_many_to_remove[name].append(*objs)
+                        many_to_many_to_remove[name] += objs
 
 
         many_to_one_to_add = {}
@@ -283,21 +283,20 @@ class DjangoCudBase(Mutation):
                     data = {}
 
                 operation = data.get('operation') or get_likely_operation_from_name(extra_name)
-                objs = cls.get_or_create_m2o_objs(
-                    obj,
-                    field,
-                    values,
-                    data,
-                    operation,
-                    info,
-                    Model
-                )
 
-                if len(objs) > 0:
-                    if operation == "add":
-                        many_to_one_to_add[name].append(*objs)
-                    else:
-                        many_to_one_to_remove[name].append(*objs)
+                if operation == "add":
+                    objs = cls.get_or_create_m2o_objs(
+                        obj,
+                        field,
+                        values,
+                        data,
+                        operation,
+                        info,
+                        Model
+                    )
+                    many_to_one_to_add[name] += objs
+                else:
+                    many_to_one_to_remove[name] += disambiguate_ids(values)
 
 
         for name, objs in many_to_one_to_add.items():
@@ -306,7 +305,7 @@ class DjangoCudBase(Mutation):
         for name, objs in many_to_one_to_remove.items():
             # Only nullable foreign key reverse rels have the remove method,
             # so we use this method instead
-            getattr(obj, name).filter(id__in=[obj.id for obj in objs]).delete()
+            getattr(obj, name).filter(id__in=objs).delete()
 
         for name, objs in many_to_many_to_add.items():
             getattr(obj, name).add(*objs)
@@ -421,11 +420,10 @@ class DjangoCudBase(Mutation):
                     info
                 )
 
-                if len(objs) > 0:
-                    if operation == "add":
-                        many_to_many_to_add[name].append(*objs)
-                    else:
-                        many_to_many_to_remove[name].append(*objs)
+                if operation == "add":
+                    many_to_many_to_add[name] += objs
+                else:
+                    many_to_many_to_remove[name] += objs
 
         many_to_one_to_add = {}
         many_to_one_to_remove = {}
@@ -447,21 +445,20 @@ class DjangoCudBase(Mutation):
                     data = {}
 
                 operation = data.get('operation') or get_likely_operation_from_name(extra_name)
-                objs = cls.get_or_create_m2o_objs(
-                    obj,
-                    field,
-                    values,
-                    data,
-                    operation,
-                    info,
-                    Model
-                )
 
-                if len(objs) > 0:
-                    if operation == "add":
-                        many_to_one_to_add[name].append(*objs)
-                    else:
-                        many_to_one_to_remove[name].append(*objs)
+                if operation == "add":
+                    objs = cls.get_or_create_m2o_objs(
+                        obj,
+                        field,
+                        values,
+                        data,
+                        operation,
+                        info,
+                        Model
+                    )
+                    many_to_one_to_add[name] += objs
+                else:
+                    many_to_one_to_remove[name] += disambiguate_ids(values)
 
 
         for name, objs in many_to_one_to_add.items():
@@ -470,7 +467,7 @@ class DjangoCudBase(Mutation):
         for name, objs in many_to_one_to_remove.items():
             # Only nullable foreign key reverse rels have the remove method,
             # so we use this method instead
-            getattr(obj, name).filter(id__in=[obj.id for obj in objs]).delete()
+            getattr(obj, name).filter(id__in=objs).delete()
 
         for name, objs in many_to_many_to_add.items():
             getattr(obj, name).add(*objs)
