@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.0.5
+* Fix some issues with adding/removing many to one rels
+
 ## Version 0.0.4
 * Fix bug where argument was not sent into update_obj
 
