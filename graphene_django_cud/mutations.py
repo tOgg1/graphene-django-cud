@@ -492,6 +492,7 @@ class DjangoUpdateMutationOptions(MutationOptions):
     optional_fields = ()
     required_fields = None
     nested_fields = None
+    type_name = None
 
     many_to_many_extras = None
     many_to_one_extras=None
@@ -517,6 +518,7 @@ class DjangoUpdateMutation(DjangoCudBase):
             many_to_many_extras=None,
             many_to_one_extras=None,
             foreign_key_extras=None,
+            type_name="",
             **kwargs,
     ):
         registry = get_global_registry()
@@ -537,6 +539,8 @@ class DjangoUpdateMutation(DjangoCudBase):
         if many_to_many_extras is None:
             many_to_many_extras = {}
 
+        input_type_name = type_name or f"Update{model.__name__}Input"
+
         model_fields = get_input_fields_for_model(
             model,
             only_fields,
@@ -545,10 +549,9 @@ class DjangoUpdateMutation(DjangoCudBase):
             required_fields=required_fields,
             many_to_many_extras=many_to_many_extras,
             foreign_key_extras=foreign_key_extras,
-            many_to_one_extras=many_to_one_extras
+            many_to_one_extras=many_to_one_extras,
+            parent_type_name=input_type_name
         )
-
-        input_type_name = f"Update{model.__name__}Input"
 
         InputType = type(
             input_type_name, (InputObjectType,), model_fields
@@ -644,6 +647,7 @@ class DjangoPatchMutationOptions(MutationOptions):
     many_to_many_extras = None
     many_to_one_extras = None
     foreign_key_extras = None
+    type_name = None
 
 
 class DjangoPatchMutation(DjangoCudBase):
@@ -663,6 +667,7 @@ class DjangoPatchMutation(DjangoCudBase):
             many_to_one_extras = None,
             many_to_many_extras = None,
             foreign_key_extras = None,
+            type_name=None,
             **kwargs,
     ):
         registry = get_global_registry()
@@ -683,15 +688,17 @@ class DjangoPatchMutation(DjangoCudBase):
         if many_to_many_extras is None:
             many_to_many_extras = {}
 
+        input_type_name = type_name or f"Patch{model.__name__}Input"
+
         model_fields = get_all_optional_input_fields_for_model(
             model,
             only_fields,
             exclude_fields,
             many_to_many_extras=many_to_many_extras,
-            foreign_key_extras=foreign_key_extras
+            foreign_key_extras=foreign_key_extras,
+            many_to_one_extras=many_to_one_extras,
+            parent_type_name=type_name,
         )
-
-        input_type_name = f"Patch{model.__name__}Input"
 
         InputType = type(
             input_type_name, (InputObjectType,), model_fields
@@ -806,6 +813,7 @@ class DjangoCreateMutation(DjangoCudBase):
             many_to_many_extras=None,
             foreign_key_extras = None,
             many_to_one_extras = None,
+            type_name=None,
             **kwargs,
     ):
         registry = get_global_registry()
@@ -826,6 +834,8 @@ class DjangoCreateMutation(DjangoCudBase):
         if not return_field_name:
             return_field_name = to_snake_case(model.__name__)
 
+        input_type_name = type_name or f"Create{model.__name__}Input"
+
         model_fields = get_input_fields_for_model(
             model,
             only_fields,
@@ -835,9 +845,8 @@ class DjangoCreateMutation(DjangoCudBase):
             many_to_many_extras,
             foreign_key_extras,
             many_to_one_extras,
+            parent_type_name=input_type_name,
         )
-
-        input_type_name = f"Create{model.__name__}Input"
 
         InputType = type(
             input_type_name, (InputObjectType,), model_fields

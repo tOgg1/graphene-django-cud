@@ -11,7 +11,6 @@ from typing import Union
 
 from graphene_django_cud.converter import convert_django_field_with_choices, convert_many_to_many_field
 from graphene_django_cud.registry import get_type_meta_registry
-from graphene_django_cud.tests.models import User
 
 
 def disambiguate_id(ambiguous_id: Union[int, float, str]):
@@ -71,7 +70,8 @@ def get_input_fields_for_model(
     required_fields=(),
     many_to_many_extras=None,
     foreign_key_extras=None,
-    many_to_one_extras=None
+    many_to_one_extras=None,
+    parent_type_name=""
 ) -> OrderedDict:
 
     registry = get_global_registry()
@@ -166,7 +166,7 @@ def get_input_fields_for_model(
             _type = data.get('type')
             if not _type or _type == "auto":
                 # Create new type.
-                _type_name = data.get('type_name', f"Create{model.__name__}{name.capitalize()}")
+                _type_name = data.get('type_name', f"{parent_type_name}Create{model.__name__}{name.capitalize()}")
                 converted_fields = get_input_fields_for_model(
                     field.related_model,
                     data.get('only_fields', ()),
@@ -176,6 +176,7 @@ def get_input_fields_for_model(
                     data.get('many_to_many_extras'),
                     data.get('foreign_key_extras'),
                     data.get('many_to_one_extras'),
+                    parent_type_name=_type_name,
                 )
                 InputType = type(_type_name, (InputObjectType,), converted_fields)
                 meta_registry.register(_type_name, {
@@ -210,7 +211,8 @@ def get_all_optional_input_fields_for_model(
         exclude_fields,
         many_to_many_extras=None,
         foreign_key_extras=None,
-        many_to_one_extras=None
+        many_to_one_extras=None,
+        parent_type_name="",
 ):
     registry = get_global_registry()
     meta_registry = get_type_meta_registry()
@@ -300,7 +302,7 @@ def get_all_optional_input_fields_for_model(
             _type = data.get('type')
             if not _type or _type == "auto":
                 # Create new type.
-                _type_name = data.get('type_name', f"Create{model.__name__}{name.capitalize()}")
+                _type_name = data.get('type_name', f"{parent_type_name}Create{model.__name__}{name.capitalize()}")
                 converted_fields = get_input_fields_for_model(
                     field.related_model,
                     data.get('only_fields', ()),
@@ -310,6 +312,7 @@ def get_all_optional_input_fields_for_model(
                     data.get('many_to_many_extras'),
                     data.get('foreign_key_extras'),
                     data.get('many_to_one_extras'),
+                    parent_type_name=_type_name
                 )
                 InputType = type(_type_name, (InputObjectType,), converted_fields)
                 meta_registry.register(_type_name, {
