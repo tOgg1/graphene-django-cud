@@ -621,6 +621,29 @@ execute with success the following massive mutation:
 This creates a new (stray) dog, two new cats with one new owner each and one new mouse. The new cats
 and the new dog are automatically set as enemies, and the mouse is automatically set as a target of the first cat.
 
+For `auto` fields, we can create nested behaviour explicitly:
+
+    class CreateUserMutation(DjangoCreateMutation):
+        class Meta:
+            model = User
+            many_to_one_extras = {
+                "cats": {
+                    "exact": {
+                        "type": "auto",
+                        "many_to_many_extras": {
+                            "enemies": {
+                                "exact": {
+                                   "type": "CreateDogInput"
+                                }
+                            } 
+                        }
+                    }
+                }
+            }
+
+There is no limit to how deep this recursion may go, apart from your imagination.
+
+
 ## Handle functions
 
 TODO
