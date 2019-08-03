@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.0.6
+* Add customizible names for many to many and many to one rels.
+
 ## Version 0.0.5
 * Fix some issues with adding/removing many to one rels
 

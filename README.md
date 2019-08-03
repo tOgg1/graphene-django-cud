@@ -592,7 +592,7 @@ Where `CreateCatInput` is the type generated for
             }
             foreign_key_extras = {"owner": {"type": "CreateUserInput"}}
 
-Where we assume we have now also create a new model `Mouse` with a standard `CreateMouseMutation` mutation. We could then
+Where we assume we have now also created a new model `Mouse` with a standard `CreateMouseMutation` mutation. We could then
 execute with success the following massive mutation:
 
 
