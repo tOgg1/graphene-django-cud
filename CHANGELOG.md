@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.0.4
+* Fix bug where argument was not sent into update_obj
+
 ## Version 0.0.3
 * Improve nested auto field name generation
 
