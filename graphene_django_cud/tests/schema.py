@@ -7,7 +7,7 @@ from graphene_django_cud.mutations import (
     DjangoPatchMutation,
     DjangoUpdateMutation,
     DjangoDeleteMutation,
-)
+    DjangoBatchDeleteMutation)
 from graphene_django_cud.tests.models import User, Cat, Dog, Mouse
 
 
@@ -51,7 +51,7 @@ class CreateUserMutation(DjangoCreateMutation):
     class Meta:
         model = User
         many_to_one_extras = {
-            "cats": {"add": {"type": "CreateCatInput"}},
+            "cats": {"exact": {"type": "auto"}},
             "dogs": {
                 "add": {
                     "many_to_many_extras": {
@@ -180,6 +180,14 @@ class DeleteMouseMutation(DjangoDeleteMutation):
         model = Mouse
 
 
+class BatchDeleteMouseMutation(DjangoBatchDeleteMutation):
+    class Meta:
+        model = Mouse
+        filter_fields = (
+            'friends', 'friends__name'
+        )
+
+
 class Mutations(graphene.ObjectType):
     create_user = CreateUserMutation.Field()
     patch_user = PatchUserMutation.Field()
@@ -200,6 +208,7 @@ class Mutations(graphene.ObjectType):
     patch_mouse = PatchMouseMutation.Field()
     update_mouse = UpdateMouseMutation.Field()
     delete_mouse = DeleteMouseMutation.Field()
+    batch_delete_mouse = BatchDeleteMouseMutation.Field()
 
 
 schema = Schema(query=Query, mutation=Mutations)

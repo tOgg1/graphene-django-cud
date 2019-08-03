@@ -791,6 +791,7 @@ class DjangoCreateMutationOptions(MutationOptions):
     many_to_many_extras = None
     many_to_one_extras = None
     foreign_key_extras = None
+    type_name = None
 
 
 class DjangoCreateMutation(DjangoCudBase):

@@ -156,9 +156,11 @@ def get_input_fields_for_model(
 
         for extra_name, data in extras.items():
 
-            # This is handled above
+            argument_name = data.get('name', name + "_" + extra_name)
+
+            # Override default
             if extra_name == "exact":
-                continue
+                argument_name = name
 
             if isinstance(data, bool):
                 data = {"type": 'ID'}
@@ -200,7 +202,7 @@ def get_input_fields_for_model(
                     None
                 )
 
-            fields[name + "_" + extra_name] = _field
+            fields[argument_name] = _field
 
     return fields
 
@@ -292,9 +294,11 @@ def get_all_optional_input_fields_for_model(
 
         for extra_name, data in extras.items():
 
-            # This is handled above
+            argument_name = data.get('name', name + "_" + extra_name)
+
+            # Override default
             if extra_name == "exact":
-                continue
+                argument_name = name
 
             if isinstance(data, bool):
                 data = {"type": 'ID'}
@@ -336,7 +340,7 @@ def get_all_optional_input_fields_for_model(
                     None
                 )
 
-            fields[name + "_" + extra_name] = _field
+            fields[argument_name] = _field
 
 
     return fields
@@ -348,7 +352,7 @@ def get_likely_operation_from_name(extra_name):
     if extra_name == "update" or extra_name == "patch":
         return "update"
 
-    if extra_name == "add" or extra_name == "append" or extra_name == "exact":
+    if extra_name == "add" or extra_name == "append" or extra_name == "exact" or extra_name == "create":
         return "add"
 
     if extra_name == "delete" or extra_name == "remove":
@@ -394,9 +398,10 @@ def get_m2m_all_extras_field_names(extras):
     if not extras:
         return []
     for name, extra in extras.items():
-        for extra_name, _ in extra.items():
+        for extra_name, data in extra.items():
+            argument_name = data.get('name', name + '_' + extra_name)
             if extra_name != "exact":
-                res.append(name + "_" + extra_name)
+                res.append(argument_name)
             else:
                 res.append(name)
 
