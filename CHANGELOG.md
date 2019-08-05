@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.0.7
+* Improve conversion of Boolean field
+
 ## Version 0.0.6
 * Add customizible names for many to many and many to one rels.
 
