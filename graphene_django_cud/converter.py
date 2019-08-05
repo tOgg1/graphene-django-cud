@@ -182,7 +182,11 @@ def convert_field_to_int(field, registry=None, required=None, field_many_to_many
 
 @convert_django_field_to_input.register(models.BooleanField)
 def convert_field_to_boolean(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
-    return NonNull(Boolean, description=field.help_text)
+    if is_required(field, required):
+        return NonNull(Boolean, description=field.help_text)
+    else:
+        # This will only happen here if the field has a default
+        return Boolean(description=field.help_text, required=False)
 
 
 @convert_django_field_to_input.register(models.NullBooleanField)
