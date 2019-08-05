@@ -164,7 +164,7 @@ class DjangoCudBase(Mutation):
         many_to_one_extras_field_names = get_m2m_all_extras_field_names(many_to_one_extras)  # The layout is the same as for m2m
         foreign_key_extras_field_names = get_fk_all_extras_field_names(foreign_key_extras)
 
-        for field_name, context_name in cls._meta.auto_context_fields.items():
+        for field_name, context_name in auto_context_fields.items():
             if hasattr(info.context, context_name):
                 model_field_values[field_name] = getattr(info.context, context_name)
 
