@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.0.8
+* Fix bug with bad auto context field
+
 ## Version 0.0.7
 * Improve conversion of Boolean field
 
