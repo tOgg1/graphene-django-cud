@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.0.9
+* Add DjangoBatchCreateMutation
+
 ## Version 0.0.8
 * Fix bug with bad auto context field
 
