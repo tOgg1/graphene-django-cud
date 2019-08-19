@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.0.10
+* Add better handling of filter fields in DjangoBatchDeleteMutation
+
 ## Version 0.0.9
 * Add DjangoBatchCreateMutation
 
