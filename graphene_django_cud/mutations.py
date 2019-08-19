@@ -14,8 +14,7 @@ from graphql_relay import to_global_id
 from graphene_django_cud.registry import get_type_meta_registry
 from .util import disambiguate_id, disambiguate_ids, get_input_fields_for_model, \
     get_all_optional_input_fields_for_model, is_many_to_many, get_m2m_all_extras_field_names, \
-    get_likely_operation_from_name, get_fk_all_extras_field_names
-
+    get_likely_operation_from_name, get_fk_all_extras_field_names, get_filter_fields_input_args
 
 meta_registry = get_type_meta_registry()
 
@@ -1171,9 +1170,10 @@ class DjangoBatchDeleteMutation(Mutation):
                 len(filter_fields) > 0
         ), f"You must specify at least one field to filter on for deletion."
 
-        input_arguments = OrderedDict()
-        for field in filter_fields:
-            input_arguments[field] = graphene.String()
+        input_arguments = get_filter_fields_input_args(
+            filter_fields,
+            model
+        )
 
         InputType = type(
             f"BatchDelete{model.__name__}Input", (InputObjectType,), input_arguments
@@ -1209,11 +1209,22 @@ class DjangoBatchDeleteMutation(Mutation):
         model_field_values = {}
 
         for name, value in super(type(input), input).items():
+            filter_field_split = name.split("__", 1)
+            field_name = filter_field_split[0]
+
             try:
-                field = Model._meta.get_field(name)
+                field = Model._meta.get_field(field_name)
             except FieldDoesNotExist:
                 # This can happen with nested selectors. In this case we set the field to none.
                 field = None
+
+            filter_field_is_list = False
+
+            if len(filter_field_split) > 1:
+                # If we have an "__in" final part of the filter, we are now dealing with
+                # a list of things. Note that all other variants can be coerced directly
+                # on the filter-call, so we don't really have to deal with other cases.
+                filter_field_is_list = filter_field_split[-1] == "in"
 
             new_value = value
 
@@ -1226,7 +1237,7 @@ class DjangoBatchDeleteMutation(Mutation):
                 new_value = handle_func(value, name, info)
 
             # On some fields we perform some default conversion, if the value was not transformed above.
-            if new_value == value and field is not None and value is not None:
+            if new_value == value and value is not None:
                 if type(field) in (models.ForeignKey, models.OneToOneField):
                     name = getattr(field, "db_column", None) or name + "_id"
                     new_value = disambiguate_id(value)
@@ -1234,7 +1245,7 @@ class DjangoBatchDeleteMutation(Mutation):
                         models.ManyToManyField,
                         models.ManyToManyRel,
                         models.ManyToOneRel,
-                ):
+                ) or filter_field_is_list:
                     new_value = disambiguate_ids(value)
 
             model_field_values[name] = new_value

@@ -386,6 +386,56 @@ def validate_foreign_key_extras(extras, operation_type):
     pass
 
 
+def _convert_filter_field(
+        filter_field,
+        model
+):
+    filter_field_split = filter_field.split("__")
+    field_name = filter_field_split[0]
+    model_field = model._meta.get_field(field_name)
+
+    filter_field_is_list = False
+    # In this case, we have a deeply nested field. To find the correct field, we recurse into the string
+    if len(filter_field_split) > 2:
+        return _convert_filter_field(
+            "__".join(filter_field_split[1:]),
+            model_field.related_model  # This fails only on bad input
+        )
+
+    if len(filter_field_split) == 2:
+        # If we have an "__in" final part of the filter, we are now dealing with
+        # a list of things. Note that all other variants can be coerced directly
+        # on the filter-call, so we don't really have to deal with other cases here.
+        if filter_field_split[1] == "in":
+            filter_field_is_list = True
+        else:
+            return _convert_filter_field(
+                "__".join(filter_field_split[1:]),
+                model_field.related_model  # This fails only on bad input
+            )
+
+    field_type = convert_django_field_with_choices(model_field, required=False)
+
+    # Handle this case by "deconstructing" the field type class, and pass it as an argument to
+    # graphene.List
+    if filter_field_is_list:
+        field_type = graphene.List(type(field_type), required=False)
+
+    return field_type
+
+
+def get_filter_fields_input_args(
+        filter_fields,
+        model
+):
+    result = OrderedDict()
+
+    for filter_field in filter_fields:
+        result[filter_field] = _convert_filter_field(filter_field, model)
+
+    return result
+
+
 def is_many_to_many(field):
     return type(field) in (
         models.ManyToManyField,

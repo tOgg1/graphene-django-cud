@@ -145,16 +145,16 @@ def convert_field_to_string_extended(field, registry=None, required=None, field_
 @convert_django_field_to_input.register(models.ForeignKey)
 def convert_field_to_id(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
     id_type = ID(description=field.help_text, required=is_required(field, required))
+    _type_name = (field_foreign_key_extras or {}).get(
+        'type',
+        "ID"
+    )
+    if _type_name == "ID":
+        return id_type
 
     # Use the Input type node from registry in a dynamic type, and create a union with that
     # and the ID
     def dynamic_type():
-        _type_name = (field_foreign_key_extras or {}).get(
-            'type',
-            "ID"
-        )
-        if _type_name == "ID":
-            return id_type
 
         _type = registry.get_converted_field(_type_name)
 
@@ -243,17 +243,16 @@ def convert_onetoone_field_to_djangomodel(field, registry=None, required=None, f
 def convert_many_to_many_field(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
     # Use getattr on help_text here as ManyToOnRel does not possess this.
     list_id_type = List(ID, description=getattr(field, 'help_text', ''), required=is_required(field, required, True))
+    _type_name = (field_foreign_key_extras or {}).get(
+        'type',
+        "ID"
+    )
+    if _type_name == "ID":
+        return list_id_type
 
     # Use the Input type node from registry in a dynamic type, and create a union with that
     # and the ID
     def dynamic_type():
-        _type_name = (field_many_to_many_extras or {}).get(
-            'type',
-            "ID"
-        )
-        if _type_name == "ID":
-            return list_id_type
-
         _type = registry.get_converted_field(_type_name)
 
         if not _type:

@@ -85,6 +85,11 @@ class PatchUserMutation(DjangoPatchMutation):
             },
         }
 
+    @classmethod
+    def mutate(cls, root, info, id, input):
+        print(info)
+        return super().mutate(root, info, id, input)
+
 
 class UpdateUserMutation(DjangoUpdateMutation):
     class Meta:
@@ -193,7 +198,7 @@ class BatchDeleteMouseMutation(DjangoBatchDeleteMutation):
     class Meta:
         model = Mouse
         filter_fields = (
-            'friends', 'friends__name'
+            'id__in', 'friends__owner__name'
         )
 
 
