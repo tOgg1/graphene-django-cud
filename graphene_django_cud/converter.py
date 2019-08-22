@@ -102,7 +102,15 @@ def convert_django_field_with_choices(
 ):
     choices = getattr(field, "choices", None)
     if choices:
+        # Fetch this from registry, if exists. We don't want to duplicate enum fields
+        if registry:
+            from_registry = registry.get_converted_field(field)
+            if from_registry:
+                return from_registry
+
         converted = convert_choices_field(field, choices, required)
+        # Register enum fields
+        registry.register_converted_field(field, converted)
     else:
         converted = convert_django_field_to_input(
             field,
