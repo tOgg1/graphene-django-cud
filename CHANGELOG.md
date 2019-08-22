@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.0.11
+* Make sure enum fields are fetched from registry
+
 ## Version 0.0.10
 * Add better handling of filter fields in DjangoBatchDeleteMutation
 
