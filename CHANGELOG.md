@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.0.12
+* Fix issue with fields havng name "input": Change items call to use super.
+
 ## Version 0.0.11
 * Make sure enum fields are fetched from registry
 
