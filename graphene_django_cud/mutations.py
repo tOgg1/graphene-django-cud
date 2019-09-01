@@ -167,7 +167,7 @@ class DjangoCudBase(Mutation):
             if hasattr(info.context, context_name):
                 model_field_values[field_name] = getattr(info.context, context_name)
 
-        for name, value in input.items():
+        for name, value in super(type(input), input).items():
             # Handle these separately
             if name in many_to_many_extras_field_names or name in foreign_key_extras_field_names or name in many_to_one_extras_field_names:
                 continue
@@ -340,8 +340,7 @@ class DjangoCudBase(Mutation):
             if hasattr(info.context, context_name):
                 setattr(obj, field_name, getattr(info.context, context_name))
 
-        for name, value in input.items():
-
+        for name, value in super(type(input), input).items():
             # Handle these separately
             if name in many_to_many_extras_field_names or name in foreign_key_extras_field_names or name in many_to_one_extras_field_names:
                 continue
