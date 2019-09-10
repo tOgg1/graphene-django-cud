@@ -14,7 +14,7 @@ setuptools.setup(
     url="https://github.com/tOgg1/graphene-django-cud",
     packages=setuptools.find_packages(),
     install_requires=[
-        "graphene-django>=2.5",
+        "graphene-django>=2.0",
         "graphene-file-upload>=1.2"
     ],
     classifiers=[
