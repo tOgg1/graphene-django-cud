@@ -5,14 +5,18 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="graphene-django-cud",
-    version="0.0.12",
+    version="0.0.13",
     author="Tormod Haugland",
     author_email="tormod.haugland@gmail.com",
     description="Create, update and delete mutations for graphene-django",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://gitlab.com/t.-haugland-consulting-as/graphene-django-cud",
+    url="https://github.com/tOgg1/graphene-django-cud",
     packages=setuptools.find_packages(),
+    install_requires=[
+        "graphene-django>=2.5",
+        "graphene-file-upload>=1.2"
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

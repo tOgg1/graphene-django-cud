@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 0.0.13
+* Change package mangement to poetry
+* Add missing install dependencies in setup.py
+* Move repo to github
+
 ## Version 0.0.12
 * Fix issue with fields havng name "input": Change items call to use super.
 
