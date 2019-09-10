@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.0.14
+* Loosen graphene-django required version
+
 ## Version 0.0.13
 * Change package mangement to poetry
 * Add missing install dependencies in setup.py
