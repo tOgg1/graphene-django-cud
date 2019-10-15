@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.0.15
+* Fix bug with many to many extras type extraction
+
 ## Version 0.0.14
 * Loosen graphene-django required version
 
