@@ -251,7 +251,7 @@ def convert_onetoone_field_to_djangomodel(field, registry=None, required=None, f
 def convert_many_to_many_field(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
     # Use getattr on help_text here as ManyToOnRel does not possess this.
     list_id_type = List(ID, description=getattr(field, 'help_text', ''), required=is_required(field, required, True))
-    _type_name = (field_foreign_key_extras or {}).get(
+    _type_name = (field_many_to_many_extras or {}).get(
         'type',
         "ID"
     )
