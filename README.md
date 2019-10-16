@@ -340,7 +340,7 @@ There are three meta fields which allow us to extend the handling of both sides 
 The `foreign_key_extras` field is a dictionary containing information regarding how to handle a model's foreign keys. Here is an example:
 
     class Cat(models.Model):
-        owner = models.ForeignKey(User, on_delete=models.CASCADE)
+        owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="cats")
         name = models.TextField(
 
     class CreateCatMutation(DjangoCreateMutation):
