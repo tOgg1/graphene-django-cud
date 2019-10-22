@@ -4,7 +4,7 @@ This package contains a number of helper mutations making it easy to construct c
 
 The helper mutations are:
  * `DjangoCreateMutation`
- * `DjangoBatchPatchMutation`
+ * `DjangoBatchCreateMutation`
  * `DjangoPatchMutation`
  * `DjangoUpdateMutation`
  * `DjangoDeleteMutation`
