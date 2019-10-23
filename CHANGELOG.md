@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.0.16
+* Fix bug related to conversion of filter fields.
+
 ## Version 0.0.15
 * Fix bug with many to many extras type extraction
 
