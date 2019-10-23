@@ -408,11 +408,14 @@ def _convert_filter_field(
         # on the filter-call, so we don't really have to deal with other cases here.
         if filter_field_split[1] == "in":
             filter_field_is_list = True
-        else:
+        elif model_field.related_model is not None:
+            # Check if the field has a related model. If it does, we recurse one last time, otherwise
+            # we are dealing with the final field and some filter, e.g. fieldname__contains.
             return _convert_filter_field(
                 "__".join(filter_field_split[1:]),
                 model_field.related_model  # This fails only on bad input
             )
+
 
     field_type = convert_django_field_with_choices(model_field, required=False)
 
