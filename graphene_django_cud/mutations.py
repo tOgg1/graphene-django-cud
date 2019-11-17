@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import Iterable
 
 import graphene
 from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist
@@ -475,6 +476,23 @@ class DjangoCudBase(Mutation):
 
         return obj
 
+    @classmethod
+    def get_permissions(cls, root, info, *args, **kwargs) -> Iterable[str]:
+        return cls._meta.permissions
+
+    @classmethod
+    def check_permissions(cls, root, info, *args, **kwargs) -> None:
+        permissions = []
+        get_permissions = getattr(cls, 'get_permissions', None)
+        if not callable(get_permissions):
+            raise TypeError("The `get_permissions` attribute of a mutation must be callable.")
+
+        permissions = cls.get_permissions(root, info, *args, **kwargs)
+
+        if len(permissions) > 0:
+            if not info.context.user.has_perms(permissions):
+                raise GraphQLError("Not permitted to access this mutation.")
+
 
 class DjangoUpdateMutationOptions(MutationOptions):
     model = None
@@ -605,9 +623,7 @@ class DjangoUpdateMutation(DjangoCudBase):
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
-        if cls._meta.permissions and len(cls._meta.permissions) > 0:
-            if not info.context.user.has_perms(cls._meta.permissions):
-                raise GraphQLError("Not permitted to access this mutation.")
+        cls.check_permissions(root, info, id, input)
 
         id = disambiguate_id(id)
         Model = cls._meta.model
@@ -749,9 +765,7 @@ class DjangoPatchMutation(DjangoCudBase):
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
-        if cls._meta.permissions and len(cls._meta.permissions) > 0:
-            if not info.context.user.has_perms(cls._meta.permissions):
-                raise GraphQLError("Not permitted to access this mutation.")
+        cls.check_permissions(root, info, id, input)
 
         id = disambiguate_id(id)
         Model = cls._meta.model
@@ -896,9 +910,7 @@ class DjangoCreateMutation(DjangoCudBase):
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
-        if cls._meta.permissions and len(cls._meta.permissions) > 0:
-            if not info.context.user.has_perms(cls._meta.permissions):
-                raise GraphQLError("Not permitted to access this mutation.")
+        cls.check_permissions(root, info, input)
 
         Model = cls._meta.model
         model_field_values = {}
@@ -1049,9 +1061,7 @@ class DjangoBatchCreateMutation(DjangoCudBase):
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
-        if cls._meta.permissions and len(cls._meta.permissions) > 0:
-            if not info.context.user.has_perms(cls._meta.permissions):
-                raise GraphQLError("Not permitted to access this mutation.")
+        cls.check_permissions(root, info, input)
 
         Model = cls._meta.model
         model_field_values = {}
@@ -1082,7 +1092,7 @@ class DjangoDeleteMutationOptions(MutationOptions):
     login_required = None
 
 
-class DjangoDeleteMutation(Mutation):
+class DjangoDeleteMutation(DjangoCudBase):
     class Meta:
         abstract = True
 
@@ -1124,9 +1134,7 @@ class DjangoDeleteMutation(Mutation):
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
-        if cls._meta.permissions and len(cls._meta.permissions) > 0:
-            if not info.context.user.has_perms(cls._meta.permissions):
-                raise GraphQLError("Not permitted to access this mutation.")
+        cls.check_permissions(root, info, id)
 
         Model = cls._meta.model
         id = disambiguate_id(id)
@@ -1147,7 +1155,7 @@ class DjangoBatchDeleteMutationOptions(MutationOptions):
     login_required = None
 
 
-class DjangoBatchDeleteMutation(Mutation):
+class DjangoBatchDeleteMutation(DjangoCudBase):
     class Meta:
         abstract = True
 
@@ -1200,9 +1208,7 @@ class DjangoBatchDeleteMutation(Mutation):
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
-        if cls._meta.permissions and len(cls._meta.permissions) > 0:
-            if not info.context.user.has_perms(cls._meta.permissions):
-                raise GraphQLError("Not permitted to access this mutation.")
+        cls.check_permissions(root, info, input)
 
         Model = cls._meta.model
         model_field_values = {}
@@ -1257,5 +1263,3 @@ class DjangoBatchDeleteMutation(Mutation):
         deletion_count, _ = filter_qs.delete()
 
         return cls(deletion_count=deletion_count, deleted_ids=ids)
-
-
