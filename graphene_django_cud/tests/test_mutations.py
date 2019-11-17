@@ -358,3 +358,109 @@ class TestUpdateMutation(TestCase):
             context=Dict(user=user)
         )
         self.assertIsNone(result.errors)
+
+    def test_validate__validate_field_does_nothing__passes(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateCatMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Cat
+
+            @classmethod
+            def validate_name(cls, root, info, value, input, **kwargs):
+                pass
+
+        class Mutations(graphene.ObjectType):
+            update_cat = UpdateCatMutation.Field()
+
+        user = UserFactory.create()
+        cat = CatFactory.create()
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateCat(
+                $id: ID!,
+                $input: UpdateCatInput! 
+            ){
+                updateCat(id: $id, input: $input){
+                    cat{
+                        id
+                    }
+                }
+            }
+        """
+        result = schema.execute(
+            mutation,
+            variables= {
+                "id": to_global_id("UserNode", user.id),
+                "input": {
+                    "name": "Name",
+                    "owner": to_global_id("UserNode", user.id)
+                }
+            },
+            context=Dict(user=user)
+        )
+        self.assertIsNone(result.errors)
+
+    def test_validate__validate_field_raises__returns_error(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateCatMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Cat
+
+            @classmethod
+            def validate_name(cls, root, info, value, input, **kwargs):
+                owner = User.objects.get(pk=disambiguate_id(input["owner"]))
+                if value == owner.get_full_name():
+                    raise ValueError("Cat must have different name than owner")
+
+        class Mutations(graphene.ObjectType):
+            update_cat = UpdateCatMutation.Field()
+
+        user = UserFactory.create(
+            first_name="John",
+            last_name="Doe"
+        )
+        cat = CatFactory.create()
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateCat(
+                $id: ID!,
+                $input: UpdateCatInput! 
+            ){
+                updateCat(id: $id, input: $input){
+                    cat{
+                        id
+                    }
+                }
+            }
+        """
+        result = schema.execute(
+            mutation,
+            variables= {
+                "id": to_global_id("UserNode", user.id),
+                "input": {
+                    "name": "John Doe",
+                    "owner": to_global_id("UserNode", user.id)
+                }
+            },
+            context=Dict(user=user)
+        )
+        self.assertEqual(len(result.errors), 1)
+
+        result = schema.execute(
+            mutation,
+            variables= {
+                "id": to_global_id("UserNode", user.id),
+                "input": {
+                    "name": "Kitty",
+                    "owner": to_global_id("UserNode", user.id)
+                }
+            },
+            context=Dict(user=user)
+        )
+        self.assertIsNone(result.errors)
