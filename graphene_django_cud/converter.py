@@ -90,7 +90,7 @@ def convert_choices_field(field, choices, required=None):
             return named_choices_descriptions[self.name]
 
     enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
-    return enum(description=field.help_text, required=required)
+    return enum(description=field.help_text, required=is_required(field, required))
 
 
 def convert_django_field_with_choices(

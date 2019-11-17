@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import Iterable
 
 import graphene
 from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist
@@ -475,6 +476,43 @@ class DjangoCudBase(Mutation):
 
         return obj
 
+    @classmethod
+    def get_permissions(cls, root, info, *args, **kwargs) -> Iterable[str]:
+        return cls._meta.permissions
+
+    @classmethod
+    def check_permissions(cls, root, info, *args, **kwargs) -> None:
+        get_permissions = getattr(cls, 'get_permissions', None)
+        if not callable(get_permissions):
+            raise TypeError("The `get_permissions` attribute of a mutation must be callable.")
+
+        permissions = cls.get_permissions(root, info, *args, **kwargs)
+
+        if permissions and len(permissions) > 0:
+            if not info.context.user.has_perms(permissions):
+                raise GraphQLError("Not permitted to access this mutation.")
+
+    @classmethod
+    def validate(cls, root, info, input, **kwargs):
+        for name, value in super(type(input), input).items():
+            validate_field_name = f"validate_{name}"
+            validate_field = getattr(cls, validate_field_name, None)
+
+            if validate_field and callable(validate_field):
+                validate_field(root, info, value, input, **kwargs)
+
+    @classmethod
+    def before_mutate(cls, root, info, *args, **kwargs):
+        return None
+
+    @classmethod
+    def before_save(cls, root, info, *args, **kwargs):
+        return None
+
+    @classmethod
+    def after_mutate(cls, root, info, *args, **kwargs):
+        return None
+
 
 class DjangoUpdateMutationOptions(MutationOptions):
     model = None
@@ -596,38 +634,62 @@ class DjangoUpdateMutation(DjangoCudBase):
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
-    def get_queryset(self):
-        Model = self._meta.model
+    @classmethod
+    def get_queryset(cls):
+        Model = cls._meta.model
         return Model.objects
 
     @classmethod
     def mutate(cls, root, info, id, input):
+        updated_input = cls.before_mutate(
+            root,
+            info,
+            id,
+            input
+        )
+        if updated_input:
+            input = updated_input
+
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
-        if cls._meta.permissions and len(cls._meta.permissions) > 0:
-            if not info.context.user.has_perms(cls._meta.permissions):
-                raise GraphQLError("Not permitted to access this mutation.")
+        cls.check_permissions(root, info, id, input)
 
         id = disambiguate_id(id)
         Model = cls._meta.model
-        queryset = cls.get_queryset(Model)
+        queryset = cls.get_queryset()
         obj = queryset.get(pk=id)
         auto_context_fields = cls._meta.auto_context_fields or {}
 
-        obj = cls.update_obj(
-            obj,
-            input,
-            info,
-            auto_context_fields,
-            cls._meta.many_to_many_extras,
-            cls._meta.foreign_key_extras,
-            cls._meta.many_to_one_extras,
-            Model
-        )
+        cls.validate(root, info, input, id=id, obj=obj)
 
-        obj.save()
+        with transaction.atomic():
+            obj = cls.update_obj(
+                obj,
+                input,
+                info,
+                auto_context_fields,
+                cls._meta.many_to_many_extras,
+                cls._meta.foreign_key_extras,
+                cls._meta.many_to_one_extras,
+                Model
+            )
+
+            updated_obj = cls.before_save(
+                root,
+                info,
+                obj,
+                id,
+                input
+            )
+
+            if updated_obj:
+                obj = updated_obj
+
+            obj.save()
+
         kwargs = {cls._meta.return_field_name: obj}
+        cls.after_mutate(root, info, kwargs)
 
         return cls(**kwargs)
 
@@ -740,38 +802,62 @@ class DjangoPatchMutation(DjangoCudBase):
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
-    def get_queryset(self):
-        Model = self._meta.model
+    @classmethod
+    def get_queryset(cls):
+        Model = cls._meta.model
         return Model.objects
 
     @classmethod
     def mutate(cls, root, info, id, input):
+        updated_input = cls.before_mutate(
+            root,
+            info,
+            id,
+            input
+        )
+        if updated_input:
+            input = updated_input
+
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
-        if cls._meta.permissions and len(cls._meta.permissions) > 0:
-            if not info.context.user.has_perms(cls._meta.permissions):
-                raise GraphQLError("Not permitted to access this mutation.")
+        cls.check_permissions(root, info, id, input)
 
         id = disambiguate_id(id)
         Model = cls._meta.model
-        queryset = cls.get_queryset(Model)
+        queryset = cls.get_queryset()
         obj = queryset.get(pk=id)
         auto_context_fields = cls._meta.auto_context_fields or {}
 
-        obj = cls.update_obj(
-            obj,
-            input,
-            info,
-            auto_context_fields,
-            cls._meta.many_to_many_extras,
-            cls._meta.foreign_key_extras,
-            cls._meta.many_to_one_extras,
-            Model
-        )
+        cls.validate(root, info, input, id=id, obj=obj)
 
-        obj.save()
+        with transaction.atomic():
+            obj = cls.update_obj(
+                obj,
+                input,
+                info,
+                auto_context_fields,
+                cls._meta.many_to_many_extras,
+                cls._meta.foreign_key_extras,
+                cls._meta.many_to_one_extras,
+                Model
+            )
+
+            updated_obj = cls.before_save(
+                root,
+                info,
+                obj,
+                id,
+                input
+            )
+
+            if updated_obj:
+                obj = updated_obj
+
+            obj.save()
+
         kwargs = {cls._meta.return_field_name: obj}
+        cls.after_mutate(root, info, kwargs)
 
         return cls(**kwargs)
 
@@ -886,35 +972,55 @@ class DjangoCreateMutation(DjangoCudBase):
         _meta.InputType = InputType
         _meta.input_type_name = input_type_name
         _meta.login_required = _meta.login_required or (
-                _meta.permissions and len(_meta.permissions) > 0
+            _meta.permissions and len(_meta.permissions) > 0
         )
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
+
     @classmethod
     def mutate(cls, root, info, input):
+        updated_input = cls.before_mutate(
+            root,
+            info,
+            input
+        )
+        if updated_input:
+            input = updated_input
+
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
-        if cls._meta.permissions and len(cls._meta.permissions) > 0:
-            if not info.context.user.has_perms(cls._meta.permissions):
-                raise GraphQLError("Not permitted to access this mutation.")
+        cls.check_permissions(root, info, input)
+        cls.validate(root, info, input)
 
         Model = cls._meta.model
         model_field_values = {}
         auto_context_fields = cls._meta.auto_context_fields or {}
 
-        obj = cls.create_obj(
-            input,
-            info,
-            auto_context_fields,
-            cls._meta.many_to_many_extras,
-            cls._meta.foreign_key_extras,
-            cls._meta.many_to_one_extras,
-            Model
-        )
+        with transaction.atomic():
+            obj = cls.create_obj(
+                input,
+                info,
+                auto_context_fields,
+                cls._meta.many_to_many_extras,
+                cls._meta.foreign_key_extras,
+                cls._meta.many_to_one_extras,
+                Model
+            )
+            updated_obj = cls.before_save(
+                root,
+                info,
+                input
+            )
+            if updated_obj:
+                updated_obj.save()
+
+
 
         kwargs = {cls._meta.return_field_name: obj}
+        cls.after_mutate(root, info, kwargs)
+
         return cls(**kwargs)
 
 
@@ -1046,12 +1152,18 @@ class DjangoBatchCreateMutation(DjangoCudBase):
 
     @classmethod
     def mutate(cls, root, info, input):
+        updated_input = cls.before_mutate(
+            root,
+            info,
+            input
+        )
+        if updated_input:
+            input = updated_input
+
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
-        if cls._meta.permissions and len(cls._meta.permissions) > 0:
-            if not info.context.user.has_perms(cls._meta.permissions):
-                raise GraphQLError("Not permitted to access this mutation.")
+        cls.check_permissions(root, info, input)
 
         Model = cls._meta.model
         model_field_values = {}
@@ -1061,6 +1173,7 @@ class DjangoBatchCreateMutation(DjangoCudBase):
 
         with transaction.atomic():
             for data in input:
+                cls.validate(root, info, data, full_input=input)
                 obj = cls.create_obj(
                     data,
                     info,
@@ -1072,7 +1185,16 @@ class DjangoBatchCreateMutation(DjangoCudBase):
                 )
                 created_objs.append(obj)
 
+            updated_objs = cls.before_save(
+                root,
+                info,
+                created_objs
+            )
+            if updated_objs:
+                created_objs = updated_objs
+
         kwargs = {cls._meta.return_field_name: created_objs}
+        cls.after_mutate(root, info, kwargs)
         return cls(**kwargs)
 
 
@@ -1082,7 +1204,7 @@ class DjangoDeleteMutationOptions(MutationOptions):
     login_required = None
 
 
-class DjangoDeleteMutation(Mutation):
+class DjangoDeleteMutation(DjangoCudBase):
     class Meta:
         abstract = True
 
@@ -1120,20 +1242,40 @@ class DjangoDeleteMutation(Mutation):
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
     @classmethod
+    def get_queryset(cls):
+        Model = cls._meta.model
+        return Model.objects
+
+    @classmethod
     def mutate(cls, root, info, id):
+        cls.before_mutate(
+            root,
+            info,
+            id
+        )
+
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
-        if cls._meta.permissions and len(cls._meta.permissions) > 0:
-            if not info.context.user.has_perms(cls._meta.permissions):
-                raise GraphQLError("Not permitted to access this mutation.")
+        cls.check_permissions(root, info, id)
 
         Model = cls._meta.model
         id = disambiguate_id(id)
 
         try:
-            obj = Model.objects.get(pk=id)
+            obj = cls.get_queryset().get(pk=id)
+            cls.before_save(
+                root,
+                info,
+                obj,
+                id
+            )
             obj.delete()
+            cls.after_mutate(
+                root,
+                info,
+
+            )
             return cls(found=True, deleted_id=id)
         except ObjectDoesNotExist:
             return cls(found=False)
@@ -1147,7 +1289,7 @@ class DjangoBatchDeleteMutationOptions(MutationOptions):
     login_required = None
 
 
-class DjangoBatchDeleteMutation(Mutation):
+class DjangoBatchDeleteMutation(DjangoCudBase):
     class Meta:
         abstract = True
 
@@ -1195,14 +1337,27 @@ class DjangoBatchDeleteMutation(Mutation):
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
+
+    @classmethod
+    def get_queryset(cls):
+        Model = cls._meta.model
+        return Model.objects
+
+
     @classmethod
     def mutate(cls, root, info, input):
+        updated_input = cls.before_mutate(
+            root,
+            info,
+            input
+        )
+        if updated_input:
+            input = updated_input
+
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
-        if cls._meta.permissions and len(cls._meta.permissions) > 0:
-            if not info.context.user.has_perms(cls._meta.permissions):
-                raise GraphQLError("Not permitted to access this mutation.")
+        cls.check_permissions(root, info, input)
 
         Model = cls._meta.model
         model_field_values = {}
@@ -1249,13 +1404,28 @@ class DjangoBatchDeleteMutation(Mutation):
 
             model_field_values[name] = new_value
 
-        filter_qs = Model.objects.filter(**model_field_values)
+        filter_qs = cls.get_queryset().filter(**model_field_values)
+        updated_qs = cls.before_save(
+            root,
+            info,
+            filter_qs
+        )
+
+        if updated_qs:
+            filter_qs = updated_qs
+
         ids = [
             to_global_id(get_global_registry().get_type_for_model(Model).__name__, id)
             for id in filter_qs.values_list("id", flat=True)
         ]
+
         deletion_count, _ = filter_qs.delete()
 
+        cls.after_mutate(
+            root,
+            info,
+            deletion_count,
+            ids
+        )
+
         return cls(deletion_count=deletion_count, deleted_ids=ids)
-
-

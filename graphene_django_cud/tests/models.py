@@ -1,11 +1,9 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.db.models import ManyToOneRel
-
-ManyToOneRel
 
 
-class User(models.Model):
-    name = models.CharField(max_length=255)
+class User(AbstractUser):
+    email = models.EmailField(unique=True)
 
 
 class Mouse(models.Model):
