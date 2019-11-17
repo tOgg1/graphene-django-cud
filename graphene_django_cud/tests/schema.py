@@ -7,7 +7,9 @@ from graphene_django_cud.mutations import (
     DjangoPatchMutation,
     DjangoUpdateMutation,
     DjangoDeleteMutation,
-    DjangoBatchDeleteMutation, DjangoBatchCreateMutation, DjangoBatchPatchMutation)
+    DjangoBatchDeleteMutation,
+    DjangoBatchCreateMutation,
+)
 from graphene_django_cud.tests.models import User, Cat, Dog, Mouse
 
 
@@ -56,7 +58,7 @@ class CreateUserMutation(DjangoCreateMutation):
                 "add": {
                     "many_to_many_extras": {
                         "friends": {"add": {"type": "CreateMouseInput"}}
-                    },
+                    }
                 }
             },
         }
@@ -65,10 +67,8 @@ class CreateUserMutation(DjangoCreateMutation):
 class BatchCreateUserMutation(DjangoBatchCreateMutation):
     class Meta:
         model = User
-        use_type_name = 'CreateUserInput'
-        many_to_one_extras = {
-            "cats": {"exact": {"type": "auto"}}
-        }
+        use_type_name = "CreateUserInput"
+        many_to_one_extras = {"cats": {"exact": {"type": "auto"}}}
 
 
 class PatchUserMutation(DjangoPatchMutation):
@@ -80,7 +80,7 @@ class PatchUserMutation(DjangoPatchMutation):
                 "add": {
                     "many_to_many_extras": {
                         "friends": {"add": {"type": "CreateMouseInput"}}
-                    },
+                    }
                 }
             },
         }
@@ -164,10 +164,6 @@ class PatchDogMutation(DjangoPatchMutation):
         }
 
 
-class BatchPatchDogMutation(DjangoBatchPatchMutation):
-    class Meta:
-        model = Dog
-
 
 class UpdateDogMutation(DjangoUpdateMutation):
     class Meta:
@@ -202,9 +198,7 @@ class DeleteMouseMutation(DjangoDeleteMutation):
 class BatchDeleteMouseMutation(DjangoBatchDeleteMutation):
     class Meta:
         model = Mouse
-        filter_fields = (
-            'id__in', 'name__contains', 'friends__owner__name'
-        )
+        filter_fields = ("id__in", "name__contains", "friends__owner__first_name")
 
 
 class Mutations(graphene.ObjectType):
