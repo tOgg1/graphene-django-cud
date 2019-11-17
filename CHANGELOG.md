@@ -1,5 +1,13 @@
 # Changelog
 
+## Version 0.1.0
+* Improve test environment
+* Add `check_permissions` and `get_permissions` methods. The methods can be overridden to provide custom permissions handling.
+* Fix issue with `required`-handling for fields with choices.
+* Add queryset handling to delete mutations.
+* Add field validation.
+* Add `before_mutate`, `before_save` and `after_mutate` hooks.
+
 ## Version 0.0.16
 * Fix bug related to conversion of filter fields.
 
