@@ -110,6 +110,10 @@ class CreateCatMutation(DjangoCreateMutation):
         }
         foreign_key_extras = {"owner": {"type": "CreateUserInput"}}
 
+class BatchCreateCatMutation(DjangoBatchCreateMutation):
+    class Meta:
+        model = Cat
+
 
 class UpdateCatMutation(DjangoUpdateMutation):
     class Meta:
@@ -213,6 +217,7 @@ class Mutations(graphene.ObjectType):
     update_dog = UpdateDogMutation.Field()
     delete_dog = DeleteDogMutation.Field()
 
+    batch_create_cat = BatchCreateCatMutation.Field()
     create_cat = CreateCatMutation.Field()
     patch_cat = PatchCatMutation.Field()
     update_cat = UpdateCatMutation.Field()
