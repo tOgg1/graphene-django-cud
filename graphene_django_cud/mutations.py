@@ -636,7 +636,7 @@ class DjangoUpdateMutation(DjangoCudBase):
 
         id = disambiguate_id(id)
         Model = cls._meta.model
-        queryset = cls.get_queryset(Model)
+        queryset = cls.get_queryset()
         obj = queryset.get(pk=id)
         auto_context_fields = cls._meta.auto_context_fields or {}
 
@@ -781,7 +781,7 @@ class DjangoPatchMutation(DjangoCudBase):
 
         id = disambiguate_id(id)
         Model = cls._meta.model
-        queryset = cls.get_queryset(Model)
+        queryset = cls.get_queryset()
         obj = queryset.get(pk=id)
         auto_context_fields = cls._meta.auto_context_fields or {}
 
