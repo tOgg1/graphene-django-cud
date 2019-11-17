@@ -482,14 +482,13 @@ class DjangoCudBase(Mutation):
 
     @classmethod
     def check_permissions(cls, root, info, *args, **kwargs) -> None:
-        permissions = []
         get_permissions = getattr(cls, 'get_permissions', None)
         if not callable(get_permissions):
             raise TypeError("The `get_permissions` attribute of a mutation must be callable.")
 
         permissions = cls.get_permissions(root, info, *args, **kwargs)
 
-        if len(permissions) > 0:
+        if permissions and len(permissions) > 0:
             if not info.context.user.has_perms(permissions):
                 raise GraphQLError("Not permitted to access this mutation.")
 
