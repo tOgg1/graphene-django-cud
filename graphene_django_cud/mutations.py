@@ -613,8 +613,9 @@ class DjangoUpdateMutation(DjangoCudBase):
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
-    def get_queryset(self):
-        Model = self._meta.model
+    @classmethod
+    def get_queryset(cls):
+        Model = cls._meta.model
         return Model.objects
 
     @classmethod
@@ -755,8 +756,9 @@ class DjangoPatchMutation(DjangoCudBase):
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
-    def get_queryset(self):
-        Model = self._meta.model
+    @classmethod
+    def get_queryset(cls):
+        Model = cls._meta.model
         return Model.objects
 
     @classmethod
@@ -1129,6 +1131,11 @@ class DjangoDeleteMutation(DjangoCudBase):
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
     @classmethod
+    def get_queryset(cls):
+        Model = cls._meta.model
+        return Model.objects
+
+    @classmethod
     def mutate(cls, root, info, id):
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
@@ -1139,7 +1146,7 @@ class DjangoDeleteMutation(DjangoCudBase):
         id = disambiguate_id(id)
 
         try:
-            obj = Model.objects.get(pk=id)
+            obj = cls.get_queryset().get(pk=id)
             obj.delete()
             return cls(found=True, deleted_id=id)
         except ObjectDoesNotExist:
@@ -1202,6 +1209,13 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
+
+    @classmethod
+    def get_queryset(cls):
+        Model = cls._meta.model
+        return Model.objects
+
+
     @classmethod
     def mutate(cls, root, info, input):
         if cls._meta.login_required and not info.context.user.is_authenticated:
@@ -1254,7 +1268,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
 
             model_field_values[name] = new_value
 
-        filter_qs = Model.objects.filter(**model_field_values)
+        filter_qs = cls.get_queryset().filter(**model_field_values)
         ids = [
             to_global_id(get_global_registry().get_type_for_model(Model).__name__, id)
             for id in filter_qs.values_list("id", flat=True)
