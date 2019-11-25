@@ -1,5 +1,10 @@
 # Graphene Django CUD
 
+![Version](https://img.shields.io/pypi/v/graphene-django-cud)
+![Build status](https://travis-ci.org/tOgg1/graphene-django-cud.svg?branch=develop)
+[![Documentation Status](https://readthedocs.org/projects/graphene-django-cud/badge/?version=latest)](https://graphene-django-cud.readthedocs.io/en/latest/?badge=latest)
+![License](https://img.shields.io/github/license/tOgg1/graphene-django-cud)
+
 This package contains a number of helper mutations making it easy to construct create, update and delete mutations for django models.
 
 The helper mutations are:
