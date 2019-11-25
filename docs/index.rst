@@ -1,20 +1,35 @@
-.. graphene-django-cud documentation master file, created by
-   sphinx-quickstart on Sun Nov 24 15:42:16 2019.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to graphene-django-cud's documentation!
 ===============================================
+Graphene Django CUD
+===============================================
+
+Graphene-django-cud is an extension of graphene-django, supplying a number of
+helper classes designed to fast-track creation of create, update and delete mutations.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: User Guide
+
+   guide/install
+   guide/usage
+   guide/mutations
+   guide/included-and-excluded-fields
+   guide/optional-fields
+   guide/permissions
+   guide/validation
+   guide/nested-fields
+   guide/custom-field-handling
+   guide/auto-context-fields
+   guide/other-hooks
+   guide/naming
+   guide/reusing-types
+   guide/limitations
 
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Reference
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   ref/mutation-lifecycle.rst
+   ref/models/index
+   ref/conversion
+   ref/custom-types
