@@ -21,6 +21,7 @@ helper classes designed to fast-track creation of create, update and delete muta
    guide/auto-context-fields
    guide/other-hooks
    guide/naming
+   guide/field-types
    guide/reusing-types
    guide/limitations
 
