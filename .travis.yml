@@ -9,6 +9,7 @@ script:
 - make test
 before_deploy:
 - make build
+- pip install twine wheel
 deploy:
   provider: script
   script: make release
