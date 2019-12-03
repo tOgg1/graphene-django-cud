@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.2.0
+* Add the `field_types` meta-field, which allows users to override converted field types.
+
 ## Version 0.1.0
 * Improve test environment
 * Add `check_permissions` and `get_permissions` methods. The methods can be overridden to provide custom permissions handling.
