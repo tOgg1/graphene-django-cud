@@ -71,7 +71,8 @@ def get_input_fields_for_model(
     many_to_many_extras=None,
     foreign_key_extras=None,
     many_to_one_extras=None,
-    parent_type_name=""
+    parent_type_name="",
+    field_types=None
 ) -> OrderedDict:
 
     registry = get_global_registry()
@@ -81,6 +82,7 @@ def get_input_fields_for_model(
     many_to_many_extras = many_to_many_extras or {}
     foreign_key_extras = foreign_key_extras or {}
     many_to_one_extras = many_to_one_extras or {}
+    field_types = field_types or {}
 
     fields = OrderedDict()
     fields_lookup = {}
@@ -88,6 +90,12 @@ def get_input_fields_for_model(
         # We ignore the primary key
         if getattr(field, "primary_key", False):
             continue
+
+        # If the field has an override, use that
+        if name in field_types:
+            fields[name] = field_types[name]
+            continue
+
 
         # Save for later
         fields_lookup[name] = field
@@ -179,6 +187,7 @@ def get_input_fields_for_model(
                     data.get('foreign_key_extras'),
                     data.get('many_to_one_extras'),
                     parent_type_name=_type_name,
+                    field_types=data.get('field_types')
                 )
                 InputType = type(_type_name, (InputObjectType,), converted_fields)
                 meta_registry.register(_type_name, {
@@ -188,6 +197,7 @@ def get_input_fields_for_model(
                     'many_to_many_extras': data.get('many_to_many_extras', {}),
                     'many_to_one_extras': data.get('many_to_one_extras', {}),
                     'foreign_key_extras': data.get('auto_context_fields', {}),
+                    'field_types': data.get('field_types', {}),
                 })
                 _field = graphene.List(
                     type(_type_name, (InputObjectType,), converted_fields),
@@ -215,6 +225,7 @@ def get_all_optional_input_fields_for_model(
         foreign_key_extras=None,
         many_to_one_extras=None,
         parent_type_name="",
+        field_types=None
 ):
     registry = get_global_registry()
     meta_registry = get_type_meta_registry()
@@ -223,12 +234,18 @@ def get_all_optional_input_fields_for_model(
     many_to_many_extras = many_to_many_extras or {}
     foreign_key_extras = foreign_key_extras or {}
     many_to_one_extras = many_to_one_extras or {}
+    field_types = field_types or {}
 
     fields = OrderedDict()
     fields_lookup = {}
     for name, field in model_fields:
         # We ignore the primary key
         if getattr(field, "primary_key", False):
+            continue
+
+        # If the field has an override, use that
+        if name in field_types:
+            fields[name] = field_types[name]
             continue
 
         # Save for later
@@ -316,7 +333,8 @@ def get_all_optional_input_fields_for_model(
                     data.get('many_to_many_extras'),
                     data.get('foreign_key_extras'),
                     data.get('many_to_one_extras'),
-                    parent_type_name=_type_name
+                    parent_type_name=_type_name,
+                    field_types=data.get('field_types')
                 )
                 InputType = type(_type_name, (InputObjectType,), converted_fields)
                 meta_registry.register(_type_name, {
@@ -326,6 +344,7 @@ def get_all_optional_input_fields_for_model(
                     'many_to_many_extras': data.get('many_to_many_extras', {}),
                     'many_to_one_extras': data.get('many_to_one_extras', {}),
                     'foreign_key_extras': data.get('auto_context_fields', {}),
+                    'field_types': data.get('field_types', {})
                 })
                 _field = graphene.List(
                     type(_type_name, (InputObjectType,), converted_fields),

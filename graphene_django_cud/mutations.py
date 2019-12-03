@@ -518,18 +518,17 @@ class DjangoUpdateMutationOptions(MutationOptions):
     model = None
     only_fields = None
     exclude_fields = None
-    return_field_name = None
     permissions = None
     login_required = None
     auto_context_fields = None
     optional_fields = ()
     required_fields = None
-    nested_fields = None
     type_name = None
-
+    return_field_name = None
     many_to_many_extras = None
     many_to_one_extras=None
     foreign_key_extras = None
+    field_types = None
 
 
 class DjangoUpdateMutation(DjangoCudBase):
@@ -552,6 +551,7 @@ class DjangoUpdateMutation(DjangoCudBase):
             many_to_one_extras=None,
             foreign_key_extras=None,
             type_name="",
+            field_types=None,
             **kwargs,
     ):
         registry = get_global_registry()
@@ -583,7 +583,8 @@ class DjangoUpdateMutation(DjangoCudBase):
             many_to_many_extras=many_to_many_extras,
             foreign_key_extras=foreign_key_extras,
             many_to_one_extras=many_to_one_extras,
-            parent_type_name=input_type_name
+            parent_type_name=input_type_name,
+            field_types=field_types,
         )
 
         InputType = type(
@@ -599,7 +600,8 @@ class DjangoUpdateMutation(DjangoCudBase):
                 'required_fields': required_fields,
                 'many_to_many_extras': many_to_many_extras or {},
                 'many_to_one_extras': many_to_one_extras or {},
-                'foreign_key_extras': foreign_key_extras or {}
+                'foreign_key_extras': foreign_key_extras or {},
+                'field_types': field_types or {},
             }
         )
 
@@ -628,6 +630,7 @@ class DjangoUpdateMutation(DjangoCudBase):
         _meta.many_to_many_extras = many_to_many_extras
         _meta.many_to_one_extras = many_to_one_extras
         _meta.foreign_key_extras = foreign_key_extras
+        _meta.field_types = field_types or {}
         _meta.login_required = _meta.login_required or (
                 _meta.permissions and len(_meta.permissions) > 0
         )
@@ -706,6 +709,7 @@ class DjangoPatchMutationOptions(MutationOptions):
     many_to_one_extras = None
     foreign_key_extras = None
     type_name = None
+    field_types = None
 
 
 class DjangoPatchMutation(DjangoCudBase):
@@ -726,6 +730,7 @@ class DjangoPatchMutation(DjangoCudBase):
             many_to_many_extras = None,
             foreign_key_extras = None,
             type_name=None,
+            field_types=None,
             **kwargs,
     ):
         registry = get_global_registry()
@@ -756,6 +761,7 @@ class DjangoPatchMutation(DjangoCudBase):
             foreign_key_extras=foreign_key_extras,
             many_to_one_extras=many_to_one_extras,
             parent_type_name=type_name,
+            field_types=field_types
         )
 
         InputType = type(
@@ -769,7 +775,8 @@ class DjangoPatchMutation(DjangoCudBase):
                 'auto_context_fields': auto_context_fields or {},
                 'many_to_many_extras': many_to_many_extras or {},
                 'many_to_one_extras': many_to_one_extras or {},
-                'foreign_key_extras': foreign_key_extras or {}
+                'foreign_key_extras': foreign_key_extras or {},
+                'field_types': field_types or {},
             }
         )
 
@@ -796,6 +803,7 @@ class DjangoPatchMutation(DjangoCudBase):
         _meta.many_to_many_extras = many_to_many_extras
         _meta.many_to_one_extras = many_to_one_extras
         _meta.foreign_key_extras = foreign_key_extras
+        _meta.field_types = field_types or {}
         _meta.login_required = _meta.login_required or (
                 _meta.permissions and len(_meta.permissions) > 0
         )
@@ -876,6 +884,7 @@ class DjangoCreateMutationOptions(MutationOptions):
     many_to_one_extras = None
     foreign_key_extras = None
     type_name = None
+    field_types=None
 
 
 class DjangoCreateMutation(DjangoCudBase):
@@ -898,6 +907,7 @@ class DjangoCreateMutation(DjangoCudBase):
             foreign_key_extras = None,
             many_to_one_extras = None,
             type_name=None,
+            field_types=None,
             **kwargs,
     ):
         registry = get_global_registry()
@@ -930,6 +940,7 @@ class DjangoCreateMutation(DjangoCudBase):
             foreign_key_extras,
             many_to_one_extras,
             parent_type_name=input_type_name,
+            field_types=field_types,
         )
 
         InputType = type(
@@ -944,7 +955,8 @@ class DjangoCreateMutation(DjangoCudBase):
                 'optional_fields': optional_fields,
                 'required_fields': required_fields,
                 'many_to_many_extras': many_to_many_extras or {},
-                'foreign_key_extras': foreign_key_extras or {}
+                'foreign_key_extras': foreign_key_extras or {},
+                'field_types': field_types or {}
             }
         )
 
@@ -969,6 +981,7 @@ class DjangoCreateMutation(DjangoCudBase):
         _meta.many_to_many_extras = many_to_many_extras or {}
         _meta.foreign_key_extras = foreign_key_extras
         _meta.many_to_one_extras = many_to_one_extras or {}
+        _meta.field_types = field_types or {}
         _meta.InputType = InputType
         _meta.input_type_name = input_type_name
         _meta.login_required = _meta.login_required or (
@@ -1039,6 +1052,7 @@ class DjangoBatchCreateMutationOptions(MutationOptions):
     foreign_key_extras = None
     type_name = None
     use_type_name = None
+    field_types = None
 
 
 class DjangoBatchCreateMutation(DjangoCudBase):
@@ -1062,6 +1076,7 @@ class DjangoBatchCreateMutation(DjangoCudBase):
             many_to_one_extras = None,
             type_name=None,
             use_type_name=None,
+            field_types=None,
             **kwargs,
     ):
         registry = get_global_registry()
@@ -1103,6 +1118,7 @@ class DjangoBatchCreateMutation(DjangoCudBase):
                 foreign_key_extras,
                 many_to_one_extras,
                 parent_type_name=input_type_name,
+                field_types=field_types,
             )
 
             InputType = type(
@@ -1117,7 +1133,8 @@ class DjangoBatchCreateMutation(DjangoCudBase):
                     'optional_fields': optional_fields,
                     'required_fields': required_fields,
                     'many_to_many_extras': many_to_many_extras or {},
-                    'foreign_key_extras': foreign_key_extras or {}
+                    'foreign_key_extras': foreign_key_extras or {},
+                    'field_types': field_types or {}
                 }
             )
 
@@ -1142,6 +1159,7 @@ class DjangoBatchCreateMutation(DjangoCudBase):
         _meta.many_to_many_extras = many_to_many_extras or {}
         _meta.foreign_key_extras = foreign_key_extras
         _meta.many_to_one_extras = many_to_one_extras or {}
+        _meta.field_types = field_types or {}
         _meta.InputType = InputType
         _meta.input_type_name = input_type_name
         _meta.login_required = _meta.login_required or (
