@@ -23,6 +23,7 @@ class Cat(models.Model):
 class Dog(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='dogs')
     name = models.TextField()
+    tag = models.CharField(max_length=16, default="Dog-1", help_text="Non-unique identifier for the dog, on the form 'Dog-%d'")
 
     enemies = models.ManyToManyField(
         Cat,

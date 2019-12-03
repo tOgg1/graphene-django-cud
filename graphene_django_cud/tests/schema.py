@@ -1,3 +1,5 @@
+import logging
+
 import graphene
 from graphene import Node, Schema
 from graphene_django import DjangoObjectType, DjangoConnectionField
@@ -56,6 +58,9 @@ class CreateUserMutation(DjangoCreateMutation):
             "cats": {"exact": {"type": "auto"}},
             "dogs": {
                 "add": {
+                    "field_types": {
+                        "tag": graphene.Int()
+                    },
                     "many_to_many_extras": {
                         "friends": {"add": {"type": "CreateMouseInput"}}
                     }
@@ -153,12 +158,24 @@ class DeleteCatMutation(DjangoDeleteMutation):
 class CreateDogMutation(DjangoCreateMutation):
     class Meta:
         model = Dog
+        field_types = {
+            "tag": graphene.Int(required=False)
+        }
+
         many_to_many_extras = {"friends": {"add": {"type": "CreateMouseInput"}}}
+
+    @classmethod
+    def handle_tag(cls, value, *args, **kwargs):
+        return "Dog-" + str(value)
+
 
 
 class PatchDogMutation(DjangoPatchMutation):
     class Meta:
         model = Dog
+        field_types = {
+            "tag": graphene.Int(required=False)
+        }
         many_to_many_extras = {
             "enemies": {
                 "add": {"type": "CreateDogInput"},
@@ -166,6 +183,10 @@ class PatchDogMutation(DjangoPatchMutation):
                 "exact": {"type": "ID"},
             }
         }
+
+    @classmethod
+    def handle_tag(cls, value, *args, **kwargs):
+        return "Dog-" + str(value)
 
 
 

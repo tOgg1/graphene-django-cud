@@ -6,8 +6,8 @@ from graphql import ResolveInfo
 from graphql_relay import to_global_id
 
 from graphene_django_cud.mutations import DjangoUpdateMutation
-from graphene_django_cud.tests.factories import UserFactory, CatFactory, UserWithPermissionsFactory
-from graphene_django_cud.tests.models import User, Cat
+from graphene_django_cud.tests.factories import UserFactory, CatFactory, UserWithPermissionsFactory, DogFactory
+from graphene_django_cud.tests.models import User, Cat, Dog
 from graphene_django_cud.util import disambiguate_id
 
 
@@ -464,3 +464,67 @@ class TestUpdateMutation(TestCase):
             context=Dict(user=user)
         )
         self.assertIsNone(result.errors)
+
+    def test_field_types__specified__overrides_field_type(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateDogMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Dog
+                field_types = {
+                    "tag": graphene.Int()
+                }
+
+            @classmethod
+            def handle_tag(self, value, *args, **kwargs):
+                return f"Dog-{value}"
+
+        class Mutations(graphene.ObjectType):
+            update_dog = UpdateDogMutation.Field()
+
+        dog = DogFactory.create()
+        user = UserFactory.create()
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateDog(
+                $id: ID!,
+                $input: UpdateDogInput! 
+            ){
+                updateDog(id: $id, input: $input){
+                    dog{
+                        id
+                    }
+                }
+            }
+        """
+        # Result with a string in the tag field should fail now
+        result = schema.execute(
+            mutation,
+            variables= {
+                "id": to_global_id("DogNode", dog.id),
+                "input": {
+                    "name": "Sparky",
+                    "tag": "not-an-int",
+                    "owner": to_global_id("UserNode", user.id)
+                }
+            },
+            context=Dict(user=user)
+        )
+        self.assertEqual(len(result.errors), 1)
+
+        result = schema.execute(
+            mutation,
+            variables= {
+                "id": to_global_id("DogNode", dog.id),
+                "input": {
+                    "name": "Sparky",
+                    "tag": 25,
+                    "owner": to_global_id("UserNode", user.id)
+                }
+            },
+            context=Dict(user=user)
+        )
+        self.assertIsNone(result.errors)
+
