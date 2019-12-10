@@ -79,7 +79,7 @@ def get_choices(choices):
 
 def convert_choices_field(field, choices, required=None):
     meta = field.model._meta
-    name = to_camel_case("{}_{}".format(meta.object_name, field.name))
+    name = to_camel_case("{}_{}_{}".format(meta.object_name, field.name, "Input"))
     choices = list(get_choices(choices))
     named_choices = [(c[0], c[1]) for c in choices]
     named_choices_descriptions = {c[0]: c[2] for c in choices}
@@ -90,7 +90,10 @@ def convert_choices_field(field, choices, required=None):
             return named_choices_descriptions[self.name]
 
     enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
-    return enum(description=field.help_text, required=is_required(field, required))
+    # Note that we do not instantiate the field here, so we can store it un-instantiated in the registry.
+    # This is the allow different parameters (e.g. `required`) to be passed to the field.
+    return enum
+    # return enum(description=field.help_text, required=is_required(field, required))
 
 
 def convert_django_field_with_choices(
@@ -102,15 +105,23 @@ def convert_django_field_with_choices(
 ):
     choices = getattr(field, "choices", None)
     if choices:
-        # Fetch this from registry, if exists. We don't want to duplicate enum fields
+        registry_name = to_camel_case("{}_{}_{}".format(
+            field.model._meta.object_name,
+            field.name,
+            "Input"
+        ))
+        # Fetch this from registry, if exists. We don't want to duplicate enum fields.
+        enum = None
         if registry:
-            from_registry = registry.get_converted_field(field)
+            from_registry = registry.get_converted_field(registry_name)
             if from_registry:
-                return from_registry
+                return from_registry(description=field.help_text, required=is_required(field, required))
 
         converted = convert_choices_field(field, choices, required)
         # Register enum fields
-        registry.register_converted_field(field, converted)
+        if registry:
+            registry.register_converted_field(registry_name, converted)
+        return converted(description=field.help_text, required=is_required(field, required))
     else:
         converted = convert_django_field_to_input(
             field,
