@@ -1,5 +1,3 @@
-import logging
-
 import graphene
 from graphene import Node, Schema
 from graphene_django import DjangoObjectType, DjangoConnectionField
@@ -178,7 +176,7 @@ class PatchDogMutation(DjangoPatchMutation):
         }
         many_to_many_extras = {
             "enemies": {
-                "add": {"type": "CreateDogInput"},
+                "add": {"type": "CreateCatInput"},
                 "remove": True,
                 "exact": {"type": "ID"},
             }

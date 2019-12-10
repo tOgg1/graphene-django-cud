@@ -507,6 +507,7 @@ class TestUpdateMutation(TestCase):
                 "input": {
                     "name": "Sparky",
                     "tag": "not-an-int",
+                    "breed": "HUSKY",
                     "owner": to_global_id("UserNode", user.id)
                 }
             },
@@ -520,6 +521,7 @@ class TestUpdateMutation(TestCase):
                 "id": to_global_id("DogNode", dog.id),
                 "input": {
                     "name": "Sparky",
+                    "breed": "HUSKY",
                     "tag": 25,
                     "owner": to_global_id("UserNode", user.id)
                 }
