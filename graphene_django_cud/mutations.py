@@ -231,11 +231,13 @@ class DjangoCudBase(Mutation):
         # Handle extras fields
         many_to_many_to_add = {}
         many_to_many_to_remove = {}
+        many_to_many_to_set = {}
         for name, extras in many_to_many_extras.items():
             field = Model._meta.get_field(name)
             if not name in many_to_many_to_add:
                 many_to_many_to_add[name] = []
                 many_to_many_to_remove[name] = []
+                many_to_many_to_set[name] = None  # None means that we should not (re)set the relation.
 
             for extra_name, data in extras.items():
                 field_name = name
@@ -256,7 +258,9 @@ class DjangoCudBase(Mutation):
                     info
                 )
 
-                if len(objs) > 0:
+                if operation == "exact":
+                    many_to_many_to_set[name] = objs
+                elif len(objs) > 0:
                     if operation == "add":
                         many_to_many_to_add[name] += objs
                     else:
@@ -265,12 +269,14 @@ class DjangoCudBase(Mutation):
 
         many_to_one_to_add = {}
         many_to_one_to_remove = {}
+        many_to_one_to_set = {}
         for name, extras in many_to_one_extras.items():
             field = Model._meta.get_field(name)
 
             if not name in many_to_one_to_add:
                 many_to_one_to_add[name] = []
                 many_to_one_to_remove[name] = []
+                many_to_one_to_set[name] = None  # None means that we should not (re)set the relation.
 
             for extra_name, data in extras.items():
                 field_name = name
@@ -284,7 +290,18 @@ class DjangoCudBase(Mutation):
 
                 operation = data.get('operation') or get_likely_operation_from_name(extra_name)
 
-                if operation == "add":
+                if operation == "exact":
+                    objs = cls.get_or_create_m2o_objs(
+                        obj,
+                        field,
+                        values,
+                        data,
+                        operation,
+                        info,
+                        Model
+                    )
+                    many_to_many_to_set[name] = objs
+                elif operation == "add":
                     objs = cls.get_or_create_m2o_objs(
                         obj,
                         field,
@@ -298,6 +315,9 @@ class DjangoCudBase(Mutation):
                 else:
                     many_to_one_to_remove[name] += disambiguate_ids(values)
 
+        for name, objs in many_to_one_to_set.items():
+            if objs is not None:
+                getattr(obj, name).set(objs)
 
         for name, objs in many_to_one_to_add.items():
             getattr(obj, name).add(*objs)
@@ -306,6 +326,10 @@ class DjangoCudBase(Mutation):
             # Only nullable foreign key reverse rels have the remove method,
             # so we use this method instead
             getattr(obj, name).filter(id__in=objs).delete()
+
+        for name, objs in many_to_many_to_set.items():
+            if objs is not None:
+                getattr(obj, name).set(objs)
 
         for name, objs in many_to_many_to_add.items():
             getattr(obj, name).add(*objs)
@@ -394,11 +418,13 @@ class DjangoCudBase(Mutation):
 
         many_to_many_to_add = {}
         many_to_many_to_remove = {}
+        many_to_many_to_set = {}
         for name, extras in many_to_many_extras.items():
             field = Model._meta.get_field(name)
             if not name in many_to_many_to_add:
                 many_to_many_to_add[name] = []
                 many_to_many_to_remove[name] = []
+                many_to_many_to_set[name] = None  # None means that we should not (re)set the relation.
 
             for extra_name, data in extras.items():
                 field_name = name
@@ -419,19 +445,23 @@ class DjangoCudBase(Mutation):
                     info
                 )
 
-                if operation == "add":
+                if operation == "exact":
+                    many_to_many_to_set[name] = objs
+                elif operation == "add":
                     many_to_many_to_add[name] += objs
                 else:
                     many_to_many_to_remove[name] += objs
 
         many_to_one_to_add = {}
         many_to_one_to_remove = {}
+        many_to_one_to_set = {}
         for name, extras in many_to_one_extras.items():
             field = Model._meta.get_field(name)
 
             if not name in many_to_one_to_add:
                 many_to_one_to_add[name] = []
                 many_to_one_to_remove[name] = []
+                many_to_one_to_set[name] = None  # None means that we should not (re)set the relation.
 
             for extra_name, data in extras.items():
                 field_name = name
@@ -445,7 +475,18 @@ class DjangoCudBase(Mutation):
 
                 operation = data.get('operation') or get_likely_operation_from_name(extra_name)
 
-                if operation == "add":
+                if operation == "exact":
+                    objs = cls.get_or_create_m2o_objs(
+                        obj,
+                        field,
+                        values,
+                        data,
+                        operation,
+                        info,
+                        Model
+                    )
+                    many_to_many_to_set[name] = objs
+                elif operation == "add":
                     objs = cls.get_or_create_m2o_objs(
                         obj,
                         field,
@@ -460,6 +501,10 @@ class DjangoCudBase(Mutation):
                     many_to_one_to_remove[name] += disambiguate_ids(values)
 
 
+        for name, objs in many_to_one_to_set.items():
+            if objs is not None:
+                getattr(obj, name).set(objs)
+
         for name, objs in many_to_one_to_add.items():
             getattr(obj, name).add(*objs)
 
@@ -467,6 +512,10 @@ class DjangoCudBase(Mutation):
             # Only nullable foreign key reverse rels have the remove method,
             # so we use this method instead
             getattr(obj, name).filter(id__in=objs).delete()
+
+        for name, objs in many_to_many_to_set.items():
+            if objs is not None:
+                getattr(obj, name).set(objs)
 
         for name, objs in many_to_many_to_add.items():
             getattr(obj, name).add(*objs)

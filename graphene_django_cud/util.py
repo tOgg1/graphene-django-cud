@@ -368,6 +368,9 @@ def get_all_optional_input_fields_for_model(
 
 def get_likely_operation_from_name(extra_name):
     extra_name = extra_name.lower()
+    if extra_name == "exact":
+        return "exact"
+
     if extra_name == "update" or extra_name == "patch":
         return "update"
 

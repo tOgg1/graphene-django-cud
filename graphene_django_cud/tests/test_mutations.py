@@ -5,7 +5,7 @@ from graphene import Schema
 from graphql import ResolveInfo
 from graphql_relay import to_global_id
 
-from graphene_django_cud.mutations import DjangoUpdateMutation
+from graphene_django_cud.mutations import DjangoUpdateMutation, DjangoCreateMutation
 from graphene_django_cud.tests.factories import UserFactory, CatFactory, UserWithPermissionsFactory, DogFactory
 from graphene_django_cud.tests.models import User, Cat, Dog
 from graphene_django_cud.util import disambiguate_id
@@ -530,3 +530,242 @@ class TestUpdateMutation(TestCase):
         )
         self.assertIsNone(result.errors)
 
+    def test_many_to_many_extras__calling_exact_with_empty_list__resets_relation(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateDogMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Dog
+                many_to_many_extras = {
+                    "enemies":{
+                       "exact" : {"type": "ID"}
+                    }
+                }
+
+        class Mutations(graphene.ObjectType):
+            update_dog = UpdateDogMutation.Field()
+
+        dog = DogFactory.create()
+        user = UserFactory.create()
+
+        # Create some enemies
+        cats = CatFactory.create_batch(5)
+        dog.enemies.set(cats)
+        self.assertEqual(dog.enemies.all().count(), 5)
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateDog(
+                $id: ID!,
+                $input: UpdateDogInput! 
+            ){
+                updateDog(id: $id, input: $input){
+                    dog{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables= {
+                "id": to_global_id("DogNode", dog.id),
+                "input": {
+                    "name": "Sparky",
+                    "tag": "tag",
+                    "breed": "HUSKY",
+                    "owner": to_global_id("UserNode", user.id),
+                    "enemies": []
+                }
+            },
+            context=Dict(user=user)
+        )
+        self.assertIsNone(result.errors)
+
+        dog.refresh_from_db()
+        self.assertEqual(dog.enemies.all().count(), 0)
+
+    def test_many_to_many_extras__add_extra_by_id__adds_by_id(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateDogMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Dog
+                many_to_many_extras = {
+                    "enemies":{
+                        "add" : {"type": "ID"}
+                    }
+                }
+
+        class Mutations(graphene.ObjectType):
+            update_dog = UpdateDogMutation.Field()
+
+        dog = DogFactory.create()
+        user = UserFactory.create()
+
+        # Create some enemies
+        cats = CatFactory.create_batch(5)
+        self.assertEqual(dog.enemies.all().count(), 0)
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateDog(
+                $id: ID!,
+                $input: UpdateDogInput! 
+            ){
+                updateDog(id: $id, input: $input){
+                    dog{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables= {
+                "id": to_global_id("DogNode", dog.id),
+                "input": {
+                    "name": "Sparky",
+                    "tag": "tag",
+                    "breed": "HUSKY",
+                    "owner": to_global_id("UserNode", user.id),
+                    "enemiesAdd": [cat.id for cat in cats]
+                }
+            },
+            context=Dict(user=user)
+        )
+        self.assertIsNone(result.errors)
+
+        dog.refresh_from_db()
+        self.assertEqual(dog.enemies.all().count(), 5)
+
+    def test_many_to_many_extras__add_extra_by_input__adds_by_input(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class CreateCatMutation(DjangoCreateMutation):
+            class Meta:
+                model = Cat
+
+        class UpdateDogMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Dog
+                many_to_many_extras = {
+                    "enemies":{
+                        "exact" : {"type": "CreateCatInput"}
+                    }
+                }
+
+        class Mutations(graphene.ObjectType):
+            create_cat = CreateCatMutation.Field()
+            update_dog = UpdateDogMutation.Field()
+
+        dog = DogFactory.create()
+        user = UserFactory.create()
+
+        # Create some enemies
+        cats = CatFactory.create_batch(5)
+        self.assertEqual(dog.enemies.all().count(), 0)
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateDog(
+                $id: ID!,
+                $input: UpdateDogInput! 
+            ){
+                updateDog(id: $id, input: $input){
+                    dog{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables= {
+                "id": to_global_id("DogNode", dog.id),
+                "input": {
+                    "name": "Sparky",
+                    "tag": "tag",
+                    "breed": "HUSKY",
+                    "owner": to_global_id("UserNode", user.id),
+                    "enemies": [{
+                        "name": cat.name,
+                        "owner": cat.owner.id
+                    } for cat in cats]
+                }
+            },
+            context=Dict(user=user)
+        )
+        self.assertIsNone(result.errors)
+
+        dog.refresh_from_db()
+        self.assertEqual(dog.enemies.all().count(), 5)
+
+    def test_many_to_many_extras__remove_extra_by_id__removes_by_id(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateDogMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Dog
+                many_to_many_extras = {
+                    "enemies":{
+                        "remove" : {"type": "ID"}
+                    }
+                }
+
+        class Mutations(graphene.ObjectType):
+            update_dog = UpdateDogMutation.Field()
+
+        dog = DogFactory.create()
+        user = UserFactory.create()
+
+        # Create some enemies
+        cats = CatFactory.create_batch(5)
+        dog.enemies.set(cats)
+        self.assertEqual(dog.enemies.all().count(), 5)
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateDog(
+                $id: ID!,
+                $input: UpdateDogInput! 
+            ){
+                updateDog(id: $id, input: $input){
+                    dog{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables= {
+                "id": to_global_id("DogNode", dog.id),
+                "input": {
+                    "name": "Sparky",
+                    "tag": "tag",
+                    "breed": "HUSKY",
+                    "owner": to_global_id("UserNode", user.id),
+                    "enemiesRemove": [
+                        cat.id for cat in cats
+                    ]
+                }
+            },
+            context=Dict(user=user)
+        )
+        self.assertIsNone(result.errors)
+
+        dog.refresh_from_db()
+        self.assertEqual(dog.enemies.all().count(), 0)
