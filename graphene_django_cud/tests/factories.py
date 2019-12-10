@@ -4,7 +4,7 @@ import factory
 from django.contrib.auth.models import Permission
 from django.db import models
 
-from graphene_django_cud.tests.models import User, Cat, Dog
+from graphene_django_cud.tests.models import User, Cat, Dog, Mouse
 
 
 class UserFactory(factory.DjangoModelFactory):
@@ -90,3 +90,10 @@ class DogFactory(factory.DjangoModelFactory):
     owner = factory.SubFactory(UserFactory)
     name = "dog"
     tag = "tag"
+
+
+class MouseFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = Mouse
+
+    name = "mouse"

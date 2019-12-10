@@ -8,6 +8,7 @@ class User(AbstractUser):
 
 class Mouse(models.Model):
     name = models.TextField()
+    keeper = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='mice')
 
 
 class Cat(models.Model):
