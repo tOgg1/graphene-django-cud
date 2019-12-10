@@ -471,7 +471,11 @@ def get_m2m_all_extras_field_names(extras):
         return []
     for name, extra in extras.items():
         for extra_name, data in extra.items():
-            argument_name = data.get('name', name + '_' + extra_name)
+            if hasattr(data, 'get'):
+                argument_name = data.get('name', name + '_' + extra_name)
+            else:
+                argument_name = name + '_' + extra_name
+
             if extra_name != "exact":
                 res.append(argument_name)
             else:
