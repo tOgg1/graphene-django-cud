@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 0.2.1
+* Add better handling of choices fields. Fixes #5.
+* Fix handling of "exact" m2m and m2o extras.
+* Improve m2o handling of exact and remove extras.
+
 ## Version 0.2.0
 * Add the `field_types` meta-field, which allows users to override converted field types.
 
