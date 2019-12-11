@@ -16,6 +16,8 @@
 
 
 # -- Project information -----------------------------------------------------
+import sys
+from os.path import dirname, join, abspath
 
 project = 'graphene-django-cud'
 copyright = '2019, Tormod Haugland'
@@ -24,6 +26,8 @@ author = 'Tormod Haugland'
 # The full version, including alpha/beta/rc tags
 release = '0.2.1'
 
+# Inlcude extensions
+sys.path.append(abspath(join(dirname(__file__), "_ext")))
 
 # -- General configuration ---------------------------------------------------
 
@@ -31,7 +35,8 @@ release = '0.2.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-        "sphinx_rtd_theme"
+        "sphinx_rtd_theme",
+        "graphql_lexer"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
