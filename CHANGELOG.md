@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.2.2
+* Fix a bug related to setting of many-to-one extras on create operations.
+
 ## Version 0.2.1
 * Add better handling of choices fields. Fixes #5.
 * Fix handling of "exact" m2m and m2o extras.
