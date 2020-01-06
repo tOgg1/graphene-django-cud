@@ -287,6 +287,9 @@ class DjangoCudBase(Mutation):
 
                 values = input.get(field_name, None)
 
+                if values is None:
+                    continue
+
                 if isinstance(data, bool):
                     data = {}
 
@@ -326,7 +329,7 @@ class DjangoCudBase(Mutation):
                     field.add(*objs)
                 else:
                     # Remove the related objects by deletion, and set the new ones.
-                    field.exclude(id__in=objs).delete()
+                    field.exclude(id__in=[obj.id for obj in objs]).delete()
                     getattr(obj, name).add(*objs)
 
         for name, objs in many_to_one_to_add.items():
@@ -335,7 +338,11 @@ class DjangoCudBase(Mutation):
         for name, objs in many_to_one_to_remove.items():
             field = getattr(obj, name)
             if hasattr(field, 'remove'):
-                getattr(obj, name).remove(*objs)
+                # The field is nullable, and we simply remove the relation
+                related_name = Model._meta.get_field(name).remote_field.name
+                getattr(obj, name).filter(id__in=objs).update(**{
+                    related_name: None
+                })
             else:
                 # Only nullable foreign key reverse rels have the remove method.
                 # For other's we have to delete the relations
@@ -483,6 +490,9 @@ class DjangoCudBase(Mutation):
                     field_name = name + "_" + extra_name
 
                 values = input.get(field_name, None)
+
+                if values is None:
+                    continue
 
                 if isinstance(data, bool):
                     data = {}

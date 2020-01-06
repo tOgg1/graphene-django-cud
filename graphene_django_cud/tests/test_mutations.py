@@ -531,6 +531,8 @@ class TestUpdateMutation(TestCase):
         )
         self.assertIsNone(result.errors)
 
+class TestUpdateMutationManyToManyExtras(TestCase):
+
     def test_many_to_many_extras__calling_exact_with_empty_list__resets_relation(self):
         # This registers the UserNode type
         # noinspection PyUnresolvedReferences
@@ -770,6 +772,63 @@ class TestUpdateMutation(TestCase):
 
         dog.refresh_from_db()
         self.assertEqual(dog.enemies.all().count(), 0)
+
+
+class TestUpdateMutationManyToOneExtras(TestCase):
+
+    def test_many_to_one_extras__auto_calling_mutation_with_setting_field__does_nothing(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateUserMutation(DjangoUpdateMutation):
+            class Meta:
+                model = User
+                exclude_fields = ("password",)
+                many_to_one_extras = {
+                    "cats":{
+                        "exact" : {"type": "auto"}
+                    }
+                }
+
+        class Mutations(graphene.ObjectType):
+            update_user = UpdateUserMutation.Field()
+
+        user = UserFactory.create()
+
+        self.assertEqual(user.cats.all().count(), 0)
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateUser(
+                $id: ID!,
+                $input: UpdateUserInput! 
+            ){
+                updateUser(id: $id, input: $input){
+                    user{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables= {
+                "id": to_global_id("UserNode", user.id),
+                "input": {
+                    "username": user.username,
+                    "firstName": user.first_name,
+                    "lastName": user.last_name,
+                    "email": user.email
+                }
+            },
+            context=Dict(user=user)
+        )
+        self.assertIsNone(result.errors)
+
+        user.refresh_from_db()
+        self.assertEqual(user.cats.all().count(), 0)
 
     def test_many_to_one_extras__calling_exact_with_empty_list__resets_relation(self):
         # This registers the UserNode type
@@ -1125,3 +1184,223 @@ class TestUpdateMutation(TestCase):
 
         user.refresh_from_db()
         self.assertEqual(user.mice.all().count(), 0)
+
+
+class TestCreateMutationManyToOneExtras(TestCase):
+
+    def test_many_to_one_extras__auto_calling_mutation_with_setting_field__does_nothing(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class CreateUserMutation(DjangoCreateMutation):
+            class Meta:
+                model = User
+                exclude_fields = ("password",)
+                many_to_one_extras = {
+                    "cats": {
+                        "exact": {"type": "auto"}
+                    }
+                }
+
+        class Mutations(graphene.ObjectType):
+            create_user = CreateUserMutation.Field()
+
+        user = UserFactory.build()
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation CreateUser(
+                $input: CreateUserInput! 
+            ){
+                createUser(input: $input){
+                    user{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables= {
+                "input": {
+                    "username": user.username,
+                    "firstName": user.first_name,
+                    "lastName": user.last_name,
+                    "email": user.email
+                }
+            },
+            context=Dict(user=user)
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        user = User.objects.get(pk=disambiguate_id(data.createUser.user.id))
+
+        self.assertEqual(user.cats.all().count(), 0)
+
+    def test_many_to_one_extras__set_exact_by_id__sets_by_id(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class CreateUserMutation(DjangoCreateMutation):
+            class Meta:
+                model = User
+                exclude_fields = ("password",)
+                many_to_one_extras = {
+                    "cats": {
+                        "exact": {"type": "ID"}
+                    }
+                }
+
+        class Mutations(graphene.ObjectType):
+            create_user = CreateUserMutation.Field()
+
+        user = UserFactory.build()
+        other_cats = CatFactory.create_batch(5)
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation CreateUser(
+                $input: CreateUserInput! 
+            ){
+                createUser(input: $input){
+                    user{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables= {
+                "input": {
+                    "username": user.username,
+                    "firstName": user.first_name,
+                    "lastName": user.last_name,
+                    "email": user.email,
+                    "cats": [cat.id for cat in other_cats]
+                }
+            },
+            context=Dict(user=user)
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        user = User.objects.get(pk=disambiguate_id(data.createUser.user.id))
+
+        self.assertEqual(user.cats.all().count(), 5)
+
+    def test_many_to_one_extras__add_by_id__adds_by_id(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class CreateUserMutation(DjangoCreateMutation):
+            class Meta:
+                model = User
+                exclude_fields = ("password",)
+                many_to_one_extras = {
+                    "cats": {
+                        "add": {"type": "ID"}
+                    }
+                }
+
+        class Mutations(graphene.ObjectType):
+            create_user = CreateUserMutation.Field()
+
+        user = UserFactory.build()
+        other_cats = CatFactory.create_batch(5)
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation CreateUser(
+                $input: CreateUserInput! 
+            ){
+                createUser(input: $input){
+                    user{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables= {
+                "input": {
+                    "username": user.username,
+                    "firstName": user.first_name,
+                    "lastName": user.last_name,
+                    "email": user.email,
+                    "catsAdd": [cat.id for cat in other_cats]
+                }
+            },
+            context=Dict(user=user)
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        user = User.objects.get(pk=disambiguate_id(data.createUser.user.id))
+
+        self.assertEqual(user.cats.all().count(), 5)
+
+    def test_many_to_one_extras__add_by_input__adds_by_input(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class CreateCatMutation(DjangoCreateMutation):
+            class Meta:
+                model = Cat
+
+        class CreateUserMutation(DjangoCreateMutation):
+            class Meta:
+                model = User
+                exclude_fields = ("password",)
+                many_to_one_extras = {
+                    "cats":{
+                        "add" : {"type": "auto"}
+                    }
+                }
+
+        class Mutations(graphene.ObjectType):
+            create_cat = CreateCatMutation.Field()
+            create_user = CreateUserMutation.Field()
+
+        user = UserFactory.build()
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation CreateUser(
+                $input: CreateUserInput! 
+            ){
+                createUser(input: $input){
+                    user{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables= {
+                "input": {
+                    "username": user.username,
+                    "firstName": user.first_name,
+                    "lastName": user.last_name,
+                    "email": user.email,
+                    "catsAdd": [{
+                        "name": "Cat Damon"
+                    } for _ in range(5)]
+                }
+            },
+            context=Dict(user=user)
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        user = User.objects.get(pk=disambiguate_id(data.createUser.user.id))
+
+        self.assertEqual(user.cats.all().count(), 5)
+
