@@ -40,7 +40,7 @@ If there are multiple filters, these will be combined with
             model = User
             filter_fields = ('name', 'house__address',)
 
-.. code:: graphql
+.. code::
 
     mutation {
         batchDeleteUser(input: {name: 'John'}){

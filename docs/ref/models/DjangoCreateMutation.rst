@@ -45,7 +45,7 @@ Meta fields:
 | foreign\_key\_extras     | Dict       | {}        | A dict with extra information regarding foreign key extras.                                                                                                                       |
 +--------------------------+------------+-----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-.. code:: graphql
+.. code::
 
     mutation {
         createUser(input: {name: "John Doe", address: "Downing Street 10"}){

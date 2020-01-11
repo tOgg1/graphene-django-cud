@@ -53,7 +53,7 @@ All meta arguments:
 Example mutation
 ^^^^^^^^^^^^^^^^
 
-.. code:: graphql
+.. code::
 
     mutation {
         updateUser(id: "VXNlck5vZGU6MQ==", input: {

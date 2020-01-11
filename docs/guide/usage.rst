@@ -38,7 +38,7 @@ The input to the mutation is a single variable ``input`` which is
 automatically created with the models fields. An example mutation would
 then be
 
-.. code:: graphql
+.. code::
 
     mutation {
         createUser(input: {name: "John Doe", address: "Downing Street 10"}){

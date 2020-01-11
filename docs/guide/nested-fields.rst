@@ -33,7 +33,7 @@ which has to have been created before, typically via a
 ``CreateUserMutation``, which by default will result in the type name
 ``CreateUserInput``. An example call to the mutation is:
 
-.. code:: graphql
+.. code::
 
     mutation {
         createCat(input: {owner: {name: "John Doe"}, name: "Kitty"}){
@@ -79,7 +79,7 @@ give here, as it is inferred.
 
 Now we could create a user with multiple cats in one go as follows:
 
-.. code:: graphql
+.. code::
 
     mutation {
         createUser(input: {
@@ -133,7 +133,7 @@ Cat objects to be added by id.
                 }
             }
 
-.. code:: graphql
+.. code::
 
     mutation {
         createUser(input: {
@@ -190,7 +190,7 @@ customized fairly similar to many to one extras:
 
 This will, similar to before, add an ``enemiesAdd`` argument:
 
-.. code:: graphql
+.. code::
 
     mutation {
         createDog(input: {
@@ -228,7 +228,7 @@ many relationship:
 Note that this *has* to have the type "ID". Also note that this has no
 effect on ``DjangoCreateMutation`` mutations. We could then perform
 
-.. code:: graphql
+.. code::
 
     mutation {
         updateDog(id: "RG9nTm9kZTox", input: {
@@ -261,7 +261,7 @@ by adding the "exact":
                 }
             }
 
-.. code:: graphql
+.. code::
 
     mutation {
         updateDog(id: "RG9nTm9kZTox", input: {
@@ -372,7 +372,7 @@ Where ``CreateCatInput`` is the type generated for
 Where we assume we have now also created a new model ``Mouse`` with a
 standard ``CreateMouseMutation`` mutation. We could then execute the following mutation:
 
-.. code:: graphql
+.. code::
 
     mutation {
         createDog(input: {

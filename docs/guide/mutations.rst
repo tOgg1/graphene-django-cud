@@ -17,7 +17,7 @@ which is the camel-case version of the model name.
             model = User
 
 
-.. code:: graphql
+.. code::
 
     mutation {
         createUser(input: {name: "John Doe", address: "161 Lexington Avenue"}){
@@ -50,7 +50,7 @@ By default, all :ref:`included fields<included_and_excluded>` of the model are m
             model = User
 
 
-.. code:: graphql
+.. code::
 
     mutation {
         updateUser(input: {name: "John Doe", address: "161 Lexington Avenue"}){
@@ -83,7 +83,7 @@ All fields of the model are marked as **not required**.
             model = User
 
 
-.. code:: graphql
+.. code::
 
     mutation {
         patchUser(input: {name: "John Doe"}){
@@ -116,7 +116,7 @@ The mutation returns two fields for resolving:
             model = User
 
 
-.. code:: graphql
+.. code::
 
     mutation {
         deleteUser(id: "VXNlck5vZGU6MTMzNw=="){
@@ -141,7 +141,7 @@ which is the camel-case version of the model name.
             model = User
 
 
-.. code:: graphql
+.. code::
 
     mutation {
         batchCreateUser(input: {name: "John Doe", address: "161 Lexington Avenue"}){
@@ -180,7 +180,7 @@ The mutation returns two fields for resolving:
             )
 
 
-.. code:: graphql
+.. code::
 
     mutation {
         batchDeleteUser(input: {"name": "John Doe", "house_Owner_Name_In": ["Michael Bloomberg", "Steve Jobs"]}){

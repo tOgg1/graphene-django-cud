@@ -27,7 +27,7 @@ All meta arguments:
 | login\_required   | Boolean   | None      | If true, the calling user has to be authenticated   |
 +-------------------+-----------+-----------+-----------------------------------------------------+
 
-.. code:: graphql
+.. code::
 
     mutation {
         deleteUser(id: "VXNlck5vZGU6MQ=="){

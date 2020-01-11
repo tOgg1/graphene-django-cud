@@ -29,7 +29,7 @@ The two others can be customized by the following meta parameters:
         update_user = UpdateUserMutation.Field()
 
 
-.. code:: graphql
+.. code::
 
     mutation UpdateUserMutation($input: ChangeUserInput){
         updateUser(input: $input){
