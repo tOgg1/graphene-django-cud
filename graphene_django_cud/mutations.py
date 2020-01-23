@@ -726,7 +726,7 @@ class DjangoUpdateMutation(DjangoCudBase):
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
     @classmethod
-    def get_queryset(cls):
+    def get_queryset(cls, info, **args):
         Model = cls._meta.model
         return Model.objects
 
@@ -748,7 +748,7 @@ class DjangoUpdateMutation(DjangoCudBase):
 
         id = disambiguate_id(id)
         Model = cls._meta.model
-        queryset = cls.get_queryset()
+        queryset = cls.get_queryset(info, id=id, input=input)
         obj = queryset.get(pk=id)
         auto_context_fields = cls._meta.auto_context_fields or {}
 
@@ -899,7 +899,7 @@ class DjangoPatchMutation(DjangoCudBase):
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
     @classmethod
-    def get_queryset(cls):
+    def get_queryset(cls, info, **args):
         Model = cls._meta.model
         return Model.objects
 
@@ -921,7 +921,7 @@ class DjangoPatchMutation(DjangoCudBase):
 
         id = disambiguate_id(id)
         Model = cls._meta.model
-        queryset = cls.get_queryset()
+        queryset = cls.get_queryset(info, id=id, input=input)
         obj = queryset.get(pk=id)
         auto_context_fields = cls._meta.auto_context_fields or {}
 
@@ -1348,7 +1348,7 @@ class DjangoDeleteMutation(DjangoCudBase):
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
     @classmethod
-    def get_queryset(cls):
+    def get_queryset(cls, info, **args):
         Model = cls._meta.model
         return Model.objects
 
@@ -1369,7 +1369,7 @@ class DjangoDeleteMutation(DjangoCudBase):
         id = disambiguate_id(id)
 
         try:
-            obj = cls.get_queryset().get(pk=id)
+            obj = cls.get_queryset(info, id=id).get(pk=id)
             cls.before_save(
                 root,
                 info,
@@ -1445,7 +1445,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
 
 
     @classmethod
-    def get_queryset(cls):
+    def get_queryset(cls, info, **args):
         Model = cls._meta.model
         return Model.objects
 
@@ -1457,6 +1457,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
             info,
             input
         )
+
         if updated_input:
             input = updated_input
 
@@ -1510,7 +1511,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
 
             model_field_values[name] = new_value
 
-        filter_qs = cls.get_queryset().filter(**model_field_values)
+        filter_qs = cls.get_queryset(info, input=input).filter(**model_field_values)
         updated_qs = cls.before_save(
             root,
             info,
