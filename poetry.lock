@@ -17,6 +17,7 @@ version = "7.0.0"
 [[package]]
 category = "dev"
 description = "Atomic file writes."
+marker = "sys_platform == \"win32\""
 name = "atomicwrites"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
@@ -30,22 +31,31 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "19.3.0"
 
+[package.extras]
+azure-pipelines = ["coverage", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "zope.interface", "pytest-azurepipelines"]
+dev = ["coverage", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "zope.interface", "sphinx", "pre-commit"]
+docs = ["sphinx", "zope.interface"]
+tests = ["coverage", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "zope.interface"]
+
 [[package]]
 category = "dev"
 description = "Cross-platform colored terminal text."
 marker = "sys_platform == \"win32\""
 name = "colorama"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "0.4.1"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+version = "0.4.3"
 
 [[package]]
 category = "dev"
 description = "Code coverage measurement for Python"
 name = "coverage"
 optional = false
-python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*, <4"
-version = "4.5.4"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4"
+version = "5.0.3"
+
+[package.extras]
+toml = ["toml"]
 
 [[package]]
 category = "main"
@@ -53,11 +63,15 @@ description = "A high-level Python Web framework that encourages rapid developme
 name = "django"
 optional = false
 python-versions = ">=3.5"
-version = "2.2.6"
+version = "2.2.9"
 
 [package.dependencies]
 pytz = "*"
 sqlparse = "*"
+
+[package.extras]
+argon2 = ["argon2-cffi (>=16.1.0)"]
+bcrypt = ["bcrypt"]
 
 [[package]]
 category = "dev"
@@ -75,12 +89,11 @@ category = "dev"
 description = "Faker is a Python package that generates fake data for you."
 name = "faker"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-version = "2.0.4"
+python-versions = ">=3.4"
+version = "4.0.0"
 
 [package.dependencies]
 python-dateutil = ">=2.4"
-six = ">=1.10"
 text-unidecode = "1.3"
 
 [[package]]
@@ -97,21 +110,31 @@ graphql-core = ">=2.1,<3"
 graphql-relay = ">=2,<3"
 six = ">=1.10.0,<2"
 
+[package.extras]
+django = ["graphene-django"]
+sqlalchemy = ["graphene-sqlalchemy"]
+test = ["pytest", "pytest-benchmark", "pytest-cov", "pytest-mock", "snapshottest", "coveralls", "promise", "six", "mock", "pytz", "iso8601"]
+
 [[package]]
 category = "main"
 description = "Graphene Django integration"
 name = "graphene-django"
 optional = false
 python-versions = "*"
-version = "2.5.0"
+version = "2.8.0"
 
 [package.dependencies]
 Django = ">=1.11"
-graphene = ">=2.1.3,<3"
+graphene = ">=2.1.7,<3"
 graphql-core = ">=2.1.0,<3"
 promise = ">=2.1"
 singledispatch = ">=3.4.0.3"
 six = ">=1.10.0"
+
+[package.extras]
+dev = ["black (19.3b0)", "flake8 (3.7.7)", "flake8-black (0.1.0)", "flake8-bugbear (19.3.0)", "pytest (>=3.6.3)", "pytest-cov", "coveralls", "mock", "pytz", "pytest-django (>=3.3.2)", "djangorestframework (>=3.6.3)", "django-filter (<2)", "django-filter (>=2)"]
+rest_framework = ["djangorestframework (>=3.6.3)"]
+test = ["pytest (>=3.6.3)", "pytest-cov", "coveralls", "mock", "pytz", "pytest-django (>=3.3.2)", "djangorestframework (>=3.6.3)", "django-filter (<2)", "django-filter (>=2)"]
 
 [[package]]
 category = "main"
@@ -123,6 +146,11 @@ version = "1.2.2"
 
 [package.dependencies]
 six = ">=1.11.0"
+
+[package.extras]
+all = ["Flask (>=1.0.2)", "graphene (>=2.1.2)", "Flask-Graphql (>=2.0.0)", "graphene-django (>=2.0.0)"]
+django = ["graphene-django (>=2.0.0)"]
+flask = ["Flask (>=1.0.2)", "graphene (>=2.1.2)", "Flask-Graphql (>=2.0.0)"]
 
 [[package]]
 category = "main"
@@ -137,13 +165,17 @@ promise = ">=2.1"
 rx = ">=1.6,<3"
 six = ">=1.10.0"
 
+[package.extras]
+gevent = ["gevent (>=1.1)"]
+test = ["pytest (>=3.3,<4.0)", "pytest-django (2.9.1)", "pytest-cov (2.3.1)", "coveralls", "gevent (>=1.1)", "six (>=1.10.0)", "pytest-benchmark (3.0.0)", "pytest-mock (1.2)"]
+
 [[package]]
 category = "main"
 description = "Relay implementation for Python"
 name = "graphql-relay"
 optional = false
 python-versions = "*"
-version = "2.0.0"
+version = "2.0.1"
 
 [package.dependencies]
 graphql-core = ">=2.2,<3"
@@ -156,19 +188,23 @@ description = "Read metadata from Python packages"
 marker = "python_version < \"3.8\""
 name = "importlib-metadata"
 optional = false
-python-versions = ">=2.7,!=3.0,!=3.1,!=3.2,!=3.3"
-version = "0.23"
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
+version = "1.4.0"
 
 [package.dependencies]
 zipp = ">=0.5"
+
+[package.extras]
+docs = ["sphinx", "rst.linker"]
+testing = ["packaging", "importlib-resources"]
 
 [[package]]
 category = "dev"
 description = "More routines for operating on iterables, beyond itertools"
 name = "more-itertools"
 optional = false
-python-versions = ">=3.4"
-version = "7.2.0"
+python-versions = ">=3.5"
+version = "8.1.0"
 
 [[package]]
 category = "dev"
@@ -176,7 +212,7 @@ description = "Core utilities for Python packages"
 name = "packaging"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "19.2"
+version = "20.0"
 
 [package.dependencies]
 pyparsing = ">=2.0.2"
@@ -188,12 +224,15 @@ description = "plugin and hook calling mechanisms for python"
 name = "pluggy"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "0.13.0"
+version = "0.13.1"
 
 [package.dependencies]
 [package.dependencies.importlib-metadata]
 python = "<3.8"
 version = ">=0.12"
+
+[package.extras]
+dev = ["pre-commit", "tox"]
 
 [[package]]
 category = "main"
@@ -201,10 +240,13 @@ description = "Promises/A+ implementation for Python"
 name = "promise"
 optional = false
 python-versions = "*"
-version = "2.2.1"
+version = "2.3"
 
 [package.dependencies]
 six = "*"
+
+[package.extras]
+test = ["pytest (>=2.7.3)", "pytest-cov", "coveralls", "futures", "pytest-benchmark", "mock"]
 
 [[package]]
 category = "dev"
@@ -212,7 +254,7 @@ description = "library with cross-python path, ini-parsing, io, code, log facili
 name = "py"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "1.8.0"
+version = "1.8.1"
 
 [[package]]
 category = "dev"
@@ -220,7 +262,7 @@ description = "Python parsing module"
 name = "pyparsing"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
-version = "2.4.5"
+version = "2.4.6"
 
 [[package]]
 category = "dev"
@@ -228,7 +270,7 @@ description = "pytest: simple powerful testing with Python"
 name = "pytest"
 optional = false
 python-versions = ">=3.5"
-version = "5.2.4"
+version = "5.3.4"
 
 [package.dependencies]
 atomicwrites = ">=1.0"
@@ -244,6 +286,10 @@ wcwidth = "*"
 python = "<3.8"
 version = ">=0.12"
 
+[package.extras]
+checkqa-mypy = ["mypy (v0.761)"]
+testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "requests", "xmlschema"]
+
 [[package]]
 category = "dev"
 description = "Pytest plugin for measuring coverage."
@@ -256,16 +302,23 @@ version = "2.8.1"
 coverage = ">=4.4"
 pytest = ">=3.6"
 
+[package.extras]
+testing = ["fields", "hunter", "process-tests (2.0.2)", "six", "virtualenv"]
+
 [[package]]
 category = "dev"
 description = "A Django plugin for pytest."
 name = "pytest-django"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "3.7.0"
+version = "3.8.0"
 
 [package.dependencies]
 pytest = ">=3.6"
+
+[package.extras]
+docs = ["sphinx", "sphinx-rtd-theme"]
+testing = ["django", "django-configurations (>=2.0)", "six"]
 
 [[package]]
 category = "dev"
@@ -284,7 +337,7 @@ description = "World timezone definitions, modern and historical"
 name = "pytz"
 optional = false
 python-versions = "*"
-version = "2019.2"
+version = "2019.3"
 
 [[package]]
 category = "main"
@@ -310,8 +363,8 @@ category = "main"
 description = "Python 2 and 3 compatibility utilities"
 name = "six"
 optional = false
-python-versions = ">=2.6, !=3.0.*, !=3.1.*"
-version = "1.12.0"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
+version = "1.14.0"
 
 [[package]]
 category = "main"
@@ -335,7 +388,7 @@ description = "Measures number of Terminal column cells of wide-character codes"
 name = "wcwidth"
 optional = false
 python-versions = "*"
-version = "0.1.7"
+version = "0.1.8"
 
 [[package]]
 category = "dev"
@@ -343,47 +396,176 @@ description = "Backport of pathlib-compatible object wrapper for zip files"
 marker = "python_version < \"3.8\""
 name = "zipp"
 optional = false
-python-versions = ">=2.7"
-version = "0.6.0"
+python-versions = ">=3.6"
+version = "2.0.1"
 
 [package.dependencies]
 more-itertools = "*"
+
+[package.extras]
+docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 
 [metadata]
 content-hash = "4251d9ab590b9ae2a74675b75a378695f35de52a652f463bba7ef3f4c45be255"
 python-versions = "^3.6"
 
-[metadata.hashes]
-addict = ["1948c2a5d93ba6026eb91aef2c971234aaf72488a9c07ab8a7950f82ae30eea7", "f22493f056032f50e4931a82444fcba8ef74c8fc994c5d06aa546a1433c2b8b0"]
-aniso8601 = ["513d2b6637b7853806ae79ffaca6f3e8754bdd547048f5ccc1420aec4b714f1e", "d10a4bf949f619f719b227ef5386e31f49a2b6d453004b21f02661ccc8670c7b"]
-atomicwrites = ["03472c30eb2c5d1ba9227e4c2ca66ab8287fbfbbda3888aa93dc2e28fc6811b4", "75a9445bac02d8d058d5e1fe689654ba5a6556a1dfd8ce6ec55a0ed79866cfa6"]
-attrs = ["08a96c641c3a74e44eb59afb61a24f2cb9f4d7188748e76ba4bb5edfa3cb7d1c", "f7b7ce16570fe9965acd6d30101a28f62fb4a7f9e926b3bbc9b61f8b04247e72"]
-colorama = ["05eed71e2e327246ad6b38c540c4a3117230b19679b875190486ddd2d721422d", "f8ac84de7840f5b9c4e3347b3c1eaa50f7e49c2b07596221daec5edaabbd7c48"]
-coverage = ["08907593569fe59baca0bf152c43f3863201efb6113ecb38ce7e97ce339805a6", "0be0f1ed45fc0c185cfd4ecc19a1d6532d72f86a2bac9de7e24541febad72650", "141f08ed3c4b1847015e2cd62ec06d35e67a3ac185c26f7635f4406b90afa9c5", "19e4df788a0581238e9390c85a7a09af39c7b539b29f25c89209e6c3e371270d", "23cc09ed395b03424d1ae30dcc292615c1372bfba7141eb85e11e50efaa6b351", "245388cda02af78276b479f299bbf3783ef0a6a6273037d7c60dc73b8d8d7755", "331cb5115673a20fb131dadd22f5bcaf7677ef758741312bee4937d71a14b2ef", "386e2e4090f0bc5df274e720105c342263423e77ee8826002dcffe0c9533dbca", "3a794ce50daee01c74a494919d5ebdc23d58873747fa0e288318728533a3e1ca", "60851187677b24c6085248f0a0b9b98d49cba7ecc7ec60ba6b9d2e5574ac1ee9", "63a9a5fc43b58735f65ed63d2cf43508f462dc49857da70b8980ad78d41d52fc", "6b62544bb68106e3f00b21c8930e83e584fdca005d4fffd29bb39fb3ffa03cb5", "6ba744056423ef8d450cf627289166da65903885272055fb4b5e113137cfa14f", "7494b0b0274c5072bddbfd5b4a6c6f18fbbe1ab1d22a41e99cd2d00c8f96ecfe", "826f32b9547c8091679ff292a82aca9c7b9650f9fda3e2ca6bf2ac905b7ce888", "93715dffbcd0678057f947f496484e906bf9509f5c1c38fc9ba3922893cda5f5", "9a334d6c83dfeadae576b4d633a71620d40d1c379129d587faa42ee3e2a85cce", "af7ed8a8aa6957aac47b4268631fa1df984643f07ef00acd374e456364b373f5", "bf0a7aed7f5521c7ca67febd57db473af4762b9622254291fbcbb8cd0ba5e33e", "bf1ef9eb901113a9805287e090452c05547578eaab1b62e4ad456fcc049a9b7e", "c0afd27bc0e307a1ffc04ca5ec010a290e49e3afbe841c5cafc5c5a80ecd81c9", "dd579709a87092c6dbee09d1b7cfa81831040705ffa12a1b248935274aee0437", "df6712284b2e44a065097846488f66840445eb987eb81b3cc6e4149e7b6982e1", "e07d9f1a23e9e93ab5c62902833bf3e4b1f65502927379148b6622686223125c", "e2ede7c1d45e65e209d6093b762e98e8318ddeff95317d07a27a2140b80cfd24", "e4ef9c164eb55123c62411f5936b5c2e521b12356037b6e1c2617cef45523d47", "eca2b7343524e7ba246cab8ff00cab47a2d6d54ada3b02772e908a45675722e2", "eee64c616adeff7db37cc37da4180a3a5b6177f5c46b187894e633f088fb5b28", "ef824cad1f980d27f26166f86856efe11eff9912c4fed97d3804820d43fa550c", "efc89291bd5a08855829a3c522df16d856455297cf35ae827a37edac45f466a7", "fa964bae817babece5aa2e8c1af841bebb6d0b9add8e637548809d040443fee0", "ff37757e068ae606659c28c3bd0d923f9d29a85de79bf25b2b34b148473b5025"]
-django = ["4025317ca01f75fc79250ff7262a06d8ba97cd4f82e93394b2a0a6a4a925caeb", "a8ca1033acac9f33995eb2209a6bf18a4681c3e5269a878e9a7e0b7384ed1ca3"]
-factory-boy = ["728df59b372c9588b83153facf26d3d28947fc750e8e3c95cefa9bed0e6394ee", "faf48d608a1735f0d0a3c9cbf536d64f9132b547dae7ba452c4d99a79e84a370"]
-faker = ["48c03580720e0b46538d528b1296e4e5b24a809dcaf33a7dddec719489a9edb8", "6327c665c0d8721280b3036d9c9e851c60092bc1f30c8394cc433f8723e2bda5"]
-graphene = ["09165f03e1591b76bf57b133482db9be6dac72c74b0a628d3c93182af9c5a896", "2cbe6d4ef15cfc7b7805e0760a0e5b80747161ce1b0f990dfdc0d2cf497c12f9"]
-graphene-django = ["25f2bdf41e30bc7b860c1c13bfb4ba5c3961712394f16e847d79a69fc25a06b1", "d75b3e468d8d765d5964bc809e403b44bf7c37556c0464230a5083bccf14581b"]
-graphene-file-upload = ["034ff72d2834b7aebd06fda412fa88a10aba34bac604317f7552457e47040654", "b5f47a81f5614d1184ba9480a63835769b26303cb7759316122401784858e9c7"]
-graphql-core = ["1488f2a5c2272dc9ba66e3042a6d1c30cea0db4c80bd1e911c6791ad6187d91b", "da64c472d720da4537a2e8de8ba859210b62841bd47a9be65ca35177f62fe0e4"]
-graphql-relay = ["0e94201af4089e1f81f07d7bd8f84799768e39d70fa1ea16d1df505b46cc6335", "75aa0758971e252964cb94068a4decd472d2a8295229f02189e3cbca1f10dbb5", "7fa74661246e826ef939ee92e768f698df167a7617361ab399901eaebf80dce6"]
-importlib-metadata = ["aa18d7378b00b40847790e7c27e11673d7fed219354109d0e7b9e5b25dc3ad26", "d5f18a79777f3aa179c145737780282e27b508fc8fd688cb17c7a813e8bd39af"]
-more-itertools = ["409cd48d4db7052af495b09dec721011634af3753ae1ef92d2b32f73a745f832", "92b8c4b06dac4f0611c0729b2f2ede52b2e1bac1ab48f089c7ddc12e26bb60c4"]
-packaging = ["28b924174df7a2fa32c1953825ff29c61e2f5e082343165438812f00d3a7fc47", "d9551545c6d761f3def1677baf08ab2a3ca17c56879e70fecba2fc4dde4ed108"]
-pluggy = ["0db4b7601aae1d35b4a033282da476845aa19185c1e6964b25cf324b5e4ec3e6", "fa5fa1622fa6dd5c030e9cad086fa19ef6a0cf6d7a2d12318e10cb49d6d68f34"]
-promise = ["2ebbfc10b7abf6354403ed785fe4f04b9dfd421eb1a474ac8d187022228332af", "348f5f6c3edd4fd47c9cd65aed03ac1b31136d375aa63871a57d3e444c85655c"]
-py = ["64f65755aee5b381cea27766a3a147c3f15b9b6b9ac88676de66ba2ae36793fa", "dc639b046a6e2cff5bbe40194ad65936d6ba360b52b3c3fe1d08a82dd50b5e53"]
-pyparsing = ["20f995ecd72f2a1f4bf6b072b63b22e2eb457836601e76d6e5dfcd75436acc1f", "4ca62001be367f01bd3e92ecbb79070272a9d4964dce6a48a82ff0b8bc7e683a"]
-pytest = ["8e256fe71eb74e14a4d20a5987bb5e1488f0511ee800680aaedc62b9358714e8", "ff0090819f669aaa0284d0f4aad1a6d9d67a6efdc6dd4eb4ac56b704f890a0d6"]
-pytest-cov = ["cc6742d8bac45070217169f5f72ceee1e0e55b0221f54bcf24845972d3a47f2b", "cdbdef4f870408ebdbfeb44e63e07eb18bb4619fae852f6e760645fa36172626"]
-pytest-django = ["17592f06d51c2ef4b7a0fb24aa32c8b6998506a03c8439606cb96db160106659", "ef3d15b35ed7e46293475e6f282e71a53bcd8c6f87bdc5d5e7ad0f4d49352127"]
-python-dateutil = ["73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c", "75bb3f31ea686f1197762692a9ee6a7550b59fc6ca3a1f4b5d7e32fb98e2da2a"]
-pytz = ["26c0b32e437e54a18161324a2fca3c4b9846b74a8dccddd843113109e1116b32", "c894d57500a4cd2d5c71114aaab77dbab5eabd9022308ce5ac9bb93a60a6f0c7"]
-rx = ["13a1d8d9e252625c173dc795471e614eadfe1cf40ffc684e08b8fff0d9748c23", "7357592bc7e881a95e0c2013b73326f704953301ab551fbc8133a6fadab84105"]
-singledispatch = ["5b06af87df13818d14f08a028e42f566640aef80805c3b50c5056b086e3c2b9c", "833b46966687b3de7f438c761ac475213e53b306740f1abfaa86e1d1aae56aa8"]
-six = ["3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c", "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"]
-sqlparse = ["40afe6b8d4b1117e7dff5504d7a8ce07d9a1b15aeeade8a2d10f130a834f8177", "7c3dca29c022744e95b547e867cee89f4fce4373f3549ccd8797d8eb52cdb873"]
-text-unidecode = ["1311f10e8b895935241623731c2ba64f4c455287888b18189350b67134a822e8", "bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93"]
-wcwidth = ["3df37372226d6e63e1b1e1eda15c594bca98a22d33a23832a90998faa96bc65e", "f4ebe71925af7b40a864553f761ed559b43544f8f71746c2d756c7fe788ade7c"]
-zipp = ["3718b1cbcd963c7d4c5511a8240812904164b7f381b647143a89d3b98f9bcd8e", "f06903e9f1f43b12d371004b4ac7b06ab39a44adc747266928ae6debfa7b3335"]
+[metadata.files]
+addict = [
+    {file = "addict-2.2.1-py3-none-any.whl", hash = "sha256:1948c2a5d93ba6026eb91aef2c971234aaf72488a9c07ab8a7950f82ae30eea7"},
+    {file = "addict-2.2.1.tar.gz", hash = "sha256:f22493f056032f50e4931a82444fcba8ef74c8fc994c5d06aa546a1433c2b8b0"},
+]
+aniso8601 = [
+    {file = "aniso8601-7.0.0-py2.py3-none-any.whl", hash = "sha256:d10a4bf949f619f719b227ef5386e31f49a2b6d453004b21f02661ccc8670c7b"},
+    {file = "aniso8601-7.0.0.tar.gz", hash = "sha256:513d2b6637b7853806ae79ffaca6f3e8754bdd547048f5ccc1420aec4b714f1e"},
+]
+atomicwrites = [
+    {file = "atomicwrites-1.3.0-py2.py3-none-any.whl", hash = "sha256:03472c30eb2c5d1ba9227e4c2ca66ab8287fbfbbda3888aa93dc2e28fc6811b4"},
+    {file = "atomicwrites-1.3.0.tar.gz", hash = "sha256:75a9445bac02d8d058d5e1fe689654ba5a6556a1dfd8ce6ec55a0ed79866cfa6"},
+]
+attrs = [
+    {file = "attrs-19.3.0-py2.py3-none-any.whl", hash = "sha256:08a96c641c3a74e44eb59afb61a24f2cb9f4d7188748e76ba4bb5edfa3cb7d1c"},
+    {file = "attrs-19.3.0.tar.gz", hash = "sha256:f7b7ce16570fe9965acd6d30101a28f62fb4a7f9e926b3bbc9b61f8b04247e72"},
+]
+colorama = [
+    {file = "colorama-0.4.3-py2.py3-none-any.whl", hash = "sha256:7d73d2a99753107a36ac6b455ee49046802e59d9d076ef8e47b61499fa29afff"},
+    {file = "colorama-0.4.3.tar.gz", hash = "sha256:e96da0d330793e2cb9485e9ddfd918d456036c7149416295932478192f4436a1"},
+]
+coverage = [
+    {file = "coverage-5.0.3-cp27-cp27m-macosx_10_12_x86_64.whl", hash = "sha256:cc1109f54a14d940b8512ee9f1c3975c181bbb200306c6d8b87d93376538782f"},
+    {file = "coverage-5.0.3-cp27-cp27m-macosx_10_13_intel.whl", hash = "sha256:be18f4ae5a9e46edae3f329de2191747966a34a3d93046dbdf897319923923bc"},
+    {file = "coverage-5.0.3-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:3230d1003eec018ad4a472d254991e34241e0bbd513e97a29727c7c2f637bd2a"},
+    {file = "coverage-5.0.3-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:e69215621707119c6baf99bda014a45b999d37602cb7043d943c76a59b05bf52"},
+    {file = "coverage-5.0.3-cp27-cp27m-win32.whl", hash = "sha256:1daa3eceed220f9fdb80d5ff950dd95112cd27f70d004c7918ca6dfc6c47054c"},
+    {file = "coverage-5.0.3-cp27-cp27m-win_amd64.whl", hash = "sha256:51bc7710b13a2ae0c726f69756cf7ffd4362f4ac36546e243136187cfcc8aa73"},
+    {file = "coverage-5.0.3-cp27-cp27mu-manylinux1_i686.whl", hash = "sha256:9bea19ac2f08672636350f203db89382121c9c2ade85d945953ef3c8cf9d2a68"},
+    {file = "coverage-5.0.3-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:5012d3b8d5a500834783689a5d2292fe06ec75dc86ee1ccdad04b6f5bf231691"},
+    {file = "coverage-5.0.3-cp35-cp35m-macosx_10_12_x86_64.whl", hash = "sha256:d513cc3db248e566e07a0da99c230aca3556d9b09ed02f420664e2da97eac301"},
+    {file = "coverage-5.0.3-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:3dbb72eaeea5763676a1a1efd9b427a048c97c39ed92e13336e726117d0b72bf"},
+    {file = "coverage-5.0.3-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:15cf13a6896048d6d947bf7d222f36e4809ab926894beb748fc9caa14605d9c3"},
+    {file = "coverage-5.0.3-cp35-cp35m-win32.whl", hash = "sha256:fca1669d464f0c9831fd10be2eef6b86f5ebd76c724d1e0706ebdff86bb4adf0"},
+    {file = "coverage-5.0.3-cp35-cp35m-win_amd64.whl", hash = "sha256:1e44a022500d944d42f94df76727ba3fc0a5c0b672c358b61067abb88caee7a0"},
+    {file = "coverage-5.0.3-cp36-cp36m-macosx_10_13_x86_64.whl", hash = "sha256:b26aaf69713e5674efbde4d728fb7124e429c9466aeaf5f4a7e9e699b12c9fe2"},
+    {file = "coverage-5.0.3-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:722e4557c8039aad9592c6a4213db75da08c2cd9945320220634f637251c3894"},
+    {file = "coverage-5.0.3-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:7afad9835e7a651d3551eab18cbc0fdb888f0a6136169fbef0662d9cdc9987cf"},
+    {file = "coverage-5.0.3-cp36-cp36m-win32.whl", hash = "sha256:25dbf1110d70bab68a74b4b9d74f30e99b177cde3388e07cc7272f2168bd1477"},
+    {file = "coverage-5.0.3-cp36-cp36m-win_amd64.whl", hash = "sha256:c312e57847db2526bc92b9bfa78266bfbaabac3fdcd751df4d062cd4c23e46dc"},
+    {file = "coverage-5.0.3-cp37-cp37m-macosx_10_13_x86_64.whl", hash = "sha256:a8b8ac7876bc3598e43e2603f772d2353d9931709345ad6c1149009fd1bc81b8"},
+    {file = "coverage-5.0.3-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:527b4f316e6bf7755082a783726da20671a0cc388b786a64417780b90565b987"},
+    {file = "coverage-5.0.3-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:d649dc0bcace6fcdb446ae02b98798a856593b19b637c1b9af8edadf2b150bea"},
+    {file = "coverage-5.0.3-cp37-cp37m-win32.whl", hash = "sha256:cd60f507c125ac0ad83f05803063bed27e50fa903b9c2cfee3f8a6867ca600fc"},
+    {file = "coverage-5.0.3-cp37-cp37m-win_amd64.whl", hash = "sha256:c60097190fe9dc2b329a0eb03393e2e0829156a589bd732e70794c0dd804258e"},
+    {file = "coverage-5.0.3-cp38-cp38-macosx_10_13_x86_64.whl", hash = "sha256:d7008a6796095a79544f4da1ee49418901961c97ca9e9d44904205ff7d6aa8cb"},
+    {file = "coverage-5.0.3-cp38-cp38-manylinux1_i686.whl", hash = "sha256:ea9525e0fef2de9208250d6c5aeeee0138921057cd67fcef90fbed49c4d62d37"},
+    {file = "coverage-5.0.3-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:c62a2143e1313944bf4a5ab34fd3b4be15367a02e9478b0ce800cb510e3bbb9d"},
+    {file = "coverage-5.0.3-cp38-cp38m-win32.whl", hash = "sha256:b0840b45187699affd4c6588286d429cd79a99d509fe3de0f209594669bb0954"},
+    {file = "coverage-5.0.3-cp38-cp38m-win_amd64.whl", hash = "sha256:76e2057e8ffba5472fd28a3a010431fd9e928885ff480cb278877c6e9943cc2e"},
+    {file = "coverage-5.0.3-cp39-cp39m-win32.whl", hash = "sha256:b63dd43f455ba878e5e9f80ba4f748c0a2156dde6e0e6e690310e24d6e8caf40"},
+    {file = "coverage-5.0.3-cp39-cp39m-win_amd64.whl", hash = "sha256:da93027835164b8223e8e5af2cf902a4c80ed93cb0909417234f4a9df3bcd9af"},
+    {file = "coverage-5.0.3.tar.gz", hash = "sha256:77afca04240c40450c331fa796b3eab6f1e15c5ecf8bf2b8bee9706cd5452fef"},
+]
+django = [
+    {file = "Django-2.2.9-py3-none-any.whl", hash = "sha256:687c37153486cf26c3fdcbdd177ef16de38dc3463f094b5f9c9955d91f277b14"},
+    {file = "Django-2.2.9.tar.gz", hash = "sha256:662a1ff78792e3fd77f16f71b1f31149489434de4b62a74895bd5d6534e635a5"},
+]
+factory-boy = [
+    {file = "factory_boy-2.12.0-py2.py3-none-any.whl", hash = "sha256:728df59b372c9588b83153facf26d3d28947fc750e8e3c95cefa9bed0e6394ee"},
+    {file = "factory_boy-2.12.0.tar.gz", hash = "sha256:faf48d608a1735f0d0a3c9cbf536d64f9132b547dae7ba452c4d99a79e84a370"},
+]
+faker = [
+    {file = "Faker-4.0.0-py3-none-any.whl", hash = "sha256:047d4d1791bfb3756264da670d99df13d799bb36e7d88774b1585a82d05dbaec"},
+    {file = "Faker-4.0.0.tar.gz", hash = "sha256:1b1a58961683b30c574520d0c739c4443e0ef6a185c04382e8cc888273dbebed"},
+]
+graphene = [
+    {file = "graphene-2.1.8-py2.py3-none-any.whl", hash = "sha256:09165f03e1591b76bf57b133482db9be6dac72c74b0a628d3c93182af9c5a896"},
+    {file = "graphene-2.1.8.tar.gz", hash = "sha256:2cbe6d4ef15cfc7b7805e0760a0e5b80747161ce1b0f990dfdc0d2cf497c12f9"},
+]
+graphene-django = [
+    {file = "graphene-django-2.8.0.tar.gz", hash = "sha256:85376ed02941f579849033c027cd8b1e31be72765b504a08706ccb9234ecdc26"},
+    {file = "graphene_django-2.8.0-py2.py3-none-any.whl", hash = "sha256:a290fc41a58ee61b43ff4b4885e866ef48bb8d66b0e7088fd8dc2bd677856e6a"},
+]
+graphene-file-upload = [
+    {file = "graphene_file_upload-1.2.2-py3-none-any.whl", hash = "sha256:034ff72d2834b7aebd06fda412fa88a10aba34bac604317f7552457e47040654"},
+    {file = "graphene_file_upload-1.2.2.tar.gz", hash = "sha256:b5f47a81f5614d1184ba9480a63835769b26303cb7759316122401784858e9c7"},
+]
+graphql-core = [
+    {file = "graphql-core-2.2.1.tar.gz", hash = "sha256:da64c472d720da4537a2e8de8ba859210b62841bd47a9be65ca35177f62fe0e4"},
+    {file = "graphql_core-2.2.1-py2.py3-none-any.whl", hash = "sha256:1488f2a5c2272dc9ba66e3042a6d1c30cea0db4c80bd1e911c6791ad6187d91b"},
+]
+graphql-relay = [
+    {file = "graphql-relay-2.0.1.tar.gz", hash = "sha256:870b6b5304123a38a0b215a79eace021acce5a466bf40cd39fa18cb8528afabb"},
+    {file = "graphql_relay-2.0.1-py3-none-any.whl", hash = "sha256:ac514cb86db9a43014d7e73511d521137ac12cf0101b2eaa5f0a3da2e10d913d"},
+]
+importlib-metadata = [
+    {file = "importlib_metadata-1.4.0-py2.py3-none-any.whl", hash = "sha256:bdd9b7c397c273bcc9a11d6629a38487cd07154fa255a467bf704cd2c258e359"},
+    {file = "importlib_metadata-1.4.0.tar.gz", hash = "sha256:f17c015735e1a88296994c0697ecea7e11db24290941983b08c9feb30921e6d8"},
+]
+more-itertools = [
+    {file = "more-itertools-8.1.0.tar.gz", hash = "sha256:c468adec578380b6281a114cb8a5db34eb1116277da92d7c46f904f0b52d3288"},
+    {file = "more_itertools-8.1.0-py3-none-any.whl", hash = "sha256:1a2a32c72400d365000412fe08eb4a24ebee89997c18d3d147544f70f5403b39"},
+]
+packaging = [
+    {file = "packaging-20.0-py2.py3-none-any.whl", hash = "sha256:aec3fdbb8bc9e4bb65f0634b9f551ced63983a529d6a8931817d52fdd0816ddb"},
+    {file = "packaging-20.0.tar.gz", hash = "sha256:fe1d8331dfa7cc0a883b49d75fc76380b2ab2734b220fbb87d774e4fd4b851f8"},
+]
+pluggy = [
+    {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
+    {file = "pluggy-0.13.1.tar.gz", hash = "sha256:15b2acde666561e1298d71b523007ed7364de07029219b604cf808bfa1c765b0"},
+]
+promise = [
+    {file = "promise-2.3.tar.gz", hash = "sha256:dfd18337c523ba4b6a58801c164c1904a9d4d1b1747c7d5dbf45b693a49d93d0"},
+]
+py = [
+    {file = "py-1.8.1-py2.py3-none-any.whl", hash = "sha256:c20fdd83a5dbc0af9efd622bee9a5564e278f6380fffcacc43ba6f43db2813b0"},
+    {file = "py-1.8.1.tar.gz", hash = "sha256:5e27081401262157467ad6e7f851b7aa402c5852dbcb3dae06768434de5752aa"},
+]
+pyparsing = [
+    {file = "pyparsing-2.4.6-py2.py3-none-any.whl", hash = "sha256:c342dccb5250c08d45fd6f8b4a559613ca603b57498511740e65cd11a2e7dcec"},
+    {file = "pyparsing-2.4.6.tar.gz", hash = "sha256:4c830582a84fb022400b85429791bc551f1f4871c33f23e44f353119e92f969f"},
+]
+pytest = [
+    {file = "pytest-5.3.4-py3-none-any.whl", hash = "sha256:c13d1943c63e599b98cf118fcb9703e4d7bde7caa9a432567bcdcae4bf512d20"},
+    {file = "pytest-5.3.4.tar.gz", hash = "sha256:1d122e8be54d1a709e56f82e2d85dcba3018313d64647f38a91aec88c239b600"},
+]
+pytest-cov = [
+    {file = "pytest-cov-2.8.1.tar.gz", hash = "sha256:cc6742d8bac45070217169f5f72ceee1e0e55b0221f54bcf24845972d3a47f2b"},
+    {file = "pytest_cov-2.8.1-py2.py3-none-any.whl", hash = "sha256:cdbdef4f870408ebdbfeb44e63e07eb18bb4619fae852f6e760645fa36172626"},
+]
+pytest-django = [
+    {file = "pytest-django-3.8.0.tar.gz", hash = "sha256:489b904f695f9fb880ce591cf5a4979880afb467763b1f180c07574554bdfd26"},
+    {file = "pytest_django-3.8.0-py2.py3-none-any.whl", hash = "sha256:456fa6854d04ee625d6bbb8b38ca2259e7040a6f93333bfe8bc8159b7e987203"},
+]
+python-dateutil = [
+    {file = "python-dateutil-2.8.1.tar.gz", hash = "sha256:73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c"},
+    {file = "python_dateutil-2.8.1-py2.py3-none-any.whl", hash = "sha256:75bb3f31ea686f1197762692a9ee6a7550b59fc6ca3a1f4b5d7e32fb98e2da2a"},
+]
+pytz = [
+    {file = "pytz-2019.3-py2.py3-none-any.whl", hash = "sha256:1c557d7d0e871de1f5ccd5833f60fb2550652da6be2693c1e02300743d21500d"},
+    {file = "pytz-2019.3.tar.gz", hash = "sha256:b02c06db6cf09c12dd25137e563b31700d3b80fcc4ad23abb7a315f2789819be"},
+]
+rx = [
+    {file = "Rx-1.6.1-py2.py3-none-any.whl", hash = "sha256:7357592bc7e881a95e0c2013b73326f704953301ab551fbc8133a6fadab84105"},
+    {file = "Rx-1.6.1.tar.gz", hash = "sha256:13a1d8d9e252625c173dc795471e614eadfe1cf40ffc684e08b8fff0d9748c23"},
+]
+singledispatch = [
+    {file = "singledispatch-3.4.0.3-py2.py3-none-any.whl", hash = "sha256:833b46966687b3de7f438c761ac475213e53b306740f1abfaa86e1d1aae56aa8"},
+    {file = "singledispatch-3.4.0.3.tar.gz", hash = "sha256:5b06af87df13818d14f08a028e42f566640aef80805c3b50c5056b086e3c2b9c"},
+]
+six = [
+    {file = "six-1.14.0-py2.py3-none-any.whl", hash = "sha256:8f3cd2e254d8f793e7f3d6d9df77b92252b52637291d0f0da013c76ea2724b6c"},
+    {file = "six-1.14.0.tar.gz", hash = "sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a"},
+]
+sqlparse = [
+    {file = "sqlparse-0.3.0-py2.py3-none-any.whl", hash = "sha256:40afe6b8d4b1117e7dff5504d7a8ce07d9a1b15aeeade8a2d10f130a834f8177"},
+    {file = "sqlparse-0.3.0.tar.gz", hash = "sha256:7c3dca29c022744e95b547e867cee89f4fce4373f3549ccd8797d8eb52cdb873"},
+]
+text-unidecode = [
+    {file = "text-unidecode-1.3.tar.gz", hash = "sha256:bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93"},
+    {file = "text_unidecode-1.3-py2.py3-none-any.whl", hash = "sha256:1311f10e8b895935241623731c2ba64f4c455287888b18189350b67134a822e8"},
+]
+wcwidth = [
+    {file = "wcwidth-0.1.8-py2.py3-none-any.whl", hash = "sha256:8fd29383f539be45b20bd4df0dc29c20ba48654a41e661925e612311e9f3c603"},
+]
+zipp = [
+    {file = "zipp-2.0.1-py3-none-any.whl", hash = "sha256:e013e7800f60ec4dde789ebf4e9f7a54236e4bbf5df2a1a4e20ce9e1d9609d67"},
+    {file = "zipp-2.0.1.tar.gz", hash = "sha256:b338014b9bc7102ca69e0fb96ed07215a8954d2989bc5d83658494ab2ba634af"},
+]

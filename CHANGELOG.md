@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.3.0
+* `get_queryset` now takes an `info` argument and other kwargs.
+
 ## Version 0.2.2
 * Fix a bug related to setting of many-to-one extras on create operations.
 
