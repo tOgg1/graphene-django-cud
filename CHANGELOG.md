@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.3.1
+* Fix bug in `TimeDelta`
+
 ## Version 0.3.0
 * `get_queryset` now takes an `info` argument and other kwargs.
 
