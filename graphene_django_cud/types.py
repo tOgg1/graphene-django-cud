@@ -18,7 +18,7 @@ class TimeDelta(graphene.Scalar):
     def serialize(timedelta: datetime.timedelta):
         hours = timedelta.seconds // 3600
         if timedelta.days > 0:
-            hours = timedelta.days * 24
+            hours += timedelta.days * 24
         minutes = (timedelta.seconds // 60) % 60
         seconds = timedelta.seconds % 60
 
