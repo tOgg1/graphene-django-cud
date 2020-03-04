@@ -37,6 +37,6 @@ build:
 
 .PHONY: release
 release:
-	twine upload dist/*
+	poetry run twine upload dist/*
 
 
