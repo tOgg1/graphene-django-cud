@@ -51,8 +51,8 @@ class ConvertDjangoFieldWithChoices(TestCase):
         self.assertIsInstance(result, graphene.types.Enum)
         self.assertEqual(result.kwargs.get("required"), False)
 
+    # Exists to address: https://github.com/tOgg1/graphene-django-cud/issues/5
     def test_choices_field__choice_field_in_different_locations__accepts_different_parameters(self):
-        # Exists to address: https://github.com/tOgg1/graphene-django-cud/issues/5
         class MockModel(models.Model):
             field_with_choices = models.CharField(
                 max_length=16,
@@ -81,3 +81,33 @@ class ConvertDjangoFieldWithChoices(TestCase):
 
         self.assertIsInstance(result, graphene.types.Enum)
         self.assertEqual(result.kwargs.get("required"), False)
+
+    # Exists to adress: https://github.com/tOgg1/graphene-django-cud/issues/9
+    def test__one_to_one_field__is_properly_converted(self):
+
+        class MockSuperModel(models.Model):
+            name = models.CharField(max_length=128, default="Heidi Klum")
+
+        class MockModel(models.Model):
+            super_model = models.OneToOneField(MockSuperModel, on_delete=models.CASCADE, related_name='modelling')  # Model-ling... Get it? xD
+
+        # Convert primary relation
+        registry = get_global_registry()
+        field = MockModel._meta.get_field("super_model")
+        result = convert_django_field_with_choices(
+            field,
+            registry=registry
+        )
+
+        self.assertIsInstance(result, graphene.types.ID)
+        self.assertEqual(result.kwargs.get("required"), True)
+
+        # Convert backward relation
+        field = MockSuperModel._meta.get_field("modelling")
+        result = convert_django_field_with_choices(
+            field,
+            registry=registry
+        )
+
+        self.assertIsInstance(result, graphene.types.ID)
+

@@ -163,7 +163,8 @@ def convert_field_to_string_extended(field, registry=None, required=None, field_
 @convert_django_field_to_input.register(models.OneToOneRel)
 @convert_django_field_to_input.register(models.ForeignKey)
 def convert_field_to_id(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
-    id_type = ID(description=field.help_text, required=is_required(field, required))
+    # Call getattr here, as OneToOneRel does not carry the attribute whatsoeever.
+    id_type = ID(description=getattr(field, "help_text", ""), required=is_required(field, required))
     _type_name = (field_foreign_key_extras or {}).get(
         'type',
         "ID"
@@ -251,9 +252,6 @@ def convert_time_to_string(field, registry=None, required=None, field_many_to_ma
     return Time(description=field.help_text, required=is_required(field, required))
 
 
-@convert_django_field_to_input.register(models.OneToOneRel)
-def convert_onetoone_field_to_djangomodel(field, registry=None, required=None, field_many_to_many_extras=None, field_foreign_key_extras=None):
-    return List(ID, description=field.help_text, required=is_required(field, required))
 
 
 @convert_django_field_to_input.register(models.ManyToManyField)
