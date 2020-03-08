@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.3.2
+* Fix bug when converting OneToOneRels.
+
 ## Version 0.3.1
 * Fix bug in `TimeDelta`
 
