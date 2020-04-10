@@ -76,6 +76,7 @@ def get_input_fields_for_model(
     many_to_one_extras=None,
     parent_type_name="",
     field_types=None,
+    ignore_primary_key=True,
 ) -> OrderedDict:
 
     registry = get_global_registry()
@@ -91,7 +92,7 @@ def get_input_fields_for_model(
     fields_lookup = {}
     for name, field in model_fields:
         # We ignore the primary key
-        if getattr(field, "primary_key", False):
+        if getattr(field, "primary_key", False) and ignore_primary_key:
             continue
 
         # If the field has an override, use that
@@ -176,10 +177,14 @@ def get_input_fields_for_model(
             _type = data.get("type")
             if not _type or _type == "auto":
                 # Create new type.
+                operation_name = data.get(
+                    "operation", get_likely_operation_from_name(extra_name)
+                )
                 _type_name = data.get(
                     "type_name",
-                    f"{parent_type_name}Create{model.__name__}{name.capitalize()}",
+                    f"{parent_type_name or ''}{operation_name.capitalize()}{model.__name__}{name.capitalize()}",
                 )
+
                 converted_fields = get_input_fields_for_model(
                     field.related_model,
                     data.get("only_fields", ()),
@@ -193,6 +198,8 @@ def get_input_fields_for_model(
                     data.get("many_to_one_extras"),
                     parent_type_name=_type_name,
                     field_types=data.get("field_types"),
+                    # Don't ignore the primary key on updates
+                    ignore_primary_key=operation_name != "update"
                 )
                 InputType = type(_type_name, (InputObjectType,), converted_fields)
                 meta_registry.register(
@@ -228,6 +235,7 @@ def get_all_optional_input_fields_for_model(
     many_to_one_extras=None,
     parent_type_name="",
     field_types=None,
+    ignore_primary_key=True,
 ):
     registry = get_global_registry()
     meta_registry = get_type_meta_registry()
@@ -242,7 +250,7 @@ def get_all_optional_input_fields_for_model(
     fields_lookup = {}
     for name, field in model_fields:
         # We ignore the primary key
-        if getattr(field, "primary_key", False):
+        if getattr(field, "primary_key", False) and ignore_primary_key:
             continue
 
         # If the field has an override, use that
@@ -322,9 +330,12 @@ def get_all_optional_input_fields_for_model(
             _type = data.get("type")
             if not _type or _type == "auto":
                 # Create new type.
+                operation_name = data.get(
+                    "operation", get_likely_operation_from_name(extra_name)
+                )
                 _type_name = data.get(
                     "type_name",
-                    f"{parent_type_name}Create{model.__name__}{name.capitalize()}",
+                    f"{parent_type_name or ''}{operation_name.capitalize()}{model.__name__}{name.capitalize()}",
                 )
                 converted_fields = get_input_fields_for_model(
                     field.related_model,
@@ -339,6 +350,8 @@ def get_all_optional_input_fields_for_model(
                     data.get("many_to_one_extras"),
                     parent_type_name=_type_name,
                     field_types=data.get("field_types"),
+                    # Don't ignore the primary key on updates
+                    ignore_primary_key=operation_name != "update"
                 )
                 InputType = type(_type_name, (InputObjectType,), converted_fields)
                 meta_registry.register(
@@ -373,12 +386,7 @@ def get_likely_operation_from_name(extra_name):
     if extra_name == "update" or extra_name == "patch":
         return "update"
 
-    if (
-        extra_name == "add"
-        or extra_name == "append"
-        or extra_name == "exact"
-        or extra_name == "create"
-    ):
+    if extra_name == "add" or extra_name == "append" or extra_name == "create":
         return "add"
 
     if extra_name == "delete" or extra_name == "remove":

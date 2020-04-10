@@ -85,7 +85,7 @@ class DjangoCudBase(Mutation):
         return results
 
     @classmethod
-    def get_or_create_m2o_objs(cls, obj, field, values, data, operation, info, Model):
+    def get_or_upsert_m2o_objs(cls, obj, field, values, data, operation, info, Model):
         results = []
 
         if not values:
@@ -101,13 +101,17 @@ class DjangoCudBase(Mutation):
                 # then get it's meta, and then create it. We also need to attach the obj as the
                 # foreign key.
                 _type_name = data.get(
-                    "type_name", f"Create{Model.__name__}{field.name.capitalize()}"
+                    "type_name",
+                    f"{operation.capitalize()}{Model.__name__}{field.name.capitalize()}",
                 )
                 input_type_meta = meta_registry.get_meta_for_type(field_type)
 
-                # .id has to be called here, as the regular input for a foreignkey is ID!
+                # Ensure the parent relation exists and has the correct id.
                 value[field.field.name] = obj.id
-                related_obj = cls.create_obj(
+
+                # We use upsert here, as the operation might be "update", where we
+                # want to update the object.
+                related_obj = cls.upsert_obj(
                     value,
                     info,
                     input_type_meta.get("auto_context_fields", {}),
@@ -133,6 +137,44 @@ class DjangoCudBase(Mutation):
                 results.append(related_obj)
 
         return results
+
+    @classmethod
+    def upsert_obj(
+        cls,
+        input,
+        info,
+        auto_context_fields,
+        many_to_many_extras,
+        foreign_key_extras,
+        many_to_one_extras,
+        Model,
+    ):
+        id = disambiguate_id(input.get("id"))
+        obj = Model.objects.filter(pk=id).first()
+
+        if obj:
+            obj = cls.update_obj(
+                obj,
+                input,
+                info,
+                auto_context_fields,
+                many_to_many_extras,
+                foreign_key_extras,
+                many_to_one_extras,
+                Model,
+            )
+            obj.save()
+            return obj
+        else:
+            return cls.create_obj(
+                input,
+                info,
+                auto_context_fields,
+                many_to_many_extras,
+                foreign_key_extras,
+                many_to_one_extras,
+                Model,
+            )
 
     @classmethod
     def create_obj(
@@ -289,12 +331,12 @@ class DjangoCudBase(Mutation):
                 )
 
                 if operation == "exact":
-                    objs = cls.get_or_create_m2o_objs(
+                    objs = cls.get_or_upsert_m2o_objs(
                         obj, field, values, data, operation, info, Model
                     )
                     many_to_one_to_set[name] = objs
-                elif operation == "add":
-                    objs = cls.get_or_create_m2o_objs(
+                elif operation == "add" or operation == "update":
+                    objs = cls.get_or_upsert_m2o_objs(
                         obj, field, values, data, operation, info, Model
                     )
                     many_to_one_to_add[name] += objs
@@ -485,12 +527,12 @@ class DjangoCudBase(Mutation):
                 )
 
                 if operation == "exact":
-                    objs = cls.get_or_create_m2o_objs(
+                    objs = cls.get_or_upsert_m2o_objs(
                         obj, field, values, data, operation, info, Model
                     )
                     many_to_one_to_set[name] = objs
-                elif operation == "add":
-                    objs = cls.get_or_create_m2o_objs(
+                elif operation == "add" or operation == "update":
+                    objs = cls.get_or_upsert_m2o_objs(
                         obj, field, values, data, operation, info, Model
                     )
                     many_to_one_to_add[name] += objs
