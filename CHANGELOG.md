@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 0.4.0
+* Add proper handling of update nested many-to-on extras for update mutations.
+* Fix a deprecation warning. See #12. Thanks to @fkromer.
+
 ## Version 0.3.2
 * Fix bug when converting OneToOneRels.
 
