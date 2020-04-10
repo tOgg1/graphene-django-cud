@@ -11,8 +11,7 @@ from functools import singledispatch
 
 from django.db import models
 from django.db.models import FileField, ImageField
-from django.utils.encoding import force_text
-
+from django.utils.encoding import force_str
 from graphene import (
     ID,
     Boolean,
@@ -31,10 +30,9 @@ from graphene import (
 )
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
+from graphene_django.compat import ArrayField, HStoreField, JSONField, RangeField
 from graphene_file_upload.scalars import Upload
 from graphql import assert_valid_name, GraphQLError
-
-from graphene_django.compat import ArrayField, HStoreField, JSONField, RangeField
 
 from graphene_django_cud.types import TimeDelta
 
@@ -54,7 +52,7 @@ def is_required(field, required=None, is_many_to_many=False):
 
 
 def convert_choice_name(name):
-    name = to_const(force_text(name))
+    name = to_const(force_str(name))
     try:
         assert_valid_name(name)
     except AssertionError:
