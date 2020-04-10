@@ -88,7 +88,6 @@ class PatchUserMutation(DjangoPatchMutation):
 
     @classmethod
     def mutate(cls, root, info, id, input):
-        print(info)
         return super().mutate(root, info, id, input)
 
 
