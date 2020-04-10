@@ -9,7 +9,10 @@ from graphql import GraphQLError
 from graphql_relay import from_global_id
 from typing import Union
 
-from graphene_django_cud.converter import convert_django_field_with_choices, convert_many_to_many_field
+from graphene_django_cud.converter import (
+    convert_django_field_with_choices,
+    convert_many_to_many_field,
+)
 from graphene_django_cud.registry import get_type_meta_registry
 
 
@@ -72,7 +75,7 @@ def get_input_fields_for_model(
     foreign_key_extras=None,
     many_to_one_extras=None,
     parent_type_name="",
-    field_types=None
+    field_types=None,
 ) -> OrderedDict:
 
     registry = get_global_registry()
@@ -95,7 +98,6 @@ def get_input_fields_for_model(
         if name in field_types:
             fields[name] = field_types[name]
             continue
-
 
         # Save for later
         fields_lookup[name] = field
@@ -121,8 +123,8 @@ def get_input_fields_for_model(
             field,
             registry,
             required,
-            many_to_many_extras.get(name, {}).get('exact'),
-            foreign_key_extras.get(name, {})
+            many_to_many_extras.get(name, {}).get("exact"),
+            foreign_key_extras.get(name, {}),
         )
         fields[name] = converted
 
@@ -130,7 +132,9 @@ def get_input_fields_for_model(
     for name, extras in many_to_many_extras.items():
         field = fields_lookup.get(name)
         if field is None:
-            raise GraphQLError(f"Error adding extras for {name} in model f{model}. Field {name} does not exist.")
+            raise GraphQLError(
+                f"Error adding extras for {name} in model f{model}. Field {name} does not exist."
+            )
 
         for extra_name, data in extras.items():
 
@@ -141,14 +145,8 @@ def get_input_fields_for_model(
             if isinstance(data, bool):
                 data = {}
 
-            _type_name = data.get('type')
-            _field = convert_many_to_many_field(
-                field,
-                registry,
-                False,
-                data,
-                None
-            )
+            _type_name = data.get("type")
+            _field = convert_many_to_many_field(field, registry, False, data, None)
 
             # Default to the same as the "exact" version
             if not _field:
@@ -160,57 +158,61 @@ def get_input_fields_for_model(
     for name, extras in many_to_one_extras.items():
         field = fields_lookup.get(name)
         if field is None:
-            raise GraphQLError(f"Error adding extras for {name} in model f{model}. Field {name} does not exist.")
+            raise GraphQLError(
+                f"Error adding extras for {name} in model f{model}. Field {name} does not exist."
+            )
 
         for extra_name, data in extras.items():
 
-            argument_name = data.get('name', name + "_" + extra_name)
+            argument_name = data.get("name", name + "_" + extra_name)
 
             # Override default
             if extra_name == "exact":
                 argument_name = name
 
             if isinstance(data, bool):
-                data = {"type": 'ID'}
+                data = {"type": "ID"}
 
-            _type = data.get('type')
+            _type = data.get("type")
             if not _type or _type == "auto":
                 # Create new type.
-                _type_name = data.get('type_name', f"{parent_type_name}Create{model.__name__}{name.capitalize()}")
+                _type_name = data.get(
+                    "type_name",
+                    f"{parent_type_name}Create{model.__name__}{name.capitalize()}",
+                )
                 converted_fields = get_input_fields_for_model(
                     field.related_model,
-                    data.get('only_fields', ()),
-                    data.get('exclude_fields', (field.field.name,)),  # Exclude the field referring back to the foreign key
-                    data.get('optional_fields', ()),
-                    data.get('required_fields', ()),
-                    data.get('many_to_many_extras'),
-                    data.get('foreign_key_extras'),
-                    data.get('many_to_one_extras'),
+                    data.get("only_fields", ()),
+                    data.get(
+                        "exclude_fields", (field.field.name,)
+                    ),  # Exclude the field referring back to the foreign key
+                    data.get("optional_fields", ()),
+                    data.get("required_fields", ()),
+                    data.get("many_to_many_extras"),
+                    data.get("foreign_key_extras"),
+                    data.get("many_to_one_extras"),
                     parent_type_name=_type_name,
-                    field_types=data.get('field_types')
+                    field_types=data.get("field_types"),
                 )
                 InputType = type(_type_name, (InputObjectType,), converted_fields)
-                meta_registry.register(_type_name, {
-                    'auto_context_fields': data.get('auto_context_fields', {}),
-                    'optional_fields': data.get('optional_fields', ()),
-                    'required_fields': data.get('required_fields', ()),
-                    'many_to_many_extras': data.get('many_to_many_extras', {}),
-                    'many_to_one_extras': data.get('many_to_one_extras', {}),
-                    'foreign_key_extras': data.get('auto_context_fields', {}),
-                    'field_types': data.get('field_types', {}),
-                })
+                meta_registry.register(
+                    _type_name,
+                    {
+                        "auto_context_fields": data.get("auto_context_fields", {}),
+                        "optional_fields": data.get("optional_fields", ()),
+                        "required_fields": data.get("required_fields", ()),
+                        "many_to_many_extras": data.get("many_to_many_extras", {}),
+                        "many_to_one_extras": data.get("many_to_one_extras", {}),
+                        "foreign_key_extras": data.get("auto_context_fields", {}),
+                        "field_types": data.get("field_types", {}),
+                    },
+                )
                 _field = graphene.List(
                     type(_type_name, (InputObjectType,), converted_fields),
-                    required=False
+                    required=False,
                 )
             else:
-                _field = convert_many_to_many_field(
-                    field,
-                    registry,
-                    False,
-                    data,
-                    None
-                )
+                _field = convert_many_to_many_field(field, registry, False, data, None)
 
             fields[argument_name] = _field
 
@@ -218,14 +220,14 @@ def get_input_fields_for_model(
 
 
 def get_all_optional_input_fields_for_model(
-        model,
-        only_fields,
-        exclude_fields,
-        many_to_many_extras=None,
-        foreign_key_extras=None,
-        many_to_one_extras=None,
-        parent_type_name="",
-        field_types=None
+    model,
+    only_fields,
+    exclude_fields,
+    many_to_many_extras=None,
+    foreign_key_extras=None,
+    many_to_one_extras=None,
+    parent_type_name="",
+    field_types=None,
 ):
     registry = get_global_registry()
     meta_registry = get_type_meta_registry()
@@ -266,8 +268,8 @@ def get_all_optional_input_fields_for_model(
             field,
             registry,
             False,
-            many_to_many_extras.get(name, {}).get('exact'),
-            foreign_key_extras.get(name, {})
+            many_to_many_extras.get(name, {}).get("exact"),
+            foreign_key_extras.get(name, {}),
         )
 
         fields[name] = converted
@@ -276,7 +278,9 @@ def get_all_optional_input_fields_for_model(
     for name, extras in many_to_many_extras.items():
         field = fields_lookup.get(name)
         if field is None:
-            raise GraphQLError(f"Error adding extras for {name} in model f{model}. Field {name} does not exist.")
+            raise GraphQLError(
+                f"Error adding extras for {name} in model f{model}. Field {name} does not exist."
+            )
 
         for extra_name, data in extras.items():
 
@@ -287,14 +291,8 @@ def get_all_optional_input_fields_for_model(
             if isinstance(data, bool):
                 data = {}
 
-            _type_name = data.get('type')
-            _field = convert_many_to_many_field(
-                field,
-                registry,
-                False,
-                data,
-                None
-            )
+            _type_name = data.get("type")
+            _field = convert_many_to_many_field(field, registry, False, data, None)
 
             # Default to the same as the "exact" version
             if not _field:
@@ -303,67 +301,68 @@ def get_all_optional_input_fields_for_model(
             # operation = data.get('operation') or get_likely_operation_from_name(extra_name)
             fields[name + "_" + extra_name] = _field
 
-
     for name, extras in many_to_one_extras.items():
         field = fields_lookup.get(name)
         if field is None:
-            raise GraphQLError(f"Error adding extras for {name} in model f{model}. Field {name} does not exist.")
+            raise GraphQLError(
+                f"Error adding extras for {name} in model f{model}. Field {name} does not exist."
+            )
 
         for extra_name, data in extras.items():
 
-            argument_name = data.get('name', name + "_" + extra_name)
+            argument_name = data.get("name", name + "_" + extra_name)
 
             # Override default
             if extra_name == "exact":
                 argument_name = name
 
             if isinstance(data, bool):
-                data = {"type": 'ID'}
+                data = {"type": "ID"}
 
-            _type = data.get('type')
+            _type = data.get("type")
             if not _type or _type == "auto":
                 # Create new type.
-                _type_name = data.get('type_name', f"{parent_type_name}Create{model.__name__}{name.capitalize()}")
+                _type_name = data.get(
+                    "type_name",
+                    f"{parent_type_name}Create{model.__name__}{name.capitalize()}",
+                )
                 converted_fields = get_input_fields_for_model(
                     field.related_model,
-                    data.get('only_fields', ()),
-                    data.get('exclude_fields', (field.field.name,)),  # Exclude the field referring back to the foreign key
-                    data.get('optional_fields', ()),
-                    data.get('required_fields', ()),
-                    data.get('many_to_many_extras'),
-                    data.get('foreign_key_extras'),
-                    data.get('many_to_one_extras'),
+                    data.get("only_fields", ()),
+                    data.get(
+                        "exclude_fields", (field.field.name,)
+                    ),  # Exclude the field referring back to the foreign key
+                    data.get("optional_fields", ()),
+                    data.get("required_fields", ()),
+                    data.get("many_to_many_extras"),
+                    data.get("foreign_key_extras"),
+                    data.get("many_to_one_extras"),
                     parent_type_name=_type_name,
-                    field_types=data.get('field_types')
+                    field_types=data.get("field_types"),
                 )
                 InputType = type(_type_name, (InputObjectType,), converted_fields)
-                meta_registry.register(_type_name, {
-                    'auto_context_fields': data.get('auto_context_fields', {}),
-                    'optional_fields': data.get('optional_fields', ()),
-                    'required_fields': data.get('required_fields', ()),
-                    'many_to_many_extras': data.get('many_to_many_extras', {}),
-                    'many_to_one_extras': data.get('many_to_one_extras', {}),
-                    'foreign_key_extras': data.get('auto_context_fields', {}),
-                    'field_types': data.get('field_types', {})
-                })
+                meta_registry.register(
+                    _type_name,
+                    {
+                        "auto_context_fields": data.get("auto_context_fields", {}),
+                        "optional_fields": data.get("optional_fields", ()),
+                        "required_fields": data.get("required_fields", ()),
+                        "many_to_many_extras": data.get("many_to_many_extras", {}),
+                        "many_to_one_extras": data.get("many_to_one_extras", {}),
+                        "foreign_key_extras": data.get("auto_context_fields", {}),
+                        "field_types": data.get("field_types", {}),
+                    },
+                )
                 _field = graphene.List(
                     type(_type_name, (InputObjectType,), converted_fields),
-                    required=False
+                    required=False,
                 )
             else:
-                _field = convert_many_to_many_field(
-                    field,
-                    registry,
-                    False,
-                    data,
-                    None
-                )
+                _field = convert_many_to_many_field(field, registry, False, data, None)
 
             fields[argument_name] = _field
 
-
     return fields
-
 
 
 def get_likely_operation_from_name(extra_name):
@@ -374,14 +373,18 @@ def get_likely_operation_from_name(extra_name):
     if extra_name == "update" or extra_name == "patch":
         return "update"
 
-    if extra_name == "add" or extra_name == "append" or extra_name == "exact" or extra_name == "create":
+    if (
+        extra_name == "add"
+        or extra_name == "append"
+        or extra_name == "exact"
+        or extra_name == "create"
+    ):
         return "add"
 
     if extra_name == "delete" or extra_name == "remove":
         return "remove"
 
     raise GraphQLError(f"Unknown extra operation {extra_name}")
-
 
 
 def _validate_create_many_to_many_extras(extras):
@@ -408,10 +411,7 @@ def validate_foreign_key_extras(extras, operation_type):
     pass
 
 
-def _convert_filter_field(
-        filter_field,
-        model
-):
+def _convert_filter_field(filter_field, model):
     filter_field_split = filter_field.split("__")
     field_name = filter_field_split[0]
     model_field = model._meta.get_field(field_name)
@@ -421,7 +421,7 @@ def _convert_filter_field(
     if len(filter_field_split) > 2:
         return _convert_filter_field(
             "__".join(filter_field_split[1:]),
-            model_field.related_model  # This fails only on bad input
+            model_field.related_model,  # This fails only on bad input
         )
 
     if len(filter_field_split) == 2:
@@ -435,9 +435,8 @@ def _convert_filter_field(
             # we are dealing with the final field and some filter, e.g. fieldname__contains.
             return _convert_filter_field(
                 "__".join(filter_field_split[1:]),
-                model_field.related_model  # This fails only on bad input
+                model_field.related_model,  # This fails only on bad input
             )
-
 
     field_type = convert_django_field_with_choices(model_field, required=False)
 
@@ -449,10 +448,7 @@ def _convert_filter_field(
     return field_type
 
 
-def get_filter_fields_input_args(
-        filter_fields,
-        model
-):
+def get_filter_fields_input_args(filter_fields, model):
     result = OrderedDict()
 
     for filter_field in filter_fields:
@@ -465,8 +461,9 @@ def is_many_to_many(field):
     return type(field) in (
         models.ManyToManyField,
         models.ManyToManyRel,
-        models.ManyToOneRel
+        models.ManyToOneRel,
     )
+
 
 def get_m2m_all_extras_field_names(extras):
     res = []
@@ -474,10 +471,10 @@ def get_m2m_all_extras_field_names(extras):
         return []
     for name, extra in extras.items():
         for extra_name, data in extra.items():
-            if hasattr(data, 'get'):
-                argument_name = data.get('name', name + '_' + extra_name)
+            if hasattr(data, "get"):
+                argument_name = data.get("name", name + "_" + extra_name)
             else:
-                argument_name = name + '_' + extra_name
+                argument_name = name + "_" + extra_name
 
             if extra_name != "exact":
                 res.append(argument_name)

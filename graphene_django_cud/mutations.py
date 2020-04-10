@@ -13,9 +13,17 @@ from graphql import GraphQLError
 from graphql_relay import to_global_id
 
 from graphene_django_cud.registry import get_type_meta_registry
-from .util import disambiguate_id, disambiguate_ids, get_input_fields_for_model, \
-    get_all_optional_input_fields_for_model, is_many_to_many, get_m2m_all_extras_field_names, \
-    get_likely_operation_from_name, get_fk_all_extras_field_names, get_filter_fields_input_args
+from .util import (
+    disambiguate_id,
+    disambiguate_ids,
+    get_input_fields_for_model,
+    get_all_optional_input_fields_for_model,
+    is_many_to_many,
+    get_m2m_all_extras_field_names,
+    get_likely_operation_from_name,
+    get_fk_all_extras_field_names,
+    get_filter_fields_input_args,
+)
 
 meta_registry = get_type_meta_registry()
 
@@ -25,14 +33,8 @@ class DjangoCudBase(Mutation):
         abstract = True
 
     @classmethod
-    def get_or_create_foreign_obj(
-            cls,
-            field,
-            value,
-            data,
-            info
-    ):
-        field_type = data.get('type', 'ID')
+    def get_or_create_foreign_obj(cls, field, value, data, info):
+        field_type = data.get("type", "ID")
 
         if field_type == "ID":
             return value
@@ -42,23 +44,16 @@ class DjangoCudBase(Mutation):
             related_obj = cls.create_obj(
                 value,
                 info,
-                input_type_meta.get('auto_context_fields', {}),
-                input_type_meta.get('many_to_many_extras', {}),
-                input_type_meta.get('foreign_key_extras', {}),
-                input_type_meta.get('many_to_one_extras', {}),
-                field.related_model
+                input_type_meta.get("auto_context_fields", {}),
+                input_type_meta.get("many_to_many_extras", {}),
+                input_type_meta.get("foreign_key_extras", {}),
+                input_type_meta.get("many_to_one_extras", {}),
+                field.related_model,
             )
             return related_obj.id
 
     @classmethod
-    def get_or_create_m2m_objs(
-            cls,
-            field,
-            values,
-            data,
-            operation,
-            info
-    ):
+    def get_or_create_m2m_objs(cls, field, values, data, operation, info):
         results = []
 
         if not values:
@@ -67,7 +62,7 @@ class DjangoCudBase(Mutation):
         if isinstance(data, bool):
             data = {}
 
-        field_type = data.get('type', 'ID')
+        field_type = data.get("type", "ID")
 
         for value in values:
             if field_type == "ID":
@@ -79,33 +74,24 @@ class DjangoCudBase(Mutation):
                 related_obj = cls.create_obj(
                     value,
                     info,
-                    input_type_meta.get('auto_context_fields', {}),
-                    input_type_meta.get('many_to_many_extras', {}),
-                    input_type_meta.get('foreign_key_extras', {}),
-                    input_type_meta.get('many_to_one_extras', {}),
-                    field.related_model
+                    input_type_meta.get("auto_context_fields", {}),
+                    input_type_meta.get("many_to_many_extras", {}),
+                    input_type_meta.get("foreign_key_extras", {}),
+                    input_type_meta.get("many_to_one_extras", {}),
+                    field.related_model,
                 )
             results.append(related_obj)
 
         return results
 
     @classmethod
-    def get_or_create_m2o_objs(
-            cls,
-            obj,
-            field,
-            values,
-            data,
-            operation,
-            info,
-            Model
-    ):
+    def get_or_create_m2o_objs(cls, obj, field, values, data, operation, info, Model):
         results = []
 
         if not values:
             return results
 
-        field_type = data.get('type', 'auto')
+        field_type = data.get("type", "auto")
         for value in values:
             if field_type == "ID":
                 related_obj = field.related_model.objects.get(pk=disambiguate_id(value))
@@ -114,7 +100,9 @@ class DjangoCudBase(Mutation):
                 # In this case, a new type has been created for us. Let's first find it's name,
                 # then get it's meta, and then create it. We also need to attach the obj as the
                 # foreign key.
-                _type_name = data.get('type_name', f"Create{Model.__name__}{field.name.capitalize()}")
+                _type_name = data.get(
+                    "type_name", f"Create{Model.__name__}{field.name.capitalize()}"
+                )
                 input_type_meta = meta_registry.get_meta_for_type(field_type)
 
                 # .id has to be called here, as the regular input for a foreignkey is ID!
@@ -122,11 +110,11 @@ class DjangoCudBase(Mutation):
                 related_obj = cls.create_obj(
                     value,
                     info,
-                    input_type_meta.get('auto_context_fields', {}),
-                    input_type_meta.get('many_to_many_extras', {}),
-                    input_type_meta.get('foreign_key_extras', {}),
-                    input_type_meta.get('many_to_one_extras', {}),
-                    field.related_model
+                    input_type_meta.get("auto_context_fields", {}),
+                    input_type_meta.get("many_to_many_extras", {}),
+                    input_type_meta.get("foreign_key_extras", {}),
+                    input_type_meta.get("many_to_one_extras", {}),
+                    field.related_model,
                 )
                 results.append(related_obj)
             else:
@@ -136,11 +124,11 @@ class DjangoCudBase(Mutation):
                 related_obj = cls.create_obj(
                     value,
                     info,
-                    input_type_meta.get('auto_context_fields', {}),
-                    input_type_meta.get('many_to_many_extras', {}),
-                    input_type_meta.get('foreign_key_extras', {}),
-                    input_type_meta.get('many_to_one_extras', {}),
-                    field.related_model
+                    input_type_meta.get("auto_context_fields", {}),
+                    input_type_meta.get("many_to_many_extras", {}),
+                    input_type_meta.get("foreign_key_extras", {}),
+                    input_type_meta.get("many_to_one_extras", {}),
+                    field.related_model,
                 )
                 results.append(related_obj)
 
@@ -148,23 +136,29 @@ class DjangoCudBase(Mutation):
 
     @classmethod
     def create_obj(
-            cls,
-            input,
-            info,
-            auto_context_fields,
-            many_to_many_extras,
-            foreign_key_extras,
-            many_to_one_extras,
-            Model
+        cls,
+        input,
+        info,
+        auto_context_fields,
+        many_to_many_extras,
+        foreign_key_extras,
+        many_to_one_extras,
+        Model,
     ):
         meta_registry = get_type_meta_registry()
 
         model_field_values = {}
         many_to_many_values = {}
 
-        many_to_many_extras_field_names = get_m2m_all_extras_field_names(many_to_many_extras)
-        many_to_one_extras_field_names = get_m2m_all_extras_field_names(many_to_one_extras)  # The layout is the same as for m2m
-        foreign_key_extras_field_names = get_fk_all_extras_field_names(foreign_key_extras)
+        many_to_many_extras_field_names = get_m2m_all_extras_field_names(
+            many_to_many_extras
+        )
+        many_to_one_extras_field_names = get_m2m_all_extras_field_names(
+            many_to_one_extras
+        )  # The layout is the same as for m2m
+        foreign_key_extras_field_names = get_fk_all_extras_field_names(
+            foreign_key_extras
+        )
 
         for field_name, context_name in auto_context_fields.items():
             if hasattr(info.context, context_name):
@@ -172,7 +166,11 @@ class DjangoCudBase(Mutation):
 
         for name, value in super(type(input), input).items():
             # Handle these separately
-            if name in many_to_many_extras_field_names or name in foreign_key_extras_field_names or name in many_to_one_extras_field_names:
+            if (
+                name in many_to_many_extras_field_names
+                or name in foreign_key_extras_field_names
+                or name in many_to_one_extras_field_names
+            ):
                 continue
 
             field = Model._meta.get_field(name)
@@ -203,7 +201,6 @@ class DjangoCudBase(Mutation):
                 elif field_is_many_to_many:
                     new_value = disambiguate_ids(value)
 
-
             if field_is_many_to_many:
                 many_to_many_values[name] = new_value
             else:
@@ -215,12 +212,7 @@ class DjangoCudBase(Mutation):
             value = input.get(name, None)
             field = Model._meta.get_field(name)
 
-            obj_id = cls.get_or_create_foreign_obj(
-                field,
-                value,
-                extras,
-                info
-            )
+            obj_id = cls.get_or_create_foreign_obj(field, value, extras, info)
 
             model_field_values[name + "_id"] = obj_id
 
@@ -239,7 +231,9 @@ class DjangoCudBase(Mutation):
             if not name in many_to_many_to_add:
                 many_to_many_to_add[name] = []
                 many_to_many_to_remove[name] = []
-                many_to_many_to_set[name] = None  # None means that we should not (re)set the relation.
+                many_to_many_to_set[
+                    name
+                ] = None  # None means that we should not (re)set the relation.
 
             for extra_name, data in extras.items():
                 field_name = name
@@ -251,14 +245,10 @@ class DjangoCudBase(Mutation):
                 if isinstance(data, bool):
                     data = {}
 
-                operation = data.get('operation') or get_likely_operation_from_name(extra_name)
-                objs = cls.get_or_create_m2m_objs(
-                    field,
-                    values,
-                    data,
-                    operation,
-                    info
+                operation = data.get("operation") or get_likely_operation_from_name(
+                    extra_name
                 )
+                objs = cls.get_or_create_m2m_objs(field, values, data, operation, info)
 
                 if operation == "exact":
                     many_to_many_to_set[name] = objs
@@ -267,7 +257,6 @@ class DjangoCudBase(Mutation):
                         many_to_many_to_add[name] += objs
                     else:
                         many_to_many_to_remove[name] += objs
-
 
         many_to_one_to_add = {}
         many_to_one_to_remove = {}
@@ -278,7 +267,9 @@ class DjangoCudBase(Mutation):
             if not name in many_to_one_to_add:
                 many_to_one_to_add[name] = []
                 many_to_one_to_remove[name] = []
-                many_to_one_to_set[name] = None  # None means that we should not (re)set the relation.
+                many_to_one_to_set[
+                    name
+                ] = None  # None means that we should not (re)set the relation.
 
             for extra_name, data in extras.items():
                 field_name = name
@@ -293,28 +284,18 @@ class DjangoCudBase(Mutation):
                 if isinstance(data, bool):
                     data = {}
 
-                operation = data.get('operation') or get_likely_operation_from_name(extra_name)
+                operation = data.get("operation") or get_likely_operation_from_name(
+                    extra_name
+                )
 
                 if operation == "exact":
                     objs = cls.get_or_create_m2o_objs(
-                        obj,
-                        field,
-                        values,
-                        data,
-                        operation,
-                        info,
-                        Model
+                        obj, field, values, data, operation, info, Model
                     )
                     many_to_one_to_set[name] = objs
                 elif operation == "add":
                     objs = cls.get_or_create_m2o_objs(
-                        obj,
-                        field,
-                        values,
-                        data,
-                        operation,
-                        info,
-                        Model
+                        obj, field, values, data, operation, info, Model
                     )
                     many_to_one_to_add[name] += objs
                 else:
@@ -323,7 +304,7 @@ class DjangoCudBase(Mutation):
         for name, objs in many_to_one_to_set.items():
             if objs is not None:
                 field = getattr(obj, name)
-                if hasattr(field, 'remove'):
+                if hasattr(field, "remove"):
                     # In this case, the relationship is nullable, and we can clear it, and then add the relevant objects
                     field.clear()
                     field.add(*objs)
@@ -337,12 +318,10 @@ class DjangoCudBase(Mutation):
 
         for name, objs in many_to_one_to_remove.items():
             field = getattr(obj, name)
-            if hasattr(field, 'remove'):
+            if hasattr(field, "remove"):
                 # The field is nullable, and we simply remove the relation
                 related_name = Model._meta.get_field(name).remote_field.name
-                getattr(obj, name).filter(id__in=objs).update(**{
-                    related_name: None
-                })
+                getattr(obj, name).filter(id__in=objs).update(**{related_name: None})
             else:
                 # Only nullable foreign key reverse rels have the remove method.
                 # For other's we have to delete the relations
@@ -360,27 +339,32 @@ class DjangoCudBase(Mutation):
 
         return obj
 
-
     @classmethod
     def update_obj(
-            cls,
-            obj,
-            input,
-            info,
-            auto_context_fields,
-            many_to_many_extras,
-            foreign_key_extras,
-            many_to_one_extras,
-            Model
+        cls,
+        obj,
+        input,
+        info,
+        auto_context_fields,
+        many_to_many_extras,
+        foreign_key_extras,
+        many_to_one_extras,
+        Model,
     ):
 
         many_to_many_values = {}
         many_to_many_add_values = {}
         many_to_many_remove_values = {}
 
-        many_to_many_extras_field_names = get_m2m_all_extras_field_names(many_to_many_extras)
-        many_to_one_extras_field_names = get_m2m_all_extras_field_names(many_to_one_extras)  # The layout is the same as for m2m
-        foreign_key_extras_field_names = get_fk_all_extras_field_names(foreign_key_extras)
+        many_to_many_extras_field_names = get_m2m_all_extras_field_names(
+            many_to_many_extras
+        )
+        many_to_one_extras_field_names = get_m2m_all_extras_field_names(
+            many_to_one_extras
+        )  # The layout is the same as for m2m
+        foreign_key_extras_field_names = get_fk_all_extras_field_names(
+            foreign_key_extras
+        )
 
         for field_name, context_name in auto_context_fields.items():
             if hasattr(info.context, context_name):
@@ -388,7 +372,11 @@ class DjangoCudBase(Mutation):
 
         for name, value in super(type(input), input).items():
             # Handle these separately
-            if name in many_to_many_extras_field_names or name in foreign_key_extras_field_names or name in many_to_one_extras_field_names:
+            if (
+                name in many_to_many_extras_field_names
+                or name in foreign_key_extras_field_names
+                or name in many_to_one_extras_field_names
+            ):
                 continue
 
             field = Model._meta.get_field(name)
@@ -429,12 +417,7 @@ class DjangoCudBase(Mutation):
             value = input.get(name, None)
             field = Model._meta.get_field(name)
 
-            obj_id = cls.get_or_create_foreign_obj(
-                field,
-                value,
-                extras,
-                info
-            )
+            obj_id = cls.get_or_create_foreign_obj(field, value, extras, info)
             setattr(obj, name + "_id", obj_id)
 
         many_to_many_to_add = {}
@@ -445,7 +428,9 @@ class DjangoCudBase(Mutation):
             if not name in many_to_many_to_add:
                 many_to_many_to_add[name] = []
                 many_to_many_to_remove[name] = []
-                many_to_many_to_set[name] = None  # None means that we should not (re)set the relation.
+                many_to_many_to_set[
+                    name
+                ] = None  # None means that we should not (re)set the relation.
 
             for extra_name, data in extras.items():
                 field_name = name
@@ -457,14 +442,10 @@ class DjangoCudBase(Mutation):
                 if isinstance(data, bool):
                     data = {}
 
-                operation = data.get('operation') or get_likely_operation_from_name(extra_name)
-                objs = cls.get_or_create_m2m_objs(
-                    field,
-                    values,
-                    data,
-                    operation,
-                    info
+                operation = data.get("operation") or get_likely_operation_from_name(
+                    extra_name
                 )
+                objs = cls.get_or_create_m2m_objs(field, values, data, operation, info)
 
                 if operation == "exact":
                     many_to_many_to_set[name] = objs
@@ -482,7 +463,9 @@ class DjangoCudBase(Mutation):
             if not name in many_to_one_to_add:
                 many_to_one_to_add[name] = []
                 many_to_one_to_remove[name] = []
-                many_to_one_to_set[name] = None  # None means that we should not (re)set the relation.
+                many_to_one_to_set[
+                    name
+                ] = None  # None means that we should not (re)set the relation.
 
             for extra_name, data in extras.items():
                 field_name = name
@@ -497,28 +480,18 @@ class DjangoCudBase(Mutation):
                 if isinstance(data, bool):
                     data = {}
 
-                operation = data.get('operation') or get_likely_operation_from_name(extra_name)
+                operation = data.get("operation") or get_likely_operation_from_name(
+                    extra_name
+                )
 
                 if operation == "exact":
                     objs = cls.get_or_create_m2o_objs(
-                        obj,
-                        field,
-                        values,
-                        data,
-                        operation,
-                        info,
-                        Model
+                        obj, field, values, data, operation, info, Model
                     )
                     many_to_one_to_set[name] = objs
                 elif operation == "add":
                     objs = cls.get_or_create_m2o_objs(
-                        obj,
-                        field,
-                        values,
-                        data,
-                        operation,
-                        info,
-                        Model
+                        obj, field, values, data, operation, info, Model
                     )
                     many_to_one_to_add[name] += objs
                 else:
@@ -527,7 +500,7 @@ class DjangoCudBase(Mutation):
         for name, objs in many_to_one_to_set.items():
             if objs is not None:
                 field = getattr(obj, name)
-                if hasattr(field, 'remove'):
+                if hasattr(field, "remove"):
                     # In this case, the relationship is nullable, and we can clear it, and then add the relevant objects
                     field.clear()
                     field.add(*objs)
@@ -541,12 +514,10 @@ class DjangoCudBase(Mutation):
 
         for name, objs in many_to_one_to_remove.items():
             field = getattr(obj, name)
-            if hasattr(field, 'remove'):
+            if hasattr(field, "remove"):
                 # The field is nullable, and we simply remove the relation
                 related_name = Model._meta.get_field(name).remote_field.name
-                getattr(obj, name).filter(id__in=objs).update(**{
-                    related_name: None
-                })
+                getattr(obj, name).filter(id__in=objs).update(**{related_name: None})
             else:
                 # Only nullable foreign key reverse rels have the remove method.
                 # For other's we have to delete the relations
@@ -570,9 +541,11 @@ class DjangoCudBase(Mutation):
 
     @classmethod
     def check_permissions(cls, root, info, *args, **kwargs) -> None:
-        get_permissions = getattr(cls, 'get_permissions', None)
+        get_permissions = getattr(cls, "get_permissions", None)
         if not callable(get_permissions):
-            raise TypeError("The `get_permissions` attribute of a mutation must be callable.")
+            raise TypeError(
+                "The `get_permissions` attribute of a mutation must be callable."
+            )
 
         permissions = cls.get_permissions(root, info, *args, **kwargs)
 
@@ -614,7 +587,7 @@ class DjangoUpdateMutationOptions(MutationOptions):
     type_name = None
     return_field_name = None
     many_to_many_extras = None
-    many_to_one_extras=None
+    many_to_one_extras = None
     foreign_key_extras = None
     field_types = None
 
@@ -625,22 +598,22 @@ class DjangoUpdateMutation(DjangoCudBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            model=None,
-            permissions=None,
-            login_required=None,
-            only_fields=(),
-            exclude_fields=(),
-            auto_context_fields={},
-            optional_fields=(),
-            required_fields=(),
-            return_field_name=None,
-            many_to_many_extras=None,
-            many_to_one_extras=None,
-            foreign_key_extras=None,
-            type_name="",
-            field_types=None,
-            **kwargs,
+        cls,
+        model=None,
+        permissions=None,
+        login_required=None,
+        only_fields=(),
+        exclude_fields=(),
+        auto_context_fields={},
+        optional_fields=(),
+        required_fields=(),
+        return_field_name=None,
+        many_to_many_extras=None,
+        many_to_one_extras=None,
+        foreign_key_extras=None,
+        type_name="",
+        field_types=None,
+        **kwargs,
     ):
         registry = get_global_registry()
         meta_registry = get_type_meta_registry()
@@ -675,28 +648,23 @@ class DjangoUpdateMutation(DjangoCudBase):
             field_types=field_types,
         )
 
-        InputType = type(
-            input_type_name, (InputObjectType,), model_fields
-        )
+        InputType = type(input_type_name, (InputObjectType,), model_fields)
 
         # Register meta-data
         meta_registry.register(
             input_type_name,
             {
-                'auto_context_fields': auto_context_fields or {},
-                'optional_fields': optional_fields,
-                'required_fields': required_fields,
-                'many_to_many_extras': many_to_many_extras or {},
-                'many_to_one_extras': many_to_one_extras or {},
-                'foreign_key_extras': foreign_key_extras or {},
-                'field_types': field_types or {},
-            }
+                "auto_context_fields": auto_context_fields or {},
+                "optional_fields": optional_fields,
+                "required_fields": required_fields,
+                "many_to_many_extras": many_to_many_extras or {},
+                "many_to_one_extras": many_to_one_extras or {},
+                "foreign_key_extras": foreign_key_extras or {},
+                "field_types": field_types or {},
+            },
         )
 
-        registry.register_converted_field(
-            input_type_name,
-            InputType
-        )
+        registry.register_converted_field(input_type_name, InputType)
 
         arguments = OrderedDict(
             id=graphene.ID(required=True), input=InputType(required=True)
@@ -720,7 +688,7 @@ class DjangoUpdateMutation(DjangoCudBase):
         _meta.foreign_key_extras = foreign_key_extras
         _meta.field_types = field_types or {}
         _meta.login_required = _meta.login_required or (
-                _meta.permissions and len(_meta.permissions) > 0
+            _meta.permissions and len(_meta.permissions) > 0
         )
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
@@ -732,12 +700,7 @@ class DjangoUpdateMutation(DjangoCudBase):
 
     @classmethod
     def mutate(cls, root, info, id, input):
-        updated_input = cls.before_mutate(
-            root,
-            info,
-            id,
-            input
-        )
+        updated_input = cls.before_mutate(root, info, id, input)
         if updated_input:
             input = updated_input
 
@@ -763,16 +726,10 @@ class DjangoUpdateMutation(DjangoCudBase):
                 cls._meta.many_to_many_extras,
                 cls._meta.foreign_key_extras,
                 cls._meta.many_to_one_extras,
-                Model
+                Model,
             )
 
-            updated_obj = cls.before_save(
-                root,
-                info,
-                obj,
-                id,
-                input
-            )
+            updated_obj = cls.before_save(root, info, obj, id, input)
 
             if updated_obj:
                 obj = updated_obj
@@ -806,20 +763,20 @@ class DjangoPatchMutation(DjangoCudBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            model=None,
-            permissions=None,
-            login_required=None,
-            only_fields=(),
-            exclude_fields=(),
-            return_field_name=None,
-            auto_context_fields={},
-            many_to_one_extras = None,
-            many_to_many_extras = None,
-            foreign_key_extras = None,
-            type_name=None,
-            field_types=None,
-            **kwargs,
+        cls,
+        model=None,
+        permissions=None,
+        login_required=None,
+        only_fields=(),
+        exclude_fields=(),
+        return_field_name=None,
+        auto_context_fields={},
+        many_to_one_extras=None,
+        many_to_many_extras=None,
+        foreign_key_extras=None,
+        type_name=None,
+        field_types=None,
+        **kwargs,
     ):
         registry = get_global_registry()
         meta_registry = get_type_meta_registry()
@@ -849,29 +806,24 @@ class DjangoPatchMutation(DjangoCudBase):
             foreign_key_extras=foreign_key_extras,
             many_to_one_extras=many_to_one_extras,
             parent_type_name=type_name,
-            field_types=field_types
+            field_types=field_types,
         )
 
-        InputType = type(
-            input_type_name, (InputObjectType,), model_fields
-        )
+        InputType = type(input_type_name, (InputObjectType,), model_fields)
 
         # Register meta-data
         meta_registry.register(
             input_type_name,
             {
-                'auto_context_fields': auto_context_fields or {},
-                'many_to_many_extras': many_to_many_extras or {},
-                'many_to_one_extras': many_to_one_extras or {},
-                'foreign_key_extras': foreign_key_extras or {},
-                'field_types': field_types or {},
-            }
+                "auto_context_fields": auto_context_fields or {},
+                "many_to_many_extras": many_to_many_extras or {},
+                "many_to_one_extras": many_to_one_extras or {},
+                "foreign_key_extras": foreign_key_extras or {},
+                "field_types": field_types or {},
+            },
         )
 
-        registry.register_converted_field(
-            input_type_name,
-            InputType
-        )
+        registry.register_converted_field(input_type_name, InputType)
 
         arguments = OrderedDict(
             id=graphene.ID(required=True), input=InputType(required=True)
@@ -893,7 +845,7 @@ class DjangoPatchMutation(DjangoCudBase):
         _meta.foreign_key_extras = foreign_key_extras
         _meta.field_types = field_types or {}
         _meta.login_required = _meta.login_required or (
-                _meta.permissions and len(_meta.permissions) > 0
+            _meta.permissions and len(_meta.permissions) > 0
         )
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
@@ -905,12 +857,7 @@ class DjangoPatchMutation(DjangoCudBase):
 
     @classmethod
     def mutate(cls, root, info, id, input):
-        updated_input = cls.before_mutate(
-            root,
-            info,
-            id,
-            input
-        )
+        updated_input = cls.before_mutate(root, info, id, input)
         if updated_input:
             input = updated_input
 
@@ -936,16 +883,10 @@ class DjangoPatchMutation(DjangoCudBase):
                 cls._meta.many_to_many_extras,
                 cls._meta.foreign_key_extras,
                 cls._meta.many_to_one_extras,
-                Model
+                Model,
             )
 
-            updated_obj = cls.before_save(
-                root,
-                info,
-                obj,
-                id,
-                input
-            )
+            updated_obj = cls.before_save(root, info, obj, id, input)
 
             if updated_obj:
                 obj = updated_obj
@@ -972,7 +913,7 @@ class DjangoCreateMutationOptions(MutationOptions):
     many_to_one_extras = None
     foreign_key_extras = None
     type_name = None
-    field_types=None
+    field_types = None
 
 
 class DjangoCreateMutation(DjangoCudBase):
@@ -981,22 +922,22 @@ class DjangoCreateMutation(DjangoCudBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            model=None,
-            permissions=None,
-            login_required=None,
-            only_fields=(),
-            exclude_fields=(),
-            optional_fields=(),
-            required_fields=(),
-            auto_context_fields={},
-            return_field_name=None,
-            many_to_many_extras=None,
-            foreign_key_extras = None,
-            many_to_one_extras = None,
-            type_name=None,
-            field_types=None,
-            **kwargs,
+        cls,
+        model=None,
+        permissions=None,
+        login_required=None,
+        only_fields=(),
+        exclude_fields=(),
+        optional_fields=(),
+        required_fields=(),
+        auto_context_fields={},
+        return_field_name=None,
+        many_to_many_extras=None,
+        foreign_key_extras=None,
+        many_to_one_extras=None,
+        type_name=None,
+        field_types=None,
+        **kwargs,
     ):
         registry = get_global_registry()
         meta_registry = get_type_meta_registry()
@@ -1031,27 +972,22 @@ class DjangoCreateMutation(DjangoCudBase):
             field_types=field_types,
         )
 
-        InputType = type(
-            input_type_name, (InputObjectType,), model_fields
-        )
+        InputType = type(input_type_name, (InputObjectType,), model_fields)
 
         # Register meta-data
         meta_registry.register(
             input_type_name,
             {
-                'auto_context_fields': auto_context_fields or {},
-                'optional_fields': optional_fields,
-                'required_fields': required_fields,
-                'many_to_many_extras': many_to_many_extras or {},
-                'foreign_key_extras': foreign_key_extras or {},
-                'field_types': field_types or {}
-            }
+                "auto_context_fields": auto_context_fields or {},
+                "optional_fields": optional_fields,
+                "required_fields": required_fields,
+                "many_to_many_extras": many_to_many_extras or {},
+                "foreign_key_extras": foreign_key_extras or {},
+                "field_types": field_types or {},
+            },
         )
 
-        registry.register_converted_field(
-            input_type_name,
-            InputType
-        )
+        registry.register_converted_field(input_type_name, InputType)
 
         arguments = OrderedDict(input=InputType(required=True))
 
@@ -1078,14 +1014,9 @@ class DjangoCreateMutation(DjangoCudBase):
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
-
     @classmethod
     def mutate(cls, root, info, input):
-        updated_input = cls.before_mutate(
-            root,
-            info,
-            input
-        )
+        updated_input = cls.before_mutate(root, info, input)
         if updated_input:
             input = updated_input
 
@@ -1107,17 +1038,11 @@ class DjangoCreateMutation(DjangoCudBase):
                 cls._meta.many_to_many_extras,
                 cls._meta.foreign_key_extras,
                 cls._meta.many_to_one_extras,
-                Model
+                Model,
             )
-            updated_obj = cls.before_save(
-                root,
-                info,
-                input
-            )
+            updated_obj = cls.before_save(root, info, input)
             if updated_obj:
                 updated_obj.save()
-
-
 
         kwargs = {cls._meta.return_field_name: obj}
         cls.after_mutate(root, info, kwargs)
@@ -1149,23 +1074,23 @@ class DjangoBatchCreateMutation(DjangoCudBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            model=None,
-            permissions=None,
-            login_required=None,
-            only_fields=(),
-            exclude_fields=(),
-            optional_fields=(),
-            required_fields=(),
-            auto_context_fields={},
-            return_field_name=None,
-            many_to_many_extras=None,
-            foreign_key_extras = None,
-            many_to_one_extras = None,
-            type_name=None,
-            use_type_name=None,
-            field_types=None,
-            **kwargs,
+        cls,
+        model=None,
+        permissions=None,
+        login_required=None,
+        only_fields=(),
+        exclude_fields=(),
+        optional_fields=(),
+        required_fields=(),
+        auto_context_fields={},
+        return_field_name=None,
+        many_to_many_extras=None,
+        foreign_key_extras=None,
+        many_to_one_extras=None,
+        type_name=None,
+        use_type_name=None,
+        field_types=None,
+        **kwargs,
     ):
         registry = get_global_registry()
         meta_registry = get_type_meta_registry()
@@ -1188,11 +1113,11 @@ class DjangoBatchCreateMutation(DjangoCudBase):
 
         if use_type_name:
             input_type_name = use_type_name
-            InputType = registry.get_converted_field(
-                input_type_name
-            )
+            InputType = registry.get_converted_field(input_type_name)
             if not InputType:
-                raise GraphQLError(f"Could not find input type with name {input_type_name}")
+                raise GraphQLError(
+                    f"Could not find input type with name {input_type_name}"
+                )
         else:
             input_type_name = type_name or f"BatchCreate{model.__name__}Input"
 
@@ -1209,27 +1134,22 @@ class DjangoBatchCreateMutation(DjangoCudBase):
                 field_types=field_types,
             )
 
-            InputType = type(
-                input_type_name, (InputObjectType,), model_fields
-            )
+            InputType = type(input_type_name, (InputObjectType,), model_fields)
 
             # Register meta-data
             meta_registry.register(
                 input_type_name,
                 {
-                    'auto_context_fields': auto_context_fields or {},
-                    'optional_fields': optional_fields,
-                    'required_fields': required_fields,
-                    'many_to_many_extras': many_to_many_extras or {},
-                    'foreign_key_extras': foreign_key_extras or {},
-                    'field_types': field_types or {}
-                }
+                    "auto_context_fields": auto_context_fields or {},
+                    "optional_fields": optional_fields,
+                    "required_fields": required_fields,
+                    "many_to_many_extras": many_to_many_extras or {},
+                    "foreign_key_extras": foreign_key_extras or {},
+                    "field_types": field_types or {},
+                },
             )
 
-            registry.register_converted_field(
-                input_type_name,
-                InputType
-            )
+            registry.register_converted_field(input_type_name, InputType)
 
         arguments = OrderedDict(input=graphene.List(InputType, required=True))
 
@@ -1251,18 +1171,14 @@ class DjangoBatchCreateMutation(DjangoCudBase):
         _meta.InputType = InputType
         _meta.input_type_name = input_type_name
         _meta.login_required = _meta.login_required or (
-                _meta.permissions and len(_meta.permissions) > 0
+            _meta.permissions and len(_meta.permissions) > 0
         )
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
     @classmethod
     def mutate(cls, root, info, input):
-        updated_input = cls.before_mutate(
-            root,
-            info,
-            input
-        )
+        updated_input = cls.before_mutate(root, info, input)
         if updated_input:
             input = updated_input
 
@@ -1287,15 +1203,11 @@ class DjangoBatchCreateMutation(DjangoCudBase):
                     cls._meta.many_to_many_extras,
                     cls._meta.foreign_key_extras,
                     cls._meta.many_to_one_extras,
-                    Model
+                    Model,
                 )
                 created_objs.append(obj)
 
-            updated_objs = cls.before_save(
-                root,
-                info,
-                created_objs
-            )
+            updated_objs = cls.before_save(root, info, created_objs)
             if updated_objs:
                 created_objs = updated_objs
 
@@ -1316,14 +1228,14 @@ class DjangoDeleteMutation(DjangoCudBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            model=None,
-            permissions=None,
-            login_required=None,
-            only_fields=(),
-            exclude_fields=(),
-            return_field_name=None,
-            **kwargs,
+        cls,
+        model=None,
+        permissions=None,
+        login_required=None,
+        only_fields=(),
+        exclude_fields=(),
+        return_field_name=None,
+        **kwargs,
     ):
         registry = get_global_registry()
 
@@ -1342,7 +1254,7 @@ class DjangoDeleteMutation(DjangoCudBase):
         _meta.return_field_name = return_field_name
         _meta.permissions = permissions
         _meta.login_required = _meta.login_required or (
-                _meta.permissions and len(_meta.permissions) > 0
+            _meta.permissions and len(_meta.permissions) > 0
         )
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
@@ -1354,11 +1266,7 @@ class DjangoDeleteMutation(DjangoCudBase):
 
     @classmethod
     def mutate(cls, root, info, id):
-        cls.before_mutate(
-            root,
-            info,
-            id
-        )
+        cls.before_mutate(root, info, id)
 
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
@@ -1370,17 +1278,10 @@ class DjangoDeleteMutation(DjangoCudBase):
 
         try:
             obj = cls.get_queryset(info, id=id).get(pk=id)
-            cls.before_save(
-                root,
-                info,
-                obj,
-                id
-            )
+            cls.before_save(root, info, obj, id)
             obj.delete()
             cls.after_mutate(
-                root,
-                info,
-
+                root, info,
             )
             return cls(found=True, deleted_id=id)
         except ObjectDoesNotExist:
@@ -1401,26 +1302,23 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            model=None,
-            permissions=None,
-            login_required=None,
-            filter_fields=(),
-            filter_class=None,
-            **kwargs,
+        cls,
+        model=None,
+        permissions=None,
+        login_required=None,
+        filter_fields=(),
+        filter_class=None,
+        **kwargs,
     ):
         registry = get_global_registry()
         model_type = registry.get_type_for_model(model)
 
         assert model_type, f"Model type must be registered for model {model}"
         assert (
-                len(filter_fields) > 0
+            len(filter_fields) > 0
         ), f"You must specify at least one field to filter on for deletion."
 
-        input_arguments = get_filter_fields_input_args(
-            filter_fields,
-            model
-        )
+        input_arguments = get_filter_fields_input_args(filter_fields, model)
 
         InputType = type(
             f"BatchDelete{model.__name__}Input", (InputObjectType,), input_arguments
@@ -1438,25 +1336,19 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
         _meta.filter_fields = filter_fields
         _meta.permissions = permissions
         _meta.login_required = _meta.login_required or (
-                _meta.permissions and len(_meta.permissions) > 0
+            _meta.permissions and len(_meta.permissions) > 0
         )
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
-
 
     @classmethod
     def get_queryset(cls, info, **args):
         Model = cls._meta.model
         return Model.objects
 
-
     @classmethod
     def mutate(cls, root, info, input):
-        updated_input = cls.before_mutate(
-            root,
-            info,
-            input
-        )
+        updated_input = cls.before_mutate(root, info, input)
 
         if updated_input:
             input = updated_input
@@ -1502,21 +1394,21 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
                 if type(field) in (models.ForeignKey, models.OneToOneField):
                     name = getattr(field, "db_column", None) or name + "_id"
                     new_value = disambiguate_id(value)
-                elif type(field) in (
+                elif (
+                    type(field)
+                    in (
                         models.ManyToManyField,
                         models.ManyToManyRel,
                         models.ManyToOneRel,
-                ) or filter_field_is_list:
+                    )
+                    or filter_field_is_list
+                ):
                     new_value = disambiguate_ids(value)
 
             model_field_values[name] = new_value
 
         filter_qs = cls.get_queryset(info, input=input).filter(**model_field_values)
-        updated_qs = cls.before_save(
-            root,
-            info,
-            filter_qs
-        )
+        updated_qs = cls.before_save(root, info, filter_qs)
 
         if updated_qs:
             filter_qs = updated_qs
@@ -1528,11 +1420,6 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
 
         deletion_count, _ = filter_qs.delete()
 
-        cls.after_mutate(
-            root,
-            info,
-            deletion_count,
-            ids
-        )
+        cls.after_mutate(root, info, deletion_count, ids)
 
         return cls(deletion_count=deletion_count, deleted_ids=ids)

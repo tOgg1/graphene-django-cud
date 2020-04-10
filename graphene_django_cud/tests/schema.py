@@ -56,12 +56,10 @@ class CreateUserMutation(DjangoCreateMutation):
             "cats": {"exact": {"type": "auto"}},
             "dogs": {
                 "add": {
-                    "field_types": {
-                        "tag": graphene.Int()
-                    },
+                    "field_types": {"tag": graphene.Int()},
                     "many_to_many_extras": {
                         "friends": {"add": {"type": "CreateMouseInput"}}
-                    }
+                    },
                 }
             },
         }
@@ -78,7 +76,7 @@ class PatchUserMutation(DjangoPatchMutation):
     class Meta:
         model = User
         many_to_one_extras = {
-            "cats": {"add": {"type": "CreateCatInput"}},
+            "cats": {"add": {"type": "auto"}, "update": {"type": "auto"}},
             "dogs": {
                 "add": {
                     "many_to_many_extras": {
@@ -112,6 +110,7 @@ class CreateCatMutation(DjangoCreateMutation):
             "targets": {"exact": {"type": "CreateMouseInput"}},
         }
         foreign_key_extras = {"owner": {"type": "CreateUserInput"}}
+
 
 class BatchCreateCatMutation(DjangoBatchCreateMutation):
     class Meta:
@@ -156,9 +155,7 @@ class DeleteCatMutation(DjangoDeleteMutation):
 class CreateDogMutation(DjangoCreateMutation):
     class Meta:
         model = Dog
-        field_types = {
-            "tag": graphene.Int(required=False)
-        }
+        field_types = {"tag": graphene.Int(required=False)}
 
         many_to_many_extras = {"friends": {"add": {"type": "CreateMouseInput"}}}
 
@@ -167,13 +164,10 @@ class CreateDogMutation(DjangoCreateMutation):
         return "Dog-" + str(value)
 
 
-
 class PatchDogMutation(DjangoPatchMutation):
     class Meta:
         model = Dog
-        field_types = {
-            "tag": graphene.Int(required=False)
-        }
+        field_types = {"tag": graphene.Int(required=False)}
         many_to_many_extras = {
             "enemies": {
                 "add": {"type": "CreateCatInput"},
@@ -185,7 +179,6 @@ class PatchDogMutation(DjangoPatchMutation):
     @classmethod
     def handle_tag(cls, value, *args, **kwargs):
         return "Dog-" + str(value)
-
 
 
 class UpdateDogMutation(DjangoUpdateMutation):

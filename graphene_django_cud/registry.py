@@ -1,4 +1,3 @@
-
 from graphene_django.registry import Registry
 
 
@@ -8,6 +7,7 @@ class TypeMetaRegistry:
     used to make sure we can reuse information such as auto-context-fields, optional-fields,
     extras, etc.
     """
+
     def __init__(self):
         self._registry = {}
 
