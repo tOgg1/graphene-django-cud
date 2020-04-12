@@ -232,7 +232,11 @@ class DjangoCudBase(Mutation):
 
             # On some fields we perform some default conversion, if the value was not transformed above.
             if new_value == value and value is not None:
-                if type(field) in (models.ForeignKey, models.OneToOneField):
+                if type(field) in (
+                    models.AutoField,
+                    models.ForeignKey,
+                    models.OneToOneField,
+                ):
                     # Delete auto context field here, if it exists. We have to do this explicitly
                     # as we change the name below
                     if name in auto_context_fields:
@@ -438,7 +442,11 @@ class DjangoCudBase(Mutation):
 
             # On some fields we perform some default conversion, if the value was not transformed above.
             if new_value == value and value is not None:
-                if type(field) in (models.ForeignKey, models.OneToOneField):
+                if type(field) in (
+                    models.AutoField,
+                    models.ForeignKey,
+                    models.OneToOneField,
+                ):
                     # Delete auto context field here, if it exists. We have to do this explicitly
                     # as we change the name below
                     if name in auto_context_fields:
