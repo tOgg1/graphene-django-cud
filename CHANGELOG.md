@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.4.1
+* Ensure AutoFields are disambiguated.
+
 ## Version 0.4.0
 * Add proper handling of update nested many-to-on extras for update mutations.
 * Fix a deprecation warning. See #12. Thanks to @fkromer.
