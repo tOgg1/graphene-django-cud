@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.4.2
+* Update bad handling of AutoFields
+
 ## Version 0.4.1
 * Ensure AutoFields are disambiguated.
 
