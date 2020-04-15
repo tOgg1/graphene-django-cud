@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.4.3
+* Add missing files
+
 ## Version 0.4.2
 * Update bad handling of AutoFields
 
