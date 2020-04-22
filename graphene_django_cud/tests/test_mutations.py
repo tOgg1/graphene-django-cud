@@ -6,8 +6,13 @@ from graphql import ResolveInfo
 from graphql_relay import to_global_id
 
 from graphene_django_cud.mutations import DjangoUpdateMutation, DjangoCreateMutation
-from graphene_django_cud.tests.factories import UserFactory, CatFactory, UserWithPermissionsFactory, DogFactory, \
-    MouseFactory
+from graphene_django_cud.tests.factories import (
+    UserFactory,
+    CatFactory,
+    UserWithPermissionsFactory,
+    DogFactory,
+    MouseFactory,
+)
 from graphene_django_cud.tests.models import User, Cat, Dog
 from graphene_django_cud.util import disambiguate_id
 
@@ -27,11 +32,10 @@ def mock_info(context=None):
     )
 
 
-
 class TestUpdateMutation(TestCase):
-
     def test__model_not_registered__raises_error(self):
         with self.assertRaises(Exception):
+
             class UpdateMutation(DjangoUpdateMutation):
                 class Meta:
                     model = User
@@ -75,17 +79,13 @@ class TestUpdateMutation(TestCase):
         """
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("UserNode", user.id),
-                "input": {
-                    "name": "Name",
-                    "owner": to_global_id("UserNode", user.id)
-                }
+                "input": {"name": "Name", "owner": to_global_id("UserNode", user.id)},
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertEqual(len(result.errors), 1)
-
 
     def test_permissions__user_has_permission__does_not_return_error(self):
         # This registers the UserNode type
@@ -117,14 +117,11 @@ class TestUpdateMutation(TestCase):
         """
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("UserNode", user.id),
-                "input": {
-                    "name": "Name",
-                    "owner": to_global_id("UserNode", user.id)
-                }
+                "input": {"name": "Name", "owner": to_global_id("UserNode", user.id)},
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
@@ -163,19 +160,17 @@ class TestUpdateMutation(TestCase):
         """
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("UserNode", user.id),
-                "input": {
-                    "name": "Name",
-                    "owner": to_global_id("UserNode", user.id)
-                }
+                "input": {"name": "Name", "owner": to_global_id("UserNode", user.id)},
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
-
-    def test_get_permissions__list_with_permissions__requires_returned_permissions(self):
+    def test_get_permissions__list_with_permissions__requires_returned_permissions(
+        self,
+    ):
         # This registers the UserNode type
         # noinspection PyUnresolvedReferences
         from .schema import UserNode
@@ -186,15 +181,15 @@ class TestUpdateMutation(TestCase):
 
             @classmethod
             def get_permissions(cls, root, info, *args, **kwargs):
-                return [
-                    "tests.change_cat"
-                ]
+                return ["tests.change_cat"]
 
         class Mutations(graphene.ObjectType):
             update_cat = UpdateCatMutation.Field()
 
         user = UserFactory.create()
-        user_with_permissions = UserWithPermissionsFactory.create(permissions=["tests.change_cat"])
+        user_with_permissions = UserWithPermissionsFactory.create(
+            permissions=["tests.change_cat"]
+        )
         cat = CatFactory.create()
         schema = Schema(mutation=Mutations)
         mutation = """
@@ -211,27 +206,21 @@ class TestUpdateMutation(TestCase):
         """
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("UserNode", user.id),
-                "input": {
-                    "name": "Name",
-                    "owner": to_global_id("UserNode", user.id)
-                }
+                "input": {"name": "Name", "owner": to_global_id("UserNode", user.id)},
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertEqual(len(result.errors), 1)
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("UserNode", user.id),
-                "input": {
-                    "name": "Name",
-                    "owner": to_global_id("UserNode", user.id)
-                }
+                "input": {"name": "Name", "owner": to_global_id("UserNode", user.id)},
             },
-            context=Dict(user=user_with_permissions)
+            context=Dict(user=user_with_permissions),
         )
         self.assertIsNone(result.errors)
 
@@ -250,9 +239,7 @@ class TestUpdateMutation(TestCase):
                 if info.context.user.id == owner_id:
                     return []
 
-                return [
-                    "tests.change_cat"
-                ]
+                return ["tests.change_cat"]
 
         class Mutations(graphene.ObjectType):
             update_cat = UpdateCatMutation.Field()
@@ -275,31 +262,33 @@ class TestUpdateMutation(TestCase):
         """
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("CatNode", cat.id),
                 "input": {
                     "name": "Name",
-                    "owner": to_global_id("UserNode", new_cat_owner.id)
-                }
+                    "owner": to_global_id("UserNode", new_cat_owner.id),
+                },
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertEqual(len(result.errors), 1)
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("CatNode", cat.id),
                 "input": {
                     "name": "Name",
-                    "owner": to_global_id("UserNode", new_cat_owner.id)
-                }
+                    "owner": to_global_id("UserNode", new_cat_owner.id),
+                },
             },
-            context=Dict(user=new_cat_owner)
+            context=Dict(user=new_cat_owner),
         )
         self.assertIsNone(result.errors)
 
-    def test_check_permissions__override__uses_new_check_permissions_to_grant_access(self):
+    def test_check_permissions__override__uses_new_check_permissions_to_grant_access(
+        self,
+    ):
         # This registers the UserNode type
         # noinspection PyUnresolvedReferences
         from .schema import UserNode
@@ -337,26 +326,20 @@ class TestUpdateMutation(TestCase):
         """
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("UserNode", user.id),
-                "input": {
-                    "name": "Name 2",
-                    "owner": to_global_id("UserNode", user.id)
-                }
+                "input": {"name": "Name 2", "owner": to_global_id("UserNode", user.id)},
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertEqual(len(result.errors), 1)
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("UserNode", user.id),
-                "input": {
-                    "name": "Name 3",
-                    "owner": to_global_id("UserNode", user.id)
-                }
+                "input": {"name": "Name 3", "owner": to_global_id("UserNode", user.id)},
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
@@ -393,14 +376,11 @@ class TestUpdateMutation(TestCase):
         """
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("UserNode", user.id),
-                "input": {
-                    "name": "Name",
-                    "owner": to_global_id("UserNode", user.id)
-                }
+                "input": {"name": "Name", "owner": to_global_id("UserNode", user.id)},
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
@@ -422,10 +402,7 @@ class TestUpdateMutation(TestCase):
         class Mutations(graphene.ObjectType):
             update_cat = UpdateCatMutation.Field()
 
-        user = UserFactory.create(
-            first_name="John",
-            last_name="Doe"
-        )
+        user = UserFactory.create(first_name="John", last_name="Doe")
         cat = CatFactory.create()
         schema = Schema(mutation=Mutations)
         mutation = """
@@ -442,27 +419,24 @@ class TestUpdateMutation(TestCase):
         """
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("UserNode", user.id),
                 "input": {
                     "name": "John Doe",
-                    "owner": to_global_id("UserNode", user.id)
-                }
+                    "owner": to_global_id("UserNode", user.id),
+                },
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertEqual(len(result.errors), 1)
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("UserNode", user.id),
-                "input": {
-                    "name": "Kitty",
-                    "owner": to_global_id("UserNode", user.id)
-                }
+                "input": {"name": "Kitty", "owner": to_global_id("UserNode", user.id)},
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
@@ -474,9 +448,7 @@ class TestUpdateMutation(TestCase):
         class UpdateDogMutation(DjangoUpdateMutation):
             class Meta:
                 model = Dog
-                field_types = {
-                    "tag": graphene.Int()
-                }
+                field_types = {"tag": graphene.Int()}
 
             @classmethod
             def handle_tag(self, value, *args, **kwargs):
@@ -503,36 +475,355 @@ class TestUpdateMutation(TestCase):
         # Result with a string in the tag field should fail now
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("DogNode", dog.id),
                 "input": {
                     "name": "Sparky",
                     "tag": "not-an-int",
                     "breed": "HUSKY",
-                    "owner": to_global_id("UserNode", user.id)
-                }
+                    "owner": to_global_id("UserNode", user.id),
+                },
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertEqual(len(result.errors), 1)
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("DogNode", dog.id),
                 "input": {
                     "name": "Sparky",
                     "breed": "HUSKY",
                     "tag": 25,
-                    "owner": to_global_id("UserNode", user.id)
-                }
+                    "owner": to_global_id("UserNode", user.id),
+                },
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
-class TestUpdateMutationManyToManyExtras(TestCase):
 
+class TestUpdateMutationManyToManyOnReverseField(TestCase):
+    def test_default_setup__adding_resource_by_id__adds_resource(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateCatMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Cat
+
+        class Mutations(graphene.ObjectType):
+            update_cat = UpdateCatMutation.Field()
+
+        cat = CatFactory.create()
+        user = UserFactory.create()
+        dog = DogFactory.create()
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateCat(
+                $id: ID!,
+                $input: UpdateCatInput! 
+            ){
+                updateCat(id: $id, input: $input){
+                    cat{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("CatNode", cat.id),
+                "input": {
+                    "name": "Garfield",
+                    "owner": to_global_id("UserNode", user.id),
+                    "enemies": [to_global_id("DogNode", dog.id)],
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+
+        cat.refresh_from_db()
+        self.assertEqual(cat.enemies.all().count(), 1)
+
+    def test_default_setup__calling_with_empty_list__resets_relation(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateCatMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Cat
+
+        class Mutations(graphene.ObjectType):
+            update_cat = UpdateCatMutation.Field()
+
+        cat = CatFactory.create()
+        user = UserFactory.create()
+
+        # Create some enemies
+        dog = DogFactory.create_batch(5)
+        cat.enemies.set(dog)
+        self.assertEqual(cat.enemies.all().count(), 5)
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateCat(
+                $id: ID!,
+                $input: UpdateCatInput! 
+            ){
+                updateCat(id: $id, input: $input){
+                    cat{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("CatNode", cat.id),
+                "input": {
+                    "name": "Garfield",
+                    "owner": to_global_id("UserNode", user.id),
+                    "enemies": [],
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+
+        cat.refresh_from_db()
+        self.assertEqual(cat.enemies.all().count(), 0)
+
+    def test_many_to_many_extras__calling_exact_with_empty_list__resets_relation(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateCatMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Cat
+                many_to_many_extras = {"enemies": {"exact": {"type": "ID"}}}
+
+        class Mutations(graphene.ObjectType):
+            update_cat = UpdateCatMutation.Field()
+
+        cat = CatFactory.create()
+        user = UserFactory.create()
+
+        # Create some enemies
+        dog = DogFactory.create_batch(5)
+        cat.enemies.set(dog)
+        self.assertEqual(cat.enemies.all().count(), 5)
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateCat(
+                $id: ID!,
+                $input: UpdateCatInput! 
+            ){
+                updateCat(id: $id, input: $input){
+                    cat{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("CatNode", cat.id),
+                "input": {
+                    "name": "Garfield",
+                    "owner": to_global_id("UserNode", user.id),
+                    "enemies": [],
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+
+        cat.refresh_from_db()
+        self.assertEqual(cat.enemies.all().count(), 0)
+
+    def test_many_to_many_extras__add_extra_by_id__adds_by_id(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateCatMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Cat
+                many_to_many_extras = {"enemies": {"add": {"type": "ID"}}}
+
+        class Mutations(graphene.ObjectType):
+            update_cat = UpdateCatMutation.Field()
+
+        cat = CatFactory.create()
+        user = UserFactory.create()
+
+        # Create some enemies
+        dog = DogFactory.create_batch(5)
+        self.assertEqual(cat.enemies.all().count(), 0)
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateCat(
+                $id: ID!,
+                $input: UpdateCatInput! 
+            ){
+                updateCat(id: $id, input: $input){
+                    cat{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("CatNode", cat.id),
+                "input": {
+                    "name": "Garfield",
+                    "owner": to_global_id("UserNode", user.id),
+                    "enemiesAdd": [dog.id for dog in dog],
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+
+        cat.refresh_from_db()
+        self.assertEqual(cat.enemies.all().count(), 5)
+
+    def test_many_to_many_extras__add_extra_by_input__adds_by_input(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class CreateDogMutation(DjangoCreateMutation):
+            class Meta:
+                model = Dog
+
+        class UpdateCatMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Cat
+                many_to_many_extras = {"enemies": {"exact": {"type": "CreateDogInput"}}}
+
+        class Mutations(graphene.ObjectType):
+            create_dog = CreateDogMutation.Field()
+            update_cat = UpdateCatMutation.Field()
+
+        cat = CatFactory.create()
+        user = UserFactory.create()
+
+        # Create some enemies
+        dog = DogFactory.create_batch(5)
+        self.assertEqual(cat.enemies.all().count(), 0)
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateCat(
+                $id: ID!,
+                $input: UpdateCatInput! 
+            ){
+                updateCat(id: $id, input: $input){
+                    cat{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("CatNode", cat.id),
+                "input": {
+                    "name": "Garfield",
+                    "owner": to_global_id("UserNode", user.id),
+                    "enemies": [
+                        {
+                            "name": dog.name,
+                            "breed": dog.breed,
+                            "tag": dog.tag,
+                            "owner": dog.owner.id,
+                        }
+                        for dog in dog
+                    ],
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+
+        cat.refresh_from_db()
+        self.assertEqual(cat.enemies.all().count(), 5)
+
+    def test_many_to_many_extras__remove_extra_by_id__removes_by_id(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateCatMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Cat
+                many_to_many_extras = {"enemies": {"remove": {"type": "ID"}}}
+
+        class Mutations(graphene.ObjectType):
+            update_cat = UpdateCatMutation.Field()
+
+        cat = CatFactory.create()
+        user = UserFactory.create()
+
+        # Create some enemies
+        dog = DogFactory.create_batch(5)
+        cat.enemies.set(dog)
+        self.assertEqual(cat.enemies.all().count(), 5)
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateCat(
+                $id: ID!,
+                $input: UpdateCatInput! 
+            ){
+                updateCat(id: $id, input: $input){
+                    cat{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("CatNode", cat.id),
+                "input": {
+                    "name": "Garfield",
+                    "owner": to_global_id("UserNode", user.id),
+                    "enemiesRemove": [dog.id for dog in dog],
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+
+        cat.refresh_from_db()
+        self.assertEqual(cat.enemies.all().count(), 0)
+
+
+class TestUpdateMutationManyToManyExtras(TestCase):
     def test_many_to_many_extras__calling_exact_with_empty_list__resets_relation(self):
         # This registers the UserNode type
         # noinspection PyUnresolvedReferences
@@ -541,11 +832,7 @@ class TestUpdateMutationManyToManyExtras(TestCase):
         class UpdateDogMutation(DjangoUpdateMutation):
             class Meta:
                 model = Dog
-                many_to_many_extras = {
-                    "enemies":{
-                       "exact" : {"type": "ID"}
-                    }
-                }
+                many_to_many_extras = {"enemies": {"exact": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
             update_dog = UpdateDogMutation.Field()
@@ -574,17 +861,17 @@ class TestUpdateMutationManyToManyExtras(TestCase):
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("DogNode", dog.id),
                 "input": {
                     "name": "Sparky",
                     "tag": "tag",
                     "breed": "HUSKY",
                     "owner": to_global_id("UserNode", user.id),
-                    "enemies": []
-                }
+                    "enemies": [],
+                },
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
@@ -599,11 +886,7 @@ class TestUpdateMutationManyToManyExtras(TestCase):
         class UpdateDogMutation(DjangoUpdateMutation):
             class Meta:
                 model = Dog
-                many_to_many_extras = {
-                    "enemies":{
-                        "add" : {"type": "ID"}
-                    }
-                }
+                many_to_many_extras = {"enemies": {"add": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
             update_dog = UpdateDogMutation.Field()
@@ -631,17 +914,17 @@ class TestUpdateMutationManyToManyExtras(TestCase):
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("DogNode", dog.id),
                 "input": {
                     "name": "Sparky",
                     "tag": "tag",
                     "breed": "HUSKY",
                     "owner": to_global_id("UserNode", user.id),
-                    "enemiesAdd": [cat.id for cat in cats]
-                }
+                    "enemiesAdd": [cat.id for cat in cats],
+                },
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
@@ -660,11 +943,7 @@ class TestUpdateMutationManyToManyExtras(TestCase):
         class UpdateDogMutation(DjangoUpdateMutation):
             class Meta:
                 model = Dog
-                many_to_many_extras = {
-                    "enemies":{
-                        "exact" : {"type": "CreateCatInput"}
-                    }
-                }
+                many_to_many_extras = {"enemies": {"exact": {"type": "CreateCatInput"}}}
 
         class Mutations(graphene.ObjectType):
             create_cat = CreateCatMutation.Field()
@@ -693,20 +972,19 @@ class TestUpdateMutationManyToManyExtras(TestCase):
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("DogNode", dog.id),
                 "input": {
                     "name": "Sparky",
                     "tag": "tag",
                     "breed": "HUSKY",
                     "owner": to_global_id("UserNode", user.id),
-                    "enemies": [{
-                        "name": cat.name,
-                        "owner": cat.owner.id
-                    } for cat in cats]
-                }
+                    "enemies": [
+                        {"name": cat.name, "owner": cat.owner.id} for cat in cats
+                    ],
+                },
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
@@ -721,11 +999,7 @@ class TestUpdateMutationManyToManyExtras(TestCase):
         class UpdateDogMutation(DjangoUpdateMutation):
             class Meta:
                 model = Dog
-                many_to_many_extras = {
-                    "enemies":{
-                        "remove" : {"type": "ID"}
-                    }
-                }
+                many_to_many_extras = {"enemies": {"remove": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
             update_dog = UpdateDogMutation.Field()
@@ -754,19 +1028,17 @@ class TestUpdateMutationManyToManyExtras(TestCase):
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("DogNode", dog.id),
                 "input": {
                     "name": "Sparky",
                     "tag": "tag",
                     "breed": "HUSKY",
                     "owner": to_global_id("UserNode", user.id),
-                    "enemiesRemove": [
-                        cat.id for cat in cats
-                    ]
-                }
+                    "enemiesRemove": [cat.id for cat in cats],
+                },
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
@@ -775,8 +1047,9 @@ class TestUpdateMutationManyToManyExtras(TestCase):
 
 
 class TestUpdateMutationManyToOneExtras(TestCase):
-
-    def test_many_to_one_extras__auto_calling_mutation_with_setting_field__does_nothing(self):
+    def test_many_to_one_extras__auto_calling_mutation_with_setting_field__does_nothing(
+        self,
+    ):
         # This registers the UserNode type
         # noinspection PyUnresolvedReferences
         from .schema import UserNode
@@ -785,11 +1058,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
             class Meta:
                 model = User
                 exclude_fields = ("password",)
-                many_to_one_extras = {
-                    "cats":{
-                        "exact" : {"type": "auto"}
-                    }
-                }
+                many_to_one_extras = {"cats": {"exact": {"type": "auto"}}}
 
         class Mutations(graphene.ObjectType):
             update_user = UpdateUserMutation.Field()
@@ -814,16 +1083,16 @@ class TestUpdateMutationManyToOneExtras(TestCase):
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("UserNode", user.id),
                 "input": {
                     "username": user.username,
                     "firstName": user.first_name,
                     "lastName": user.last_name,
-                    "email": user.email
-                }
+                    "email": user.email,
+                },
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
@@ -839,11 +1108,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
             class Meta:
                 model = User
                 exclude_fields = ("password",)
-                many_to_one_extras = {
-                    "cats":{
-                        "exact" : {"type": "ID"}
-                    }
-                }
+                many_to_one_extras = {"cats": {"exact": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
             update_user = UpdateUserMutation.Field()
@@ -870,17 +1135,17 @@ class TestUpdateMutationManyToOneExtras(TestCase):
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("UserNode", user.id),
                 "input": {
                     "username": user.username,
                     "firstName": user.first_name,
                     "lastName": user.last_name,
                     "email": user.email,
-                    "cats": []
-                }
+                    "cats": [],
+                },
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
@@ -896,11 +1161,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
             class Meta:
                 model = User
                 exclude_fields = ("password",)
-                many_to_one_extras = {
-                    "cats":{
-                        "exact": {"type": "ID"}
-                    }
-                }
+                many_to_one_extras = {"cats": {"exact": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
             update_user = UpdateUserMutation.Field()
@@ -927,17 +1188,17 @@ class TestUpdateMutationManyToOneExtras(TestCase):
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("UserNode", user.id),
                 "input": {
                     "username": user.username,
                     "firstName": user.first_name,
                     "lastName": user.last_name,
                     "email": user.email,
-                    "cats": [cat.id for cat in cats]
-                }
+                    "cats": [cat.id for cat in cats],
+                },
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
@@ -953,11 +1214,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
             class Meta:
                 model = User
                 exclude_fields = ("password",)
-                many_to_one_extras = {
-                    "cats": {
-                        "add": {"type": "ID"}
-                    }
-                }
+                many_to_one_extras = {"cats": {"add": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
             update_user = UpdateUserMutation.Field()
@@ -985,17 +1242,17 @@ class TestUpdateMutationManyToOneExtras(TestCase):
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("UserNode", user.id),
                 "input": {
                     "username": user.username,
                     "firstName": user.first_name,
                     "lastName": user.last_name,
                     "email": user.email,
-                    "catsAdd": [cat.id for cat in other_cats]
-                }
+                    "catsAdd": [cat.id for cat in other_cats],
+                },
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
@@ -1015,11 +1272,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
             class Meta:
                 model = User
                 exclude_fields = ("password",)
-                many_to_one_extras = {
-                    "cats":{
-                        "add" : {"type": "auto"}
-                    }
-                }
+                many_to_one_extras = {"cats": {"add": {"type": "auto"}}}
 
         class Mutations(graphene.ObjectType):
             create_cat = CreateCatMutation.Field()
@@ -1046,19 +1299,17 @@ class TestUpdateMutationManyToOneExtras(TestCase):
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("UserNode", user.id),
                 "input": {
                     "username": user.username,
                     "firstName": user.first_name,
                     "lastName": user.last_name,
                     "email": user.email,
-                    "catsAdd": [{
-                        "name": "Cat damon"
-                    } for _ in range(5)]
-                }
+                    "catsAdd": [{"name": "Cat damon"} for _ in range(5)],
+                },
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
@@ -1074,11 +1325,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
             class Meta:
                 model = User
                 exclude_fields = ("password",)
-                many_to_one_extras = {
-                    "cats":{
-                        "remove": {"type": "ID"}
-                    }
-                }
+                many_to_one_extras = {"cats": {"remove": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
             update_user = UpdateUserMutation.Field()
@@ -1106,19 +1353,17 @@ class TestUpdateMutationManyToOneExtras(TestCase):
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("UserNode", user.id),
                 "input": {
                     "username": user.username,
                     "firstName": user.first_name,
                     "lastName": user.last_name,
                     "email": user.email,
-                    "catsRemove": [
-                        cat.id for cat in cats
-                    ]
-                }
+                    "catsRemove": [cat.id for cat in cats],
+                },
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
@@ -1134,11 +1379,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
             class Meta:
                 model = User
                 exclude_fields = ("password",)
-                many_to_one_extras = {
-                    "mice":{
-                        "remove": {"type": "ID"}
-                    }
-                }
+                many_to_one_extras = {"mice": {"remove": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
             update_user = UpdateUserMutation.Field()
@@ -1166,19 +1407,17 @@ class TestUpdateMutationManyToOneExtras(TestCase):
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "id": to_global_id("UserNode", user.id),
                 "input": {
                     "username": user.username,
                     "firstName": user.first_name,
                     "lastName": user.last_name,
                     "email": user.email,
-                    "miceRemove": [
-                        mouse.id for mouse in mice
-                    ]
-                }
+                    "miceRemove": [mouse.id for mouse in mice],
+                },
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
@@ -1187,8 +1426,9 @@ class TestUpdateMutationManyToOneExtras(TestCase):
 
 
 class TestCreateMutationManyToOneExtras(TestCase):
-
-    def test_many_to_one_extras__auto_calling_mutation_with_setting_field__does_nothing(self):
+    def test_many_to_one_extras__auto_calling_mutation_with_setting_field__does_nothing(
+        self,
+    ):
         # This registers the UserNode type
         # noinspection PyUnresolvedReferences
         from .schema import UserNode
@@ -1197,11 +1437,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
             class Meta:
                 model = User
                 exclude_fields = ("password",)
-                many_to_one_extras = {
-                    "cats": {
-                        "exact": {"type": "auto"}
-                    }
-                }
+                many_to_one_extras = {"cats": {"exact": {"type": "auto"}}}
 
         class Mutations(graphene.ObjectType):
             create_user = CreateUserMutation.Field()
@@ -1223,15 +1459,15 @@ class TestCreateMutationManyToOneExtras(TestCase):
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "input": {
                     "username": user.username,
                     "firstName": user.first_name,
                     "lastName": user.last_name,
-                    "email": user.email
+                    "email": user.email,
                 }
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
         data = Dict(result.data)
@@ -1248,11 +1484,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
             class Meta:
                 model = User
                 exclude_fields = ("password",)
-                many_to_one_extras = {
-                    "cats": {
-                        "exact": {"type": "ID"}
-                    }
-                }
+                many_to_one_extras = {"cats": {"exact": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
             create_user = CreateUserMutation.Field()
@@ -1275,16 +1507,16 @@ class TestCreateMutationManyToOneExtras(TestCase):
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "input": {
                     "username": user.username,
                     "firstName": user.first_name,
                     "lastName": user.last_name,
                     "email": user.email,
-                    "cats": [cat.id for cat in other_cats]
+                    "cats": [cat.id for cat in other_cats],
                 }
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
         data = Dict(result.data)
@@ -1301,11 +1533,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
             class Meta:
                 model = User
                 exclude_fields = ("password",)
-                many_to_one_extras = {
-                    "cats": {
-                        "add": {"type": "ID"}
-                    }
-                }
+                many_to_one_extras = {"cats": {"add": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
             create_user = CreateUserMutation.Field()
@@ -1328,16 +1556,16 @@ class TestCreateMutationManyToOneExtras(TestCase):
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "input": {
                     "username": user.username,
                     "firstName": user.first_name,
                     "lastName": user.last_name,
                     "email": user.email,
-                    "catsAdd": [cat.id for cat in other_cats]
+                    "catsAdd": [cat.id for cat in other_cats],
                 }
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
         data = Dict(result.data)
@@ -1358,11 +1586,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
             class Meta:
                 model = User
                 exclude_fields = ("password",)
-                many_to_one_extras = {
-                    "cats":{
-                        "add" : {"type": "auto"}
-                    }
-                }
+                many_to_one_extras = {"cats": {"add": {"type": "auto"}}}
 
         class Mutations(graphene.ObjectType):
             create_cat = CreateCatMutation.Field()
@@ -1385,22 +1609,19 @@ class TestCreateMutationManyToOneExtras(TestCase):
 
         result = schema.execute(
             mutation,
-            variables= {
+            variables={
                 "input": {
                     "username": user.username,
                     "firstName": user.first_name,
                     "lastName": user.last_name,
                     "email": user.email,
-                    "catsAdd": [{
-                        "name": "Cat Damon"
-                    } for _ in range(5)]
+                    "catsAdd": [{"name": "Cat Damon"} for _ in range(5)],
                 }
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
         data = Dict(result.data)
         user = User.objects.get(pk=disambiguate_id(data.createUser.user.id))
 
         self.assertEqual(user.cats.all().count(), 5)
-

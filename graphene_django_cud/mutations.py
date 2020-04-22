@@ -190,7 +190,9 @@ class DjangoCudBase(Mutation):
         meta_registry = get_type_meta_registry()
 
         model_field_values = {}
-        many_to_many_values = {}
+        many_to_many_to_add = {}
+        many_to_many_to_remove = {}
+        many_to_many_to_set = {}
 
         many_to_many_extras_field_names = get_m2m_all_extras_field_names(
             many_to_many_extras
@@ -246,7 +248,7 @@ class DjangoCudBase(Mutation):
                     new_value = disambiguate_ids(value)
 
             if field_is_many_to_many:
-                many_to_many_values[name] = new_value
+                many_to_many_to_set[name] = new_value
             else:
                 model_field_values[name] = new_value
 
@@ -262,9 +264,6 @@ class DjangoCudBase(Mutation):
 
         # Foreign keys are added, we are ready to create our object
         obj = Model.objects.create(**model_field_values)
-
-        for name, values in many_to_many_values.items():
-            getattr(obj, name).set(values)
 
         # Handle extras fields
         many_to_many_to_add = {}
@@ -396,9 +395,9 @@ class DjangoCudBase(Mutation):
         Model,
     ):
 
-        many_to_many_values = {}
-        many_to_many_add_values = {}
-        many_to_many_remove_values = {}
+        many_to_many_to_add = {}
+        many_to_many_to_remove = {}
+        many_to_many_to_set = {}
 
         many_to_many_extras_field_names = get_m2m_all_extras_field_names(
             many_to_many_extras
@@ -454,7 +453,7 @@ class DjangoCudBase(Mutation):
                     new_value = disambiguate_ids(value)
 
             if field_is_many_to_many:
-                many_to_many_values[name] = new_value
+                many_to_many_to_set[name] = new_value
             else:
                 setattr(obj, name, new_value)
 
@@ -466,9 +465,6 @@ class DjangoCudBase(Mutation):
             obj_id = cls.get_or_create_foreign_obj(field, value, extras, info)
             setattr(obj, name + "_id", obj_id)
 
-        many_to_many_to_add = {}
-        many_to_many_to_remove = {}
-        many_to_many_to_set = {}
         for name, extras in many_to_many_extras.items():
             field = Model._meta.get_field(name)
             if not name in many_to_many_to_add:

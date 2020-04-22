@@ -90,6 +90,7 @@ class DogFactory(factory.DjangoModelFactory):
     owner = factory.SubFactory(UserFactory)
     name = "dog"
     tag = "tag"
+    breed = "HUSKY"
 
 
 class MouseFactory(factory.DjangoModelFactory):
