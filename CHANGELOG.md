@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.4.4
+* Fix bug where default field handling for many-to-many and many-to-one fields failed.
+
 ## Version 0.4.3
 * Add missing files
 
