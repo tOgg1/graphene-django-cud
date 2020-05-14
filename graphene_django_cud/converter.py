@@ -164,9 +164,33 @@ def convert_field_to_string_extended(
     return String(description=field.help_text, required=is_required(field, required))
 
 
-@convert_django_field_to_input.register(models.AutoField)
 @convert_django_field_to_input.register(models.OneToOneField)
 @convert_django_field_to_input.register(models.OneToOneRel)
+def convert_one_to_one_field(
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+):
+    _type_name = f"{to_camel_case(field.name).capitalize()}Input"
+
+    def dynamic_type():
+        _type = registry.get_converted_field(_type_name)
+
+        if not _type:
+            raise GraphQLError(f"The type {_type_name} does not exist.")
+
+        return InputField(
+            _type,
+            description=getattr(field, "help_text", ""),
+            required=is_required(field, required),
+        )
+
+    return Dynamic(dynamic_type)
+
+
+@convert_django_field_to_input.register(models.AutoField)
 @convert_django_field_to_input.register(models.ForeignKey)
 def convert_field_to_id(
     field,

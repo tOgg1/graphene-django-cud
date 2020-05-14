@@ -10,7 +10,7 @@ from graphene_django_cud.mutations import (
     DjangoBatchDeleteMutation,
     DjangoBatchCreateMutation,
 )
-from graphene_django_cud.tests.models import User, Cat, Dog, Mouse
+from graphene_django_cud.tests.models import User, Cat, Dog, Mouse, DogRegistration
 
 
 class UserNode(DjangoObjectType):
@@ -28,6 +28,12 @@ class CatNode(DjangoObjectType):
 class DogNode(DjangoObjectType):
     class Meta:
         model = Dog
+        interfaces = (Node,)
+
+
+class DogRegistrationNode(DjangoObjectType):
+    class Meta:
+        model = DogRegistration
         interfaces = (Node,)
 
 
@@ -180,6 +186,11 @@ class PatchDogMutation(DjangoPatchMutation):
         return "Dog-" + str(value)
 
 
+class PatchDogRegistrationMutation(DjangoPatchMutation):
+    class Meta:
+        model = DogRegistration
+
+
 class UpdateDogMutation(DjangoUpdateMutation):
     class Meta:
         model = Dog
@@ -227,6 +238,8 @@ class Mutations(graphene.ObjectType):
     patch_dog = PatchDogMutation.Field()
     update_dog = UpdateDogMutation.Field()
     delete_dog = DeleteDogMutation.Field()
+
+    patch_dog_registration = PatchDogRegistrationMutation.Field()
 
     batch_create_cat = BatchCreateCatMutation.Field()
     create_cat = CreateCatMutation.Field()

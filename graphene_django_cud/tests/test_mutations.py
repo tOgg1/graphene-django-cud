@@ -13,7 +13,7 @@ from graphene_django_cud.tests.factories import (
     DogFactory,
     MouseFactory,
 )
-from graphene_django_cud.tests.models import User, Cat, Dog
+from graphene_django_cud.tests.models import User, Cat, Dog, DogRegistration
 from graphene_django_cud.util import disambiguate_id
 
 
@@ -68,7 +68,7 @@ class TestUpdateMutation(TestCase):
         mutation = """
             mutation UpdateCat(
                 $id: ID!,
-                $input: UpdateCatInput! 
+                $input: UpdateCatInput!
             ){
                 updateCat(id: $id, input: $input){
                     cat{
@@ -1625,3 +1625,226 @@ class TestCreateMutationManyToOneExtras(TestCase):
         user = User.objects.get(pk=disambiguate_id(data.createUser.user.id))
 
         self.assertEqual(user.cats.all().count(), 5)
+
+
+class TestUpdateWithOneToOneField(TestCase):
+    def test__one_to_one_relation_exists__updates_specified_fields(self):
+
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateDogMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Dog
+
+        class Mutations(graphene.ObjectType):
+            update_dog = UpdateDogMutation.Field()
+
+        user = UserFactory.create()
+        dog = DogFactory.create()
+        DogRegistration.objects.create(dog=dog, registration_number="1234")
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateDog(
+                $id: ID!,
+                $input: UpdateDogInput!
+            ){
+                updateDog(id: $id, input: $input){
+                    dog{
+                        id
+                        registration{
+                            id
+                            registrationNumber 
+                        }
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("DogNode", dog.id),
+                "input": {
+                    "name": dog.name,
+                    "breed": dog.breed,
+                    "tag": dog.tag,
+                    "owner": to_global_id("UserNode", dog.owner.id),
+                    "registration": {"registrationNumber": "12345"},
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        self.assertIsNone(result.errors)
+        self.assertEqual("12345", data.updateDog.dog.registration.registrationNumber)
+
+    def test__reverse_one_to_one_exists__updates_specified_fields(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateDogRegistrationMutation(DjangoUpdateMutation):
+            class Meta:
+                model = DogRegistration
+
+        class Mutations(graphene.ObjectType):
+            update_dog_registration = UpdateDogRegistrationMutation.Field()
+
+        user = UserFactory.create()
+        dog = DogFactory.create(breed="HUSKY")
+        dog_registration = DogRegistration.objects.create(dog=dog, registration_number="1234")
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateDogRegistration(
+                $id: ID!,
+                $input: UpdateDogRegistrationInput!
+            ){
+                updateDogRegistration(id: $id, input: $input){
+                    dogRegistration{
+                        id
+                        registrationNumber
+                        dog{
+                            id
+                            breed
+                        }
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("DogRegistrationNode", dog_registration.id),
+                "input": {
+                    "registrationNumber": dog_registration.registration_number,
+                    "dog": {
+                        "name": dog.name,
+                        "breed": "LABRADOR",
+                        "tag": dog.tag,
+                        "owner": dog.owner
+                    }
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        self.assertEqual("LABRADOR", data.updateDogRegistration.dogRegistration.dog.breed)
+
+
+class TestCreateWithOneToOneField(TestCase):
+    def test__one_to_one_relation_exists__creates_specified_fields(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class CreateDogMutation(DjangoCreateMutation):
+            class Meta:
+                model = Dog
+
+        class Mutations(graphene.ObjectType):
+            create_dog = CreateDogMutation.Field()
+
+        user = UserFactory.create()
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation CreateDog(
+                $input: CreateDogInput!
+            ){
+                createDog(input: $input){
+                    dog{
+                        id
+                        registration{
+                            id
+                            registrationNumber 
+                        }
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "input": {
+                    "name": "Sparky",
+                    "breed": "HUSKY",
+                    "tag": "1234",
+                    "owner": to_global_id("UserNode", user.id),
+                    "registration": {"registrationNumber": "12345"},
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        self.assertIsNone(result.errors)
+        self.assertEqual("12345", data.createDog.dog.registration.registrationNumber)
+
+    def test__reverse_one_to_one_exists__updates_specified_fields(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class CreateDogRegistrationMutation(DjangoCreateMutation):
+            class Meta:
+                model = DogRegistration
+
+        class Mutations(graphene.ObjectType):
+            create_dog_registration = CreateDogRegistrationMutation.Field()
+
+        user = UserFactory.create()
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation CreateDogRegistration(
+                $input: CreateDogRegistrationInput!
+            ){
+                createDogRegistration(input: $input){
+                    dogRegistration{
+                        id
+                        registrationNumber
+                        dog{
+                            id
+                            name
+                            tag
+                            breed
+                        }
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "input": {
+                    "registrationNumber": "12345",
+                    "dog": {
+                        "name": "Sparky",
+                        "breed": "LABRADOR",
+                        "tag": "1234",
+                        "owner": user.id
+                    }
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        dog_registration = data.createDogRegistration.dogRegistration
+        dog = data.createDogREgistration.dogRegistration.dog
+
+        self.assertEqual("Sparky", dog.name)
+        self.assertEqual("LABRADOR", dog.breed)
+        self.assertEqual("1234", dog.tag)
+
+        self.assertEqual("12345", dog_registration.registrationNumber)
+

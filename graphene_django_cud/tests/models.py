@@ -46,3 +46,13 @@ class Dog(models.Model):
         blank=True,
         related_name='friends'
     )
+
+
+
+class DogRegistration(models.Model):
+    dog = models.OneToOneField(
+        Dog,
+        related_name="registration",
+        on_delete=models.CASCADE
+    )
+    registration_number = models.CharField(max_length=32)

@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from pprint import pprint
 from typing import Iterable
 
 import graphene
@@ -18,11 +19,12 @@ from .util import (
     disambiguate_ids,
     get_input_fields_for_model,
     get_all_optional_input_fields_for_model,
-    is_many_to_many,
+    is_field_many_to_many,
     get_m2m_all_extras_field_names,
     get_likely_operation_from_name,
     get_fk_all_extras_field_names,
     get_filter_fields_input_args,
+    is_field_one_to_one,
 )
 
 meta_registry = get_type_meta_registry()
@@ -51,6 +53,17 @@ class DjangoCudBase(Mutation):
                 field.related_model,
             )
             return related_obj.id
+
+    @classmethod
+    def create_or_update_one_to_one_relation(cls, obj, field, value, info):
+        existing_value = getattr(obj, field.name, None)
+
+        if not existing_value:
+            return cls.create_obj(value, info, {}, {}, {}, {}, field.related_model)
+        else:
+            return cls.update_obj(
+                existing_value, value, info, {}, {}, {}, {}, field.related_model
+            )
 
     @classmethod
     def get_or_create_m2m_objs(cls, field, values, data, operation, info):
@@ -193,6 +206,7 @@ class DjangoCudBase(Mutation):
         many_to_many_to_add = {}
         many_to_many_to_remove = {}
         many_to_many_to_set = {}
+        one_to_one_rels = {}
 
         many_to_many_extras_field_names = get_m2m_all_extras_field_names(
             many_to_many_extras
@@ -222,7 +236,16 @@ class DjangoCudBase(Mutation):
 
             # We have to handle this case specifically, by using the fields
             # .set()-method, instead of direct assignment
-            field_is_many_to_many = is_many_to_many(field)
+            field_is_many_to_many = is_field_many_to_many(field)
+
+            # We cannot handle nested one to one rels before we have saved.
+            if type(field) == models.OneToOneRel and not (
+                # This case happens if the one to one field is specified as a related id.
+                isinstance(value, str)
+                or isinstance(value, int)
+            ):
+                one_to_one_rels[name] = value
+                continue
 
             value_handle_name = "handle_" + name
             if hasattr(cls, value_handle_name):
@@ -236,7 +259,7 @@ class DjangoCudBase(Mutation):
             if new_value == value and value is not None:
                 if type(field) in (models.AutoField,):
                     new_value = disambiguate_id(value)
-                elif type(field) in (models.ForeignKey, models.OneToOneField,):
+                elif type(field) in (models.ForeignKey, models.OneToOneRel,):
                     # Delete auto context field here, if it exists. We have to do this explicitly
                     # as we change the name below
                     if name in auto_context_fields:
@@ -244,6 +267,17 @@ class DjangoCudBase(Mutation):
 
                     name = getattr(field, "db_column", None) or name + "_id"
                     new_value = disambiguate_id(value)
+                elif type(field) == models.OneToOneField:
+                    # If the value is an integer or a string, we assume it is an ID
+                    if isinstance(value, str) or isinstance(value, int):
+                        name = getattr(field, "db_column", None) or name + "_id"
+                        new_value = disambiguate_id(value)
+                    else:
+                        # We can use create obj directly here, as we know the foreign object does
+                        # not already exist.
+                        new_value = cls.create_obj(
+                            value, info, {}, {}, {}, {}, field.related_model
+                        )
                 elif field_is_many_to_many:
                     new_value = disambiguate_ids(value)
 
@@ -264,6 +298,34 @@ class DjangoCudBase(Mutation):
 
         # Foreign keys are added, we are ready to create our object
         obj = Model.objects.create(**model_field_values)
+
+        # Handle one to one fields
+        for name, value in one_to_one_rels.items():
+            field = Model._meta.get_field(name)
+            new_value = value
+
+            value_handle_name = "handle_" + name
+            if hasattr(cls, value_handle_name):
+                handle_func = getattr(cls, value_handle_name)
+                assert callable(
+                    handle_func
+                ), f"Property {value_handle_name} on {cls.__name__} is not a function."
+                new_value = handle_func(value, name, info)
+
+            # Value was not transformed
+            if new_value == value:
+                # If the value is an integer or a string, we assume it is an ID
+                if isinstance(value, str) or isinstance(value, int):
+                    name = getattr(field, "db_column", None) or name + "_id"
+                    new_value = disambiguate_id(value)
+                else:
+                    # This is a nested field we need to take care of.
+                    value[field.field.name] = obj.id
+                    new_value = cls.create_or_update_one_to_one_relation(
+                        obj, field, value, info
+                    )
+
+            setattr(obj, name, new_value)
 
         # Handle extras fields
         many_to_many_to_add = {}
@@ -427,7 +489,9 @@ class DjangoCudBase(Mutation):
 
             # We have to handle this case specifically, by using the fields
             # .set()-method, instead of direct assignment
-            field_is_many_to_many = is_many_to_many(field)
+            field_is_many_to_many = is_field_many_to_many(field)
+
+            field_is_one_to_one = is_field_one_to_one(field)
 
             value_handle_name = "handle_" + name
             if hasattr(cls, value_handle_name):
@@ -441,7 +505,7 @@ class DjangoCudBase(Mutation):
             if new_value == value and value is not None:
                 if type(field) in (models.AutoField,):
                     new_value = disambiguate_id(value)
-                elif type(field) in (models.ForeignKey, models.OneToOneField,):
+                elif type(field) in (models.ForeignKey,):
                     # Delete auto context field here, if it exists. We have to do this explicitly
                     # as we change the name below
                     if name in auto_context_fields:
@@ -449,6 +513,28 @@ class DjangoCudBase(Mutation):
 
                     name = getattr(field, "db_column", None) or name + "_id"
                     new_value = disambiguate_id(value)
+                elif type(field) == models.OneToOneField:
+                    # If the value is an integer or a string, we assume it is an ID
+                    if isinstance(value, str) or isinstance(value, int):
+                        name = getattr(field, "db_column", None) or name + "_id"
+                        new_value = disambiguate_id(value)
+                    else:
+                        # This is a nested field we need to take care of.
+                        value[field.remote_field.name] = obj.id
+                        new_value = cls.create_or_update_one_to_one_relation(
+                            obj, field, value, info
+                        )
+                elif type(field) == models.OneToOneRel:
+                    # If the value is an integer or a string, we assume it is an ID
+                    if isinstance(value, str) or isinstance(value, int):
+                        name = getattr(field, "db_column", None) or name + "_id"
+                        new_value = disambiguate_id(value)
+                    else:
+                        # This is a nested field we need to take care of.
+                        value[field.field.name] = obj.id
+                        new_value = cls.create_or_update_one_to_one_relation(
+                            obj, field, value, info
+                        )
                 elif field_is_many_to_many:
                     new_value = disambiguate_ids(value)
 

@@ -3,6 +3,7 @@ from collections import OrderedDict
 import graphene
 from django.db import models
 from graphene import InputObjectType
+from graphene.utils.str_converters import to_camel_case
 from graphene_django.registry import get_global_registry
 from graphene_django.utils import get_model_fields
 from graphql import GraphQLError
@@ -87,6 +88,7 @@ def get_input_fields_for_model(
     foreign_key_extras = foreign_key_extras or {}
     many_to_one_extras = many_to_one_extras or {}
     field_types = field_types or {}
+    one_to_one_fields = []
 
     fields = OrderedDict()
     fields_lookup = {}
@@ -129,6 +131,30 @@ def get_input_fields_for_model(
         )
         fields[name] = converted
 
+        if type(field) in (models.OneToOneRel, models.OneToOneField):
+            one_to_one_fields.append(field)
+
+    # Create the one to one fields here
+    for field in one_to_one_fields:
+        _type_name = f"{to_camel_case(field.name).capitalize()}Input"
+
+        field: models.OneToOneField = field
+
+        # One OneToOnerels we can get the reverse field name from "field.field.name", as we have a direct
+        # reference to the reverse field that way. For OneToOneFields we need to go through "field.target_field".
+        reverse_field_name = (
+            field.field.name
+            if isinstance(field, models.OneToOneRel)
+            else field.remote_field.name
+        )
+
+        converted_fields = get_input_fields_for_model(
+            field.related_model, (), (reverse_field_name,), (), (), None, None, None,
+        )
+        InputType = type(_type_name, (InputObjectType,), converted_fields)
+        registry.register_converted_field(_type_name, InputType)
+        meta_registry.register(_type_name, {})
+
     # Create extra many_to_many_fields
     for name, extras in many_to_many_extras.items():
         field = fields_lookup.get(name)
@@ -199,9 +225,10 @@ def get_input_fields_for_model(
                     parent_type_name=_type_name,
                     field_types=data.get("field_types"),
                     # Don't ignore the primary key on updates
-                    ignore_primary_key=operation_name != "update"
+                    ignore_primary_key=operation_name != "update",
                 )
                 InputType = type(_type_name, (InputObjectType,), converted_fields)
+                registry.register_converted_field(field, InputType)
                 meta_registry.register(
                     _type_name,
                     {
@@ -214,6 +241,7 @@ def get_input_fields_for_model(
                         "field_types": data.get("field_types", {}),
                     },
                 )
+                registry.register_converted_field(_type_name, InputType)
                 _field = graphene.List(
                     type(_type_name, (InputObjectType,), converted_fields),
                     required=False,
@@ -245,6 +273,7 @@ def get_all_optional_input_fields_for_model(
     foreign_key_extras = foreign_key_extras or {}
     many_to_one_extras = many_to_one_extras or {}
     field_types = field_types or {}
+    one_to_one_fields = []
 
     fields = OrderedDict()
     fields_lookup = {}
@@ -282,6 +311,30 @@ def get_all_optional_input_fields_for_model(
 
         fields[name] = converted
 
+        if type(field) in (models.OneToOneRel, models.OneToOneField):
+            one_to_one_fields.append(field)
+
+    # Create the one to one fields here
+    for field in one_to_one_fields:
+        _type_name = f"{to_camel_case(field.name).capitalize()}Input"
+
+        field: models.OneToOneField = field
+
+        # One OneToOnerels we can get the reverse field name from "field.field.name", as we have a direct
+        # reference to the reverse field that way. For OneToOneFields we need to go through "field.target_field".
+        reverse_field_name = (
+            field.field.name
+            if isinstance(field, models.OneToOneRel)
+            else field.remote_field.name
+        )
+
+        converted_fields = get_input_fields_for_model(
+            field.related_model, (), (reverse_field_name,), (), (), None, None, None,
+        )
+        InputType = type(_type_name, (InputObjectType,), converted_fields)
+        registry.register_converted_field(_type_name, InputType)
+        meta_registry.register(_type_name, {})
+
     # Create extra many_to_many_fields
     for name, extras in many_to_many_extras.items():
         field = fields_lookup.get(name)
@@ -351,9 +404,10 @@ def get_all_optional_input_fields_for_model(
                     parent_type_name=_type_name,
                     field_types=data.get("field_types"),
                     # Don't ignore the primary key on updates
-                    ignore_primary_key=operation_name != "update"
+                    ignore_primary_key=operation_name != "update",
                 )
                 InputType = type(_type_name, (InputObjectType,), converted_fields)
+                registry.register_converted_field(field, InputType)
                 meta_registry.register(
                     _type_name,
                     {
@@ -465,12 +519,16 @@ def get_filter_fields_input_args(filter_fields, model):
     return result
 
 
-def is_many_to_many(field):
+def is_field_many_to_many(field):
     return type(field) in (
         models.ManyToManyField,
         models.ManyToManyRel,
         models.ManyToOneRel,
     )
+
+
+def is_field_one_to_one(field):
+    return type(field) in (models.OneToOneField, models.OneToOneRel,)
 
 
 def get_m2m_all_extras_field_names(extras):
