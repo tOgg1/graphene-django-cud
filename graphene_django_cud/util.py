@@ -8,7 +8,7 @@ from graphene_django.registry import get_global_registry
 from graphene_django.utils import get_model_fields
 from graphql import GraphQLError
 from graphql_relay import from_global_id
-from typing import Union
+from typing import Union, List
 
 from graphene_django_cud.converter import (
     convert_django_field_with_choices,
@@ -88,7 +88,7 @@ def get_input_fields_for_model(
     foreign_key_extras = foreign_key_extras or {}
     many_to_one_extras = many_to_one_extras or {}
     field_types = field_types or {}
-    one_to_one_fields = []
+    one_to_one_fields: List[Union[models.OneToOneRel, models.OneToOneField]] = []
 
     fields = OrderedDict()
     fields_lookup = {}
@@ -138,8 +138,6 @@ def get_input_fields_for_model(
     for field in one_to_one_fields:
         _type_name = f"{to_camel_case(field.name).capitalize()}Input"
 
-        field: models.OneToOneField = field
-
         # One OneToOnerels we can get the reverse field name from "field.field.name", as we have a direct
         # reference to the reverse field that way. For OneToOneFields we need to go through "field.target_field".
         reverse_field_name = (
@@ -157,7 +155,9 @@ def get_input_fields_for_model(
 
     # Create extra many_to_many_fields
     for name, extras in many_to_many_extras.items():
-        field = fields_lookup.get(name)
+        field: Union[models.ManyToManyField, models.ManyToManyRel] = fields_lookup.get(
+            name
+        )
         if field is None:
             raise GraphQLError(
                 f"Error adding extras for {name} in model f{model}. Field {name} does not exist."
@@ -183,7 +183,7 @@ def get_input_fields_for_model(
             fields[name + "_" + extra_name] = _field
 
     for name, extras in many_to_one_extras.items():
-        field = fields_lookup.get(name)
+        field: models.ManyToOneRel = fields_lookup.get(name)
         if field is None:
             raise GraphQLError(
                 f"Error adding extras for {name} in model f{model}. Field {name} does not exist."
