@@ -1840,7 +1840,7 @@ class TestCreateWithOneToOneField(TestCase):
         self.assertIsNone(result.errors)
         data = Dict(result.data)
         dog_registration = data.createDogRegistration.dogRegistration
-        dog = data.createDogREgistration.dogRegistration.dog
+        dog = data.createDogRegistration.dogRegistration.dog
 
         self.assertEqual("Sparky", dog.name)
         self.assertEqual("LABRADOR", dog.breed)
