@@ -3,7 +3,6 @@ from collections import OrderedDict
 import graphene
 from django.db import transaction
 from graphene import InputObjectType
-from graphene.types.mutation import MutationOptions
 from graphene.types.utils import yank_fields_from_attrs
 from graphene.utils.str_converters import to_snake_case
 from graphene_django.registry import get_global_registry

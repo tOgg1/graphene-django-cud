@@ -3,30 +3,18 @@ from collections import OrderedDict
 import graphene
 from django.db import transaction
 from graphene import InputObjectType
-from graphene.types.mutation import MutationOptions
 from graphene.types.utils import yank_fields_from_attrs
 from graphene.utils.str_converters import to_snake_case
 from graphene_django.registry import get_global_registry
 from graphql import GraphQLError
 
-from graphene_django_cud.mutations.core import DjangoCudBase
+from graphene_django_cud.mutations.core import DjangoCudBase, DjangoCudBaseOptions
 from graphene_django_cud.registry import get_type_meta_registry
 from graphene_django_cud.util import get_all_optional_input_fields_for_model, disambiguate_id
 
 
-class DjangoPatchMutationOptions(MutationOptions):
-    model = None
-    only_fields = None
-    exclude_fields = None
-    return_field_name = None
-    permissions = None
-    login_required = None
-    auto_context_fields = None
-    many_to_many_extras = None
-    many_to_one_extras = None
-    foreign_key_extras = None
-    type_name = None
-    field_types = None
+class DjangoPatchMutationOptions(DjangoCudBaseOptions):
+    pass
 
 
 class DjangoPatchMutation(DjangoCudBase):
