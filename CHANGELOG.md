@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 0.5.0
+* Add one to one extras handling, allowing for nested functionality for one to one fields.
+* Restructure project slightly, by moving mutations to separate files.
+* Remove some unnecessary utility functions.
+
 ## Version 0.4.4
 * Fix bug where default field handling for many-to-many and many-to-one fields failed.
 
