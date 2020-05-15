@@ -100,6 +100,7 @@ def convert_django_field_with_choices(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     choices = getattr(field, "choices", None)
     if choices:
@@ -129,6 +130,7 @@ def convert_django_field_with_choices(
             required,
             field_many_to_many_extras,
             field_foreign_key_extras,
+            field_one_to_one_extras,
         )
     return converted
 
@@ -140,6 +142,7 @@ def convert_django_field_to_input(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     raise Exception(
         "Don't know how to convert the Django field %s (%s)" % (field, field.__class__)
@@ -160,6 +163,7 @@ def convert_field_to_string_extended(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return String(description=field.help_text, required=is_required(field, required))
 
@@ -172,14 +176,22 @@ def convert_one_to_one_field(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
-    _type_name = f"{to_camel_case(field.name).capitalize()}Input"
+    type_name = (
+        field_one_to_one_extras.get("type", "ID") if field_one_to_one_extras else "ID"
+    )
+    if type_name == "ID":
+        return ID(
+            description=getattr(field, "help_text", ""),
+            required=is_required(field, required),
+        )
 
     def dynamic_type():
-        _type = registry.get_converted_field(_type_name)
+        _type = registry.get_converted_field(type_name)
 
         if not _type:
-            raise GraphQLError(f"The type {_type_name} does not exist.")
+            raise GraphQLError(f"The type {type_name} does not exist.")
 
         return InputField(
             _type,
@@ -198,6 +210,7 @@ def convert_field_to_id(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     # Call getattr here, as OneToOneRel does not carry the attribute whatsoeever.
     id_type = ID(
@@ -231,6 +244,7 @@ def convert_field_to_uuid(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return UUID(description=field.help_text, required=is_required(field, required))
 
@@ -246,6 +260,7 @@ def convert_field_to_int(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return Int(description=field.help_text, required=is_required(field, required))
 
@@ -257,6 +272,7 @@ def convert_field_to_boolean(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     if is_required(field, required):
         return NonNull(Boolean, description=field.help_text)
@@ -272,6 +288,7 @@ def convert_field_to_nullboolean(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return Boolean(description=field.help_text, required=is_required(field, required))
 
@@ -284,6 +301,7 @@ def convert_field_to_float(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return Float(description=field.help_text, required=is_required(field, required))
 
@@ -295,6 +313,7 @@ def convert_field_to_time_delta(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return TimeDelta(description=field.help_text, required=is_required(field, required))
 
@@ -306,6 +325,7 @@ def convert_datetime_to_string(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     # We only render DateTimeFields with auto_now[_add] if they are explicitly required or not
     if required is None and (
@@ -323,6 +343,7 @@ def convert_date_to_string(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     # We only render DateFields with auto_now[_add] if they are explicitly required or not
     if required is None and (
@@ -340,6 +361,7 @@ def convert_time_to_string(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return Time(description=field.help_text, required=is_required(field, required))
 
@@ -353,6 +375,7 @@ def convert_many_to_many_field(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     # Use getattr on help_text here as ManyToOnRel does not possess this.
     list_id_type = List(
@@ -388,6 +411,7 @@ def convert_postgres_array_to_list(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     base_type = convert_django_field_to_input(field.base_field)
     if not isinstance(base_type, (List, NonNull)):
@@ -405,6 +429,7 @@ def convert_posgres_field_to_string(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return JSONString(
         description=field.help_text, required=is_required(field, required)
@@ -418,6 +443,7 @@ def convert_postgres_range_to_string(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     inner_type = convert_django_field_to_input(field.base_field)
     if not isinstance(inner_type, (List, NonNull)):
@@ -435,5 +461,6 @@ def convert_file_field_to_upload(
     required=None,
     field_many_to_many_extras=None,
     field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return Upload(required=is_required(field, required))

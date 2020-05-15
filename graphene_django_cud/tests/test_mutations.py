@@ -1637,6 +1637,9 @@ class TestUpdateWithOneToOneField(TestCase):
         class UpdateDogMutation(DjangoUpdateMutation):
             class Meta:
                 model = Dog
+                one_to_one_extras = {
+                    "registration": {"type": "auto"}
+                }
 
         class Mutations(graphene.ObjectType):
             update_dog = UpdateDogMutation.Field()
@@ -1690,6 +1693,9 @@ class TestUpdateWithOneToOneField(TestCase):
         class UpdateDogRegistrationMutation(DjangoUpdateMutation):
             class Meta:
                 model = DogRegistration
+                one_to_one_extras = {
+                    "dog": {"type": "auto"}
+                }
 
         class Mutations(graphene.ObjectType):
             update_dog_registration = UpdateDogRegistrationMutation.Field()
@@ -1747,6 +1753,9 @@ class TestCreateWithOneToOneField(TestCase):
         class CreateDogMutation(DjangoCreateMutation):
             class Meta:
                 model = Dog
+                one_to_one_extras = {
+                    "registration": {"type": "auto"}
+                }
 
         class Mutations(graphene.ObjectType):
             create_dog = CreateDogMutation.Field()
@@ -1796,6 +1805,9 @@ class TestCreateWithOneToOneField(TestCase):
         class CreateDogRegistrationMutation(DjangoCreateMutation):
             class Meta:
                 model = DogRegistration
+                one_to_one_extras = {
+                    "dog": {"type": "auto"}
+                }
 
         class Mutations(graphene.ObjectType):
             create_dog_registration = CreateDogRegistrationMutation.Field()

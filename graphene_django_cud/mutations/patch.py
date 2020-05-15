@@ -12,7 +12,6 @@ from graphql import GraphQLError
 from graphene_django_cud.mutations.core import DjangoCudBase, DjangoCudBaseOptions
 from graphene_django_cud.registry import get_type_meta_registry
 from graphene_django_cud.util import (
-    get_all_optional_input_fields_for_model,
     disambiguate_id,
     get_input_fields_for_model,
 )
@@ -84,7 +83,7 @@ class DjangoPatchMutation(DjangoCudBase):
             foreign_key_extras=foreign_key_extras,
             many_to_one_extras=many_to_one_extras,
             one_to_one_extras=one_to_one_extras,
-            parent_type_name=type_name,
+            parent_type_name=input_type_name,
             field_types=field_types,
         )
 
@@ -165,6 +164,7 @@ class DjangoPatchMutation(DjangoCudBase):
                 cls._meta.many_to_many_extras,
                 cls._meta.foreign_key_extras,
                 cls._meta.many_to_one_extras,
+                cls._meta.one_to_one_extras,
                 Model,
             )
 

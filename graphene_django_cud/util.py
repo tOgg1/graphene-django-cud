@@ -85,14 +85,25 @@ def get_input_fields_for_model(
     meta_registry = get_type_meta_registry()
     model_fields = get_model_fields(model)
 
-    many_to_many_extras = many_to_many_extras or {}
-    foreign_key_extras = foreign_key_extras or {}
-    many_to_one_extras = many_to_one_extras or {}
+    many_to_many_extras = resolve_many_to_many_extra_auto_field_names(
+        many_to_many_extras or {}, model, parent_type_name
+    )
+    many_to_one_extras = resolve_many_to_one_extra_auto_field_names(
+        many_to_one_extras or {}, model, parent_type_name
+    )
+    foreign_key_extras = resolve_foreign_key_extra_auto_field_names(
+        foreign_key_extras or {}, model, parent_type_name
+    )
+    one_to_one_extras = resolve_one_to_one_extra_auto_field_names(
+        one_to_one_extras or {}, model, parent_type_name
+    )
+
     field_types = field_types or {}
     one_to_one_fields: List[Union[models.OneToOneRel, models.OneToOneField]] = []
 
     fields = OrderedDict()
     fields_lookup = {}
+
     for name, field in model_fields:
         # We ignore the primary key
         if getattr(field, "primary_key", False) and ignore_primary_key:
@@ -129,17 +140,28 @@ def get_input_fields_for_model(
             required,
             many_to_many_extras.get(name, {}).get("exact"),
             foreign_key_extras.get(name, {}),
+            one_to_one_extras.get(name, {}),
         )
         fields[name] = converted
 
         if type(field) in (models.OneToOneRel, models.OneToOneField):
             one_to_one_fields.append(field)
 
-    # Create the one to one fields here
-    for field in one_to_one_fields:
-        _type_name = f"{to_camel_case(field.name).capitalize()}Input"
+    # Create the one to one field types here.
+    for name, data in one_to_one_extras.items():
+        field: Union[models.OneToOneRel, models.OneToOneField] = fields_lookup.get(name)
 
-        # One OneToOnerels we can get the reverse field name from "field.field.name", as we have a direct
+        if field is None:
+            raise ValueError(
+                f"Error adding extras for {name} in model f{model}. Field {name} does not exist."
+            )
+
+        type_name = data.get("type")
+
+        if type_name == "ID":
+            continue
+
+        # On OneToOnerels we can get the reverse field name from "field.field.name", as we have a direct
         # reference to the reverse field that way. For OneToOneFields we need to go through "field.target_field".
         reverse_field_name = (
             field.field.name
@@ -148,11 +170,23 @@ def get_input_fields_for_model(
         )
 
         converted_fields = get_input_fields_for_model(
-            field.related_model, (), (reverse_field_name,), (), (), None, None, None,
+            field.related_model,
+            data.get("only_fields", ()),
+            data.get(
+                "exclude_fields", (reverse_field_name,)
+            ),  # Exclude the field referring back to the foreign key
+            data.get("optional_fields", ()),
+            data.get("required_fields", ()),
+            data.get("many_to_many_extras"),
+            data.get("foreign_key_extras"),
+            data.get("many_to_one_extras"),
+            parent_type_name=type_name,
+            field_types=data.get("field_types"),
         )
-        InputType = type(_type_name, (InputObjectType,), converted_fields)
-        registry.register_converted_field(_type_name, InputType)
-        meta_registry.register(_type_name, {})
+
+        InputType = type(type_name, (InputObjectType,), converted_fields)
+        registry.register_converted_field(type_name, InputType)
+        meta_registry.register(type_name, data)
 
     # Create extra many_to_many_fields
     for name, extras in many_to_many_extras.items():
@@ -201,15 +235,11 @@ def get_input_fields_for_model(
             if isinstance(data, bool):
                 data = {"type": "ID"}
 
-            _type = data.get("type")
-            if not _type or _type == "auto":
+            type_name = data.get("type")
+            if type_name and type_name != "ID":
                 # Create new type.
                 operation_name = data.get(
                     "operation", get_likely_operation_from_name(extra_name)
-                )
-                _type_name = data.get(
-                    "type_name",
-                    f"{parent_type_name or ''}{operation_name.capitalize()}{model.__name__}{name.capitalize()}",
                 )
 
                 converted_fields = get_input_fields_for_model(
@@ -223,15 +253,16 @@ def get_input_fields_for_model(
                     data.get("many_to_many_extras"),
                     data.get("foreign_key_extras"),
                     data.get("many_to_one_extras"),
-                    parent_type_name=_type_name,
+                    data.get("one_to_one_extras"),
+                    parent_type_name=type_name,
                     field_types=data.get("field_types"),
                     # Don't ignore the primary key on updates
                     ignore_primary_key=operation_name != "update",
                 )
-                InputType = type(_type_name, (InputObjectType,), converted_fields)
+                InputType = type(type_name, (InputObjectType,), converted_fields)
                 registry.register_converted_field(field, InputType)
                 meta_registry.register(
-                    _type_name,
+                    type_name,
                     {
                         "auto_context_fields": data.get("auto_context_fields", {}),
                         "optional_fields": data.get("optional_fields", ()),
@@ -239,190 +270,13 @@ def get_input_fields_for_model(
                         "many_to_many_extras": data.get("many_to_many_extras", {}),
                         "many_to_one_extras": data.get("many_to_one_extras", {}),
                         "foreign_key_extras": data.get("auto_context_fields", {}),
+                        "one_to_one_extras": data.get("one_to_one_extras", {}),
                         "field_types": data.get("field_types", {}),
                     },
                 )
-                registry.register_converted_field(_type_name, InputType)
+                registry.register_converted_field(type_name, InputType)
                 _field = graphene.List(
-                    type(_type_name, (InputObjectType,), converted_fields),
-                    required=False,
-                )
-            else:
-                _field = convert_many_to_many_field(field, registry, False, data, None)
-
-            fields[argument_name] = _field
-
-    return fields
-
-
-def get_all_optional_input_fields_for_model(
-    model,
-    only_fields,
-    exclude_fields,
-    many_to_many_extras=None,
-    foreign_key_extras=None,
-    many_to_one_extras=None,
-    parent_type_name="",
-    field_types=None,
-    ignore_primary_key=True,
-):
-    registry = get_global_registry()
-    meta_registry = get_type_meta_registry()
-    model_fields = get_model_fields(model)
-
-    many_to_many_extras = many_to_many_extras or {}
-    foreign_key_extras = foreign_key_extras or {}
-    many_to_one_extras = many_to_one_extras or {}
-    field_types = field_types or {}
-    one_to_one_fields = []
-
-    fields = OrderedDict()
-    fields_lookup = {}
-    for name, field in model_fields:
-        # We ignore the primary key
-        if getattr(field, "primary_key", False) and ignore_primary_key:
-            continue
-
-        # If the field has an override, use that
-        if name in field_types:
-            fields[name] = field_types[name]
-            continue
-
-        # Save for later
-        fields_lookup[name] = field
-
-        is_not_in_only = only_fields and name not in only_fields
-        # is_already_created = name in options.fields
-        is_excluded = name in exclude_fields  # or is_already_created
-        # https://docs.djangoproject.com/en/1.10/ref/models/fields/#django.db.models.ForeignKey.related_query_name
-        is_no_backref = str(name).endswith("+")
-        if is_not_in_only or is_excluded or is_no_backref:
-            # We skip this field if we specify only_fields and is not
-            # in there. Or when we exclude this field in exclude_fields.
-            # Or when there is no back reference.
-            continue
-
-        converted = convert_django_field_with_choices(
-            field,
-            registry,
-            False,
-            many_to_many_extras.get(name, {}).get("exact"),
-            foreign_key_extras.get(name, {}),
-        )
-
-        fields[name] = converted
-
-        if type(field) in (models.OneToOneRel, models.OneToOneField):
-            one_to_one_fields.append(field)
-
-    # Create the one to one fields here
-    for field in one_to_one_fields:
-        _type_name = f"{to_camel_case(field.name).capitalize()}Input"
-
-        field: models.OneToOneField = field
-
-        # One OneToOnerels we can get the reverse field name from "field.field.name", as we have a direct
-        # reference to the reverse field that way. For OneToOneFields we need to go through "field.target_field".
-        reverse_field_name = (
-            field.field.name
-            if isinstance(field, models.OneToOneRel)
-            else field.remote_field.name
-        )
-
-        converted_fields = get_input_fields_for_model(
-            field.related_model, (), (reverse_field_name,), (), (), None, None, None,
-        )
-        InputType = type(_type_name, (InputObjectType,), converted_fields)
-        registry.register_converted_field(_type_name, InputType)
-        meta_registry.register(_type_name, {})
-
-    # Create extra many_to_many_fields
-    for name, extras in many_to_many_extras.items():
-        field = fields_lookup.get(name)
-        if field is None:
-            raise GraphQLError(
-                f"Error adding extras for {name} in model f{model}. Field {name} does not exist."
-            )
-
-        for extra_name, data in extras.items():
-
-            # This is handled above
-            if extra_name == "exact":
-                continue
-
-            if isinstance(data, bool):
-                data = {}
-
-            _type_name = data.get("type")
-            _field = convert_many_to_many_field(field, registry, False, data, None)
-
-            # Default to the same as the "exact" version
-            if not _field:
-                _field = fields[name]
-
-            # operation = data.get('operation') or get_likely_operation_from_name(extra_name)
-            fields[name + "_" + extra_name] = _field
-
-    for name, extras in many_to_one_extras.items():
-        field = fields_lookup.get(name)
-        if field is None:
-            raise GraphQLError(
-                f"Error adding extras for {name} in model f{model}. Field {name} does not exist."
-            )
-
-        for extra_name, data in extras.items():
-
-            argument_name = data.get("name", name + "_" + extra_name)
-
-            # Override default
-            if extra_name == "exact":
-                argument_name = name
-
-            if isinstance(data, bool):
-                data = {"type": "ID"}
-
-            _type = data.get("type")
-            if not _type or _type == "auto":
-                # Create new type.
-                operation_name = data.get(
-                    "operation", get_likely_operation_from_name(extra_name)
-                )
-                _type_name = data.get(
-                    "type_name",
-                    f"{parent_type_name or ''}{operation_name.capitalize()}{model.__name__}{name.capitalize()}",
-                )
-                converted_fields = get_input_fields_for_model(
-                    field.related_model,
-                    data.get("only_fields", ()),
-                    data.get(
-                        "exclude_fields", (field.field.name,)
-                    ),  # Exclude the field referring back to the foreign key
-                    data.get("optional_fields", ()),
-                    data.get("required_fields", ()),
-                    data.get("many_to_many_extras"),
-                    data.get("foreign_key_extras"),
-                    data.get("many_to_one_extras"),
-                    parent_type_name=_type_name,
-                    field_types=data.get("field_types"),
-                    # Don't ignore the primary key on updates
-                    ignore_primary_key=operation_name != "update",
-                )
-                InputType = type(_type_name, (InputObjectType,), converted_fields)
-                registry.register_converted_field(field, InputType)
-                meta_registry.register(
-                    _type_name,
-                    {
-                        "auto_context_fields": data.get("auto_context_fields", {}),
-                        "optional_fields": data.get("optional_fields", ()),
-                        "required_fields": data.get("required_fields", ()),
-                        "many_to_many_extras": data.get("many_to_many_extras", {}),
-                        "many_to_one_extras": data.get("many_to_one_extras", {}),
-                        "foreign_key_extras": data.get("auto_context_fields", {}),
-                        "field_types": data.get("field_types", {}),
-                    },
-                )
-                _field = graphene.List(
-                    type(_type_name, (InputObjectType,), converted_fields),
+                    type(type_name, (InputObjectType,), converted_fields),
                     required=False,
                 )
             else:
@@ -556,3 +410,91 @@ def get_fk_all_extras_field_names(extras):
     if not extras:
         return []
     return extras.keys()
+
+
+def resolve_many_to_many_extra_auto_field_names(
+    many_to_many_extras, model, parent_type_name
+):
+    new_many_to_many_extras = {}
+    for name, extras in many_to_many_extras.items():
+        new_extras = {}
+        for extra_name, data in extras.items():
+            if isinstance(data, bool):
+                data = {}
+
+            type_name = data.get("type", "ID")
+
+            if type_name == "auto":
+                operation_name = data.get(
+                    "operation", get_likely_operation_from_name(extra_name)
+                )
+                new_extras[extra_name] = {
+                    **data,
+                    "type": f"{parent_type_name or ''}{operation_name.capitalize()}{model.__name__}{to_camel_case(name).capitalize()}",
+                }
+            else:
+                new_extras[extra_name] = data
+
+        new_many_to_many_extras[name] = new_extras
+    return new_many_to_many_extras
+
+
+def resolve_many_to_one_extra_auto_field_names(
+    many_to_one_extras, model, parent_type_name
+):
+    new_many_to_one_extras = {}
+    for name, extras in many_to_one_extras.items():
+        new_extras = {}
+        for extra_name, data in extras.items():
+            if isinstance(data, bool):
+                data = {}
+
+            type_name = data.get("type", "ID")
+
+            if type_name == "auto":
+                operation_name = data.get(
+                    "operation", get_likely_operation_from_name(extra_name)
+                )
+                new_extras[extra_name] = {
+                    **data,
+                    "type": f"{parent_type_name or ''}{operation_name.capitalize()}{model.__name__}{to_camel_case(name).capitalize()}",
+                }
+            else:
+                new_extras[extra_name] = data
+
+        new_many_to_one_extras[name] = new_extras
+    return new_many_to_one_extras
+
+
+def resolve_foreign_key_extra_auto_field_names(
+    foreign_key_extras, model, parent_type_name
+):
+    new_foreign_key_extras = {}
+    for name, data in foreign_key_extras.items():
+        type_name = data.get("type", "ID")
+
+        if type_name == "auto":
+            new_foreign_key_extras[name] = {
+                **data,
+                "type": f"{parent_type_name or ''}Create{to_camel_case(name).capitalize()}",
+            }
+        else:
+            new_foreign_key_extras[name] = data
+    return new_foreign_key_extras
+
+
+def resolve_one_to_one_extra_auto_field_names(
+    one_to_one_extras, model, parent_type_name
+):
+    new_one_to_one_extras = {}
+    for name, data in one_to_one_extras.items():
+        type_name = data.get("type", "ID")
+
+        if type_name == "auto":
+            new_one_to_one_extras[name] = {
+                **data,
+                "type": f"{parent_type_name or ''}Create{to_camel_case(name).capitalize()}",
+            }
+        else:
+            new_one_to_one_extras[name] = data
+    return new_one_to_one_extras

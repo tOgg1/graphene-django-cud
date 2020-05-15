@@ -180,6 +180,7 @@ class PatchDogMutation(DjangoPatchMutation):
                 "exact": {"type": "ID"},
             }
         }
+        one_to_one_extras = {"registration": {"type": "auto"}}
 
     @classmethod
     def handle_tag(cls, value, *args, **kwargs):
@@ -189,6 +190,7 @@ class PatchDogMutation(DjangoPatchMutation):
 class PatchDogRegistrationMutation(DjangoPatchMutation):
     class Meta:
         model = DogRegistration
+        one_to_one_extras = {"dog": {"type": "auto"}}
 
 
 class UpdateDogMutation(DjangoUpdateMutation):

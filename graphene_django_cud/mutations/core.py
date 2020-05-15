@@ -6,10 +6,18 @@ from graphene.types.mutation import MutationOptions
 from graphql import GraphQLError
 
 from graphene_django_cud.registry import get_type_meta_registry
-from graphene_django_cud.util import get_likely_operation_from_name, disambiguate_id, get_fk_all_extras_field_names, \
-    get_m2m_all_extras_field_names, disambiguate_ids, is_field_many_to_many, is_field_one_to_one
+from graphene_django_cud.util import (
+    get_likely_operation_from_name,
+    disambiguate_id,
+    get_fk_all_extras_field_names,
+    get_m2m_all_extras_field_names,
+    disambiguate_ids,
+    is_field_many_to_many,
+    is_field_one_to_one,
+)
 
 meta_registry = get_type_meta_registry()
+
 
 class DjangoCudBase(Mutation):
     class Meta:
@@ -31,19 +39,40 @@ class DjangoCudBase(Mutation):
                 input_type_meta.get("many_to_many_extras", {}),
                 input_type_meta.get("foreign_key_extras", {}),
                 input_type_meta.get("many_to_one_extras", {}),
+                input_type_meta.get("one_to_one_extras", {}),
                 field.related_model,
             )
             return related_obj.id
 
     @classmethod
-    def create_or_update_one_to_one_relation(cls, obj, field, value, info):
+    def create_or_update_one_to_one_relation(cls, obj, field, value, data, info):
         existing_value = getattr(obj, field.name, None)
 
+        field_type = data.get("type")
+        input_type_meta = meta_registry.get_meta_for_type(field_type)
+
         if not existing_value:
-            return cls.create_obj(value, info, {}, {}, {}, {}, field.related_model)
+            return cls.create_obj(
+                value,
+                info,
+                input_type_meta.get("auto_context_fields", {}),
+                input_type_meta.get("many_to_many_extras", {}),
+                input_type_meta.get("foreign_key_extras", {}),
+                input_type_meta.get("many_to_one_extras", {}),
+                input_type_meta.get("one_to_one_extras", {}),
+                field.related_model,
+            )
         else:
             return cls.update_obj(
-                existing_value, value, info, {}, {}, {}, {}, field.related_model
+                existing_value,
+                value,
+                info,
+                input_type_meta.get("auto_context_fields", {}),
+                input_type_meta.get("many_to_many_extras", {}),
+                input_type_meta.get("foreign_key_extras", {}),
+                input_type_meta.get("many_to_one_extras", {}),
+                input_type_meta.get("one_to_one_extras", {}),
+                field.related_model,
             )
 
     @classmethod
@@ -72,6 +101,7 @@ class DjangoCudBase(Mutation):
                     input_type_meta.get("many_to_many_extras", {}),
                     input_type_meta.get("foreign_key_extras", {}),
                     input_type_meta.get("many_to_one_extras", {}),
+                    input_type_meta.get("one_to_one_extras", {}),
                     field.related_model,
                 )
             results.append(related_obj)
@@ -112,6 +142,7 @@ class DjangoCudBase(Mutation):
                     input_type_meta.get("many_to_many_extras", {}),
                     input_type_meta.get("foreign_key_extras", {}),
                     input_type_meta.get("many_to_one_extras", {}),
+                    input_type_meta.get("one_to_one_extras", {}),
                     field.related_model,
                 )
                 results.append(related_obj)
@@ -126,6 +157,7 @@ class DjangoCudBase(Mutation):
                     input_type_meta.get("many_to_many_extras", {}),
                     input_type_meta.get("foreign_key_extras", {}),
                     input_type_meta.get("many_to_one_extras", {}),
+                    input_type_meta.get("one_to_one_extras", {}),
                     field.related_model,
                 )
                 results.append(related_obj)
@@ -134,14 +166,15 @@ class DjangoCudBase(Mutation):
 
     @classmethod
     def upsert_obj(
-            cls,
-            input,
-            info,
-            auto_context_fields,
-            many_to_many_extras,
-            foreign_key_extras,
-            many_to_one_extras,
-            Model,
+        cls,
+        input,
+        info,
+        auto_context_fields,
+        many_to_many_extras,
+        foreign_key_extras,
+        many_to_one_extras,
+        one_to_one_extras,
+        Model,
     ):
         id = disambiguate_id(input.get("id"))
         obj = Model.objects.filter(pk=id).first()
@@ -155,6 +188,7 @@ class DjangoCudBase(Mutation):
                 many_to_many_extras,
                 foreign_key_extras,
                 many_to_one_extras,
+                one_to_one_extras,
                 Model,
             )
             obj.save()
@@ -167,19 +201,21 @@ class DjangoCudBase(Mutation):
                 many_to_many_extras,
                 foreign_key_extras,
                 many_to_one_extras,
+                one_to_one_extras,
                 Model,
             )
 
     @classmethod
     def create_obj(
-            cls,
-            input,
-            info,
-            auto_context_fields,
-            many_to_many_extras,
-            foreign_key_extras,
-            many_to_one_extras,
-            Model,
+        cls,
+        input,
+        info,
+        auto_context_fields,
+        many_to_many_extras,
+        foreign_key_extras,
+        many_to_one_extras,
+        one_to_one_extras,
+        Model,
     ):
         meta_registry = get_type_meta_registry()
 
@@ -192,9 +228,10 @@ class DjangoCudBase(Mutation):
         many_to_many_extras_field_names = get_m2m_all_extras_field_names(
             many_to_many_extras
         )
+        # The layout is the same as for m2m
         many_to_one_extras_field_names = get_m2m_all_extras_field_names(
             many_to_one_extras
-        )  # The layout is the same as for m2m
+        )
         foreign_key_extras_field_names = get_fk_all_extras_field_names(
             foreign_key_extras
         )
@@ -206,9 +243,9 @@ class DjangoCudBase(Mutation):
         for name, value in super(type(input), input).items():
             # Handle these separately
             if (
-                    name in many_to_many_extras_field_names
-                    or name in foreign_key_extras_field_names
-                    or name in many_to_one_extras_field_names
+                name in many_to_many_extras_field_names
+                or name in foreign_key_extras_field_names
+                or name in many_to_one_extras_field_names
             ):
                 continue
 
@@ -221,9 +258,9 @@ class DjangoCudBase(Mutation):
 
             # We cannot handle nested one to one rels before we have saved.
             if type(field) == models.OneToOneRel and not (
-                    # This case happens if the one to one field is specified as a related id.
-                    isinstance(value, str)
-                    or isinstance(value, int)
+                # This case happens if the one to one field is specified as a related id.
+                isinstance(value, str)
+                or isinstance(value, int)
             ):
                 one_to_one_rels[name] = value
                 continue
@@ -256,8 +293,17 @@ class DjangoCudBase(Mutation):
                     else:
                         # We can use create obj directly here, as we know the foreign object does
                         # not already exist.
+                        extra_data = one_to_one_extras.get(name, {})
+
                         new_value = cls.create_obj(
-                            value, info, {}, {}, {}, {}, field.related_model
+                            value,
+                            info,
+                            extra_data.get("auto_context_fields", {}),
+                            extra_data.get("many_to_many_extras", {}),
+                            extra_data.get("foreign_key_extras", {}),
+                            extra_data.get("many_to_one_extras", {}),
+                            extra_data.get("one_to_one_extras", {}),
+                            field.related_model,
                         )
                 elif field_is_many_to_many:
                     new_value = disambiguate_ids(value)
@@ -280,7 +326,7 @@ class DjangoCudBase(Mutation):
         # Foreign keys are added, we are ready to create our object
         obj = Model.objects.create(**model_field_values)
 
-        # Handle one to one fields
+        # Handle one to one rels
         for name, value in one_to_one_rels.items():
             field = Model._meta.get_field(name)
             new_value = value
@@ -300,10 +346,12 @@ class DjangoCudBase(Mutation):
                     name = getattr(field, "db_column", None) or name + "_id"
                     new_value = disambiguate_id(value)
                 else:
+                    extra_data = one_to_one_extras.get(name, {})
+
                     # This is a nested field we need to take care of.
                     value[field.field.name] = obj.id
                     new_value = cls.create_or_update_one_to_one_relation(
-                        obj, field, value, info
+                        obj, field, value, extra_data, info
                     )
 
             setattr(obj, name, new_value)
@@ -427,15 +475,16 @@ class DjangoCudBase(Mutation):
 
     @classmethod
     def update_obj(
-            cls,
-            obj,
-            input,
-            info,
-            auto_context_fields,
-            many_to_many_extras,
-            foreign_key_extras,
-            many_to_one_extras,
-            Model,
+        cls,
+        obj,
+        input,
+        info,
+        auto_context_fields,
+        many_to_many_extras,
+        foreign_key_extras,
+        many_to_one_extras,
+        one_to_one_extras,
+        Model,
     ):
 
         many_to_many_to_add = {}
@@ -459,9 +508,9 @@ class DjangoCudBase(Mutation):
         for name, value in super(type(input), input).items():
             # Handle these separately
             if (
-                    name in many_to_many_extras_field_names
-                    or name in foreign_key_extras_field_names
-                    or name in many_to_one_extras_field_names
+                name in many_to_many_extras_field_names
+                or name in foreign_key_extras_field_names
+                or name in many_to_one_extras_field_names
             ):
                 continue
 
@@ -500,10 +549,11 @@ class DjangoCudBase(Mutation):
                         name = getattr(field, "db_column", None) or name + "_id"
                         new_value = disambiguate_id(value)
                     else:
+                        extra_data = one_to_one_extras.get(name, {})
                         # This is a nested field we need to take care of.
                         value[field.remote_field.name] = obj.id
                         new_value = cls.create_or_update_one_to_one_relation(
-                            obj, field, value, info
+                            obj, field, value, extra_data, info
                         )
                 elif type(field) == models.OneToOneRel:
                     # If the value is an integer or a string, we assume it is an ID
@@ -511,10 +561,11 @@ class DjangoCudBase(Mutation):
                         name = getattr(field, "db_column", None) or name + "_id"
                         new_value = disambiguate_id(value)
                     else:
+                        extra_data = one_to_one_extras.get(name, {})
                         # This is a nested field we need to take care of.
                         value[field.field.name] = obj.id
                         new_value = cls.create_or_update_one_to_one_relation(
-                            obj, field, value, info
+                            obj, field, value, extra_data, info
                         )
                 elif field_is_many_to_many:
                     new_value = disambiguate_ids(value)

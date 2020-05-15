@@ -167,6 +167,7 @@ class DjangoUpdateMutation(DjangoCudBase):
                 cls._meta.many_to_many_extras,
                 cls._meta.foreign_key_extras,
                 cls._meta.many_to_one_extras,
+                cls._meta.one_to_one_extras,
                 Model,
             )
 
