@@ -36,6 +36,7 @@ class DjangoBatchCreateMutation(DjangoCudBase):
             many_to_many_extras=None,
             foreign_key_extras=None,
             many_to_one_extras=None,
+            one_to_one_extras=None,
             type_name=None,
             use_type_name=None,
             field_types=None,
@@ -45,6 +46,9 @@ class DjangoBatchCreateMutation(DjangoCudBase):
         meta_registry = get_type_meta_registry()
         model_type = registry.get_type_for_model(model)
 
+        if auto_context_fields is None:
+            auto_context_fields = {}
+
         if many_to_one_extras is None:
             many_to_one_extras = {}
 
@@ -53,6 +57,9 @@ class DjangoBatchCreateMutation(DjangoCudBase):
 
         if many_to_many_extras is None:
             many_to_many_extras = {}
+
+        if one_to_one_extras is None:
+            one_to_one_extras = {}
 
         assert model_type, f"Model type must be registered for model {model}"
 
@@ -79,6 +86,7 @@ class DjangoBatchCreateMutation(DjangoCudBase):
                 many_to_many_extras,
                 foreign_key_extras,
                 many_to_one_extras,
+                one_to_one_extras=one_to_one_extras,
                 parent_type_name=input_type_name,
                 field_types=field_types,
                 )
@@ -92,8 +100,10 @@ class DjangoBatchCreateMutation(DjangoCudBase):
                     "auto_context_fields": auto_context_fields or {},
                     "optional_fields": optional_fields,
                     "required_fields": required_fields,
-                    "many_to_many_extras": many_to_many_extras or {},
-                    "foreign_key_extras": foreign_key_extras or {},
+                    "many_to_many_extras": many_to_many_extras,
+                    "many_to_one_extras": many_to_one_extras,
+                    "foreign_key_extras": foreign_key_extras,
+                    "one_to_one_extras": one_to_one_extras,
                     "field_types": field_types or {},
                 },
             )
@@ -112,10 +122,12 @@ class DjangoBatchCreateMutation(DjangoCudBase):
         _meta.optional_fields = optional_fields
         _meta.required_fields = required_fields
         _meta.permissions = permissions
-        _meta.auto_context_fields = auto_context_fields or {}
-        _meta.many_to_many_extras = many_to_many_extras or {}
+        _meta.auto_context_fields = auto_context_fields
+        _meta.many_to_many_extras = many_to_many_extras
         _meta.foreign_key_extras = foreign_key_extras
-        _meta.many_to_one_extras = many_to_one_extras or {}
+        _meta.many_to_one_extras = many_to_one_extras
+        _meta.one_to_one_extras = one_to_one_extras
+
         _meta.field_types = field_types or {}
         _meta.InputType = InputType
         _meta.input_type_name = input_type_name

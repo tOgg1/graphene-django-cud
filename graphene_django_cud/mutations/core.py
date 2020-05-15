@@ -686,16 +686,22 @@ class DjangoCudBase(Mutation):
 
 class DjangoCudBaseOptions(MutationOptions):
     model = None
+
     only_fields = None
     exclude_fields = None
+    optional_fields = None
+    required_fields = None
+    auto_context_fields = None
+
     permissions = None
     login_required = None
-    auto_context_fields = None
-    optional_fields = ()
-    required_fields = None
+
     type_name = None
     return_field_name = None
+
     many_to_many_extras = None
     many_to_one_extras = None
     foreign_key_extras = None
+    one_to_one_extras = None
+
     field_types = None

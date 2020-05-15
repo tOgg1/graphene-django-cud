@@ -6,11 +6,16 @@ from graphene import InputObjectType
 from graphene.types.utils import yank_fields_from_attrs
 from graphene.utils.str_converters import to_snake_case
 from graphene_django.registry import get_global_registry
+from graphene_django.utils import get_model_fields
 from graphql import GraphQLError
 
 from graphene_django_cud.mutations.core import DjangoCudBase, DjangoCudBaseOptions
 from graphene_django_cud.registry import get_type_meta_registry
-from graphene_django_cud.util import get_all_optional_input_fields_for_model, disambiguate_id
+from graphene_django_cud.util import (
+    get_all_optional_input_fields_for_model,
+    disambiguate_id,
+    get_input_fields_for_model,
+)
 
 
 class DjangoPatchMutationOptions(DjangoCudBaseOptions):
@@ -23,20 +28,23 @@ class DjangoPatchMutation(DjangoCudBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            model=None,
-            permissions=None,
-            login_required=None,
-            only_fields=(),
-            exclude_fields=(),
-            return_field_name=None,
-            auto_context_fields={},
-            many_to_one_extras=None,
-            many_to_many_extras=None,
-            foreign_key_extras=None,
-            type_name=None,
-            field_types=None,
-            **kwargs,
+        cls,
+        model=None,
+        permissions=None,
+        login_required=None,
+        only_fields=(),
+        exclude_fields=(),
+        optional_fields=(),
+        required_fields=(),
+        auto_context_fields=None,
+        return_field_name=None,
+        many_to_many_extras=None,
+        foreign_key_extras=None,
+        many_to_one_extras=None,
+        one_to_one_extras=None,
+        type_name=None,
+        field_types=None,
+        **kwargs,
     ):
         registry = get_global_registry()
         meta_registry = get_type_meta_registry()
@@ -44,8 +52,8 @@ class DjangoPatchMutation(DjangoCudBase):
 
         assert model_type, f"Model type must be registered for model {model}"
 
-        if not return_field_name:
-            return_field_name = to_snake_case(model.__name__)
+        if auto_context_fields is None:
+            auto_context_fields = {}
 
         if many_to_one_extras is None:
             many_to_one_extras = {}
@@ -56,15 +64,26 @@ class DjangoPatchMutation(DjangoCudBase):
         if many_to_many_extras is None:
             many_to_many_extras = {}
 
+        if one_to_one_extras is None:
+            one_to_one_extras = {}
+
+        if not return_field_name:
+            return_field_name = to_snake_case(model.__name__)
+
         input_type_name = type_name or f"Patch{model.__name__}Input"
 
-        model_fields = get_all_optional_input_fields_for_model(
+        all_field_names = (name for name, _ in get_model_fields(model))
+
+        model_fields = get_input_fields_for_model(
             model,
             only_fields,
             exclude_fields,
+            optional_fields=all_field_names,
+            required_fields=(),
             many_to_many_extras=many_to_many_extras,
             foreign_key_extras=foreign_key_extras,
             many_to_one_extras=many_to_one_extras,
+            one_to_one_extras=one_to_one_extras,
             parent_type_name=type_name,
             field_types=field_types,
         )
@@ -79,6 +98,7 @@ class DjangoPatchMutation(DjangoCudBase):
                 "many_to_many_extras": many_to_many_extras or {},
                 "many_to_one_extras": many_to_one_extras or {},
                 "foreign_key_extras": foreign_key_extras or {},
+                "one_to_one_extras": one_to_one_extras,
                 "field_types": field_types or {},
             },
         )
@@ -97,15 +117,17 @@ class DjangoPatchMutation(DjangoCudBase):
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.return_field_name = return_field_name
         _meta.permissions = permissions
-        _meta.auto_context_fields = auto_context_fields or {}
-        _meta.InputType = InputType
-        _meta.input_type_name = input_type_name
+        _meta.auto_context_fields = auto_context_fields
         _meta.many_to_many_extras = many_to_many_extras
         _meta.many_to_one_extras = many_to_one_extras
         _meta.foreign_key_extras = foreign_key_extras
+        _meta.one_to_one_extras = one_to_one_extras
+
         _meta.field_types = field_types or {}
+        _meta.InputType = InputType
+        _meta.input_type_name = input_type_name
         _meta.login_required = _meta.login_required or (
-                _meta.permissions and len(_meta.permissions) > 0
+            _meta.permissions and len(_meta.permissions) > 0
         )
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)

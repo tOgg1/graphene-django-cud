@@ -75,6 +75,7 @@ def get_input_fields_for_model(
     many_to_many_extras=None,
     foreign_key_extras=None,
     many_to_one_extras=None,
+    one_to_one_extras=None,
     parent_type_name="",
     field_types=None,
     ignore_primary_key=True,

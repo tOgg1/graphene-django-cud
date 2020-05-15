@@ -27,15 +27,20 @@ class DjangoCreateMutation(DjangoCudBase):
             model=None,
             permissions=None,
             login_required=None,
+
             only_fields=(),
             exclude_fields=(),
             optional_fields=(),
             required_fields=(),
             auto_context_fields={},
+
             return_field_name=None,
+
             many_to_many_extras=None,
             foreign_key_extras=None,
             many_to_one_extras=None,
+            one_to_one_extras=None,
+
             type_name=None,
             field_types=None,
             **kwargs,
@@ -43,6 +48,9 @@ class DjangoCreateMutation(DjangoCudBase):
         registry = get_global_registry()
         meta_registry = get_type_meta_registry()
         model_type = registry.get_type_for_model(model)
+
+        if auto_context_fields is None:
+            auto_context_fields = {}
 
         if many_to_one_extras is None:
             many_to_one_extras = {}
@@ -52,6 +60,9 @@ class DjangoCreateMutation(DjangoCudBase):
 
         if many_to_many_extras is None:
             many_to_many_extras = {}
+
+        if one_to_one_extras is None:
+            one_to_one_extras = {}
 
         assert model_type, f"Model type must be registered for model {model}"
 
@@ -69,9 +80,10 @@ class DjangoCreateMutation(DjangoCudBase):
             many_to_many_extras,
             foreign_key_extras,
             many_to_one_extras,
+            one_to_one_extras=one_to_one_extras,
             parent_type_name=input_type_name,
             field_types=field_types,
-            )
+        )
 
         InputType = type(input_type_name, (InputObjectType,), model_fields)
 
@@ -82,8 +94,10 @@ class DjangoCreateMutation(DjangoCudBase):
                 "auto_context_fields": auto_context_fields or {},
                 "optional_fields": optional_fields,
                 "required_fields": required_fields,
-                "many_to_many_extras": many_to_many_extras or {},
-                "foreign_key_extras": foreign_key_extras or {},
+                "many_to_many_extras": many_to_many_extras,
+                "many_to_one_extras": many_to_one_extras,
+                "foreign_key_extras": foreign_key_extras,
+                "one_to_one_extras": one_to_one_extras,
                 "field_types": field_types or {},
             },
         )
@@ -102,10 +116,12 @@ class DjangoCreateMutation(DjangoCudBase):
         _meta.optional_fields = optional_fields
         _meta.required_fields = required_fields
         _meta.permissions = permissions
-        _meta.auto_context_fields = auto_context_fields or {}
-        _meta.many_to_many_extras = many_to_many_extras or {}
+        _meta.auto_context_fields = auto_context_fields
+        _meta.many_to_many_extras = many_to_many_extras
+        _meta.many_to_one_extras = many_to_one_extras
         _meta.foreign_key_extras = foreign_key_extras
-        _meta.many_to_one_extras = many_to_one_extras or {}
+        _meta.one_to_one_extras = one_to_one_extras
+
         _meta.field_types = field_types or {}
         _meta.InputType = InputType
         _meta.input_type_name = input_type_name
