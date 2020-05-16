@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.5.1
+* Improve many to many and one to one detection.
+
 ## Version 0.5.0
 * Add one to one extras handling, allowing for nested functionality for one to one fields.
 * Restructure project slightly, by moving mutations to separate files.
