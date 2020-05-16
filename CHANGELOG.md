@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.5.2
+* Remove unnecessary debug print.
+
 ## Version 0.5.1
 * Improve many to many and one to one detection.
 
