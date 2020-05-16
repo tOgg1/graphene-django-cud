@@ -684,7 +684,6 @@ class DjangoCudBase(Mutation):
                 # For other's we have to delete the relations
                 getattr(obj, name).filter(id__in=objs).delete()
 
-        print(many_to_many_to_set)
         for name, objs in many_to_many_to_set.items():
             if objs is not None:
                 getattr(obj, name).set(objs)
