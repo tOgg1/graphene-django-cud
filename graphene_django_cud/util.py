@@ -375,15 +375,19 @@ def get_filter_fields_input_args(filter_fields, model):
 
 
 def is_field_many_to_many(field):
-    return type(field) in (
-        models.ManyToManyField,
-        models.ManyToManyRel,
-        models.ManyToOneRel,
+    # We check type equality for ManyToManyRel to ensure we don't get false positives for
+    # OnetoOneRel
+    return (
+        isinstance(field, models.ManyToManyField)
+        or isinstance(field, models.ManyToManyRel)
+        or type(field) == models.ManyToOneRel
     )
 
 
 def is_field_one_to_one(field):
-    return type(field) in (models.OneToOneField, models.OneToOneRel,)
+    # We check type equality for OneToOneRel to ensure we don't get false positives for
+    # ManyToOneRels
+    return isinstance(field, models.OneToOneField) or type(field) == models.OneToOneRel
 
 
 def get_m2m_all_extras_field_names(extras):

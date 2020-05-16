@@ -275,17 +275,10 @@ class DjangoCudBase(Mutation):
 
             # On some fields we perform some default conversion, if the value was not transformed above.
             if new_value == value and value is not None:
-                if type(field) in (models.AutoField,):
+                if isinstance(field, models.AutoField):
                     new_value = disambiguate_id(value)
-                elif type(field) in (models.ForeignKey, models.OneToOneRel,):
-                    # Delete auto context field here, if it exists. We have to do this explicitly
-                    # as we change the name below
-                    if name in auto_context_fields:
-                        del model_field_values[name]
-
-                    name = getattr(field, "db_column", None) or name + "_id"
-                    new_value = disambiguate_id(value)
-                elif type(field) == models.OneToOneField:
+                # The order here is important
+                elif isinstance(field, models.OneToOneField):
                     # If the value is an integer or a string, we assume it is an ID
                     if isinstance(value, str) or isinstance(value, int):
                         name = getattr(field, "db_column", None) or name + "_id"
@@ -305,6 +298,14 @@ class DjangoCudBase(Mutation):
                             extra_data.get("one_to_one_extras", {}),
                             field.related_model,
                         )
+                elif isinstance(field, models.OneToOneRel) or isinstance(field, models.ForeignKey):
+                    # Delete auto context field here, if it exists. We have to do this explicitly
+                    # as we change the name below
+                    if name in auto_context_fields:
+                        del model_field_values[name]
+
+                    name = getattr(field, "db_column", None) or name + "_id"
+                    new_value = disambiguate_id(value)
                 elif field_is_many_to_many:
                     new_value = disambiguate_ids(value)
 
@@ -533,17 +534,9 @@ class DjangoCudBase(Mutation):
 
             # On some fields we perform some default conversion, if the value was not transformed above.
             if new_value == value and value is not None:
-                if type(field) in (models.AutoField,):
+                if isinstance(field, models.AutoField):
                     new_value = disambiguate_id(value)
-                elif type(field) in (models.ForeignKey,):
-                    # Delete auto context field here, if it exists. We have to do this explicitly
-                    # as we change the name below
-                    if name in auto_context_fields:
-                        setattr(obj, name, None)
-
-                    name = getattr(field, "db_column", None) or name + "_id"
-                    new_value = disambiguate_id(value)
-                elif type(field) == models.OneToOneField:
+                elif isinstance(field, models.OneToOneField):
                     # If the value is an integer or a string, we assume it is an ID
                     if isinstance(value, str) or isinstance(value, int):
                         name = getattr(field, "db_column", None) or name + "_id"
@@ -555,7 +548,7 @@ class DjangoCudBase(Mutation):
                         new_value = cls.create_or_update_one_to_one_relation(
                             obj, field, value, extra_data, info
                         )
-                elif type(field) == models.OneToOneRel:
+                elif isinstance(field, models.OneToOneRel):
                     # If the value is an integer or a string, we assume it is an ID
                     if isinstance(value, str) or isinstance(value, int):
                         name = getattr(field, "db_column", None) or name + "_id"
@@ -567,6 +560,14 @@ class DjangoCudBase(Mutation):
                         new_value = cls.create_or_update_one_to_one_relation(
                             obj, field, value, extra_data, info
                         )
+                elif isinstance(field, models.ForeignKey):
+                    # Delete auto context field here, if it exists. We have to do this explicitly
+                    # as we change the name below
+                    if name in auto_context_fields:
+                        setattr(obj, name, None)
+
+                    name = getattr(field, "db_column", None) or name + "_id"
+                    new_value = disambiguate_id(value)
                 elif field_is_many_to_many:
                     new_value = disambiguate_ids(value)
 
@@ -683,6 +684,7 @@ class DjangoCudBase(Mutation):
                 # For other's we have to delete the relations
                 getattr(obj, name).filter(id__in=objs).delete()
 
+        print(many_to_many_to_set)
         for name, objs in many_to_many_to_set.items():
             if objs is not None:
                 getattr(obj, name).set(objs)
