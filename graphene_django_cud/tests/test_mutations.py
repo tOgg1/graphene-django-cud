@@ -1876,7 +1876,6 @@ class TestCreateWithOneToOneField(TestCase):
             pk=disambiguate_id(dog_registration.id)
         )
         dog = getattr(dog_registration, "dog", None)
-        print(dog, dog.id)
         self.assertIsNotNone(dog)
         self.assertEqual(dog.name, "Sparky")
         self.assertEqual(dog.tag, "1234")

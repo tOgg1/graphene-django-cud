@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.5.3
+* Change some potential issue with OneToOne persistence
+
 ## Version 0.5.2
 * Remove unnecessary debug print.
 
