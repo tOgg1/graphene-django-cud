@@ -1637,9 +1637,7 @@ class TestUpdateWithOneToOneField(TestCase):
         class UpdateDogMutation(DjangoUpdateMutation):
             class Meta:
                 model = Dog
-                one_to_one_extras = {
-                    "registration": {"type": "auto"}
-                }
+                one_to_one_extras = {"registration": {"type": "auto"}}
 
         class Mutations(graphene.ObjectType):
             update_dog = UpdateDogMutation.Field()
@@ -1685,6 +1683,10 @@ class TestUpdateWithOneToOneField(TestCase):
         self.assertIsNone(result.errors)
         self.assertEqual("12345", data.updateDog.dog.registration.registrationNumber)
 
+        # Load from database
+        dog.refresh_from_db()
+        self.assertEqual(dog.registration.registration_number, "12345")
+
     def test__reverse_one_to_one_exists__updates_specified_fields(self):
         # This registers the UserNode type
         # noinspection PyUnresolvedReferences
@@ -1693,16 +1695,16 @@ class TestUpdateWithOneToOneField(TestCase):
         class UpdateDogRegistrationMutation(DjangoUpdateMutation):
             class Meta:
                 model = DogRegistration
-                one_to_one_extras = {
-                    "dog": {"type": "auto"}
-                }
+                one_to_one_extras = {"dog": {"type": "auto"}}
 
         class Mutations(graphene.ObjectType):
             update_dog_registration = UpdateDogRegistrationMutation.Field()
 
         user = UserFactory.create()
         dog = DogFactory.create(breed="HUSKY")
-        dog_registration = DogRegistration.objects.create(dog=dog, registration_number="1234")
+        dog_registration = DogRegistration.objects.create(
+            dog=dog, registration_number="1234"
+        )
 
         schema = Schema(mutation=Mutations)
         mutation = """
@@ -1733,15 +1735,22 @@ class TestUpdateWithOneToOneField(TestCase):
                         "name": dog.name,
                         "breed": "LABRADOR",
                         "tag": dog.tag,
-                        "owner": dog.owner
-                    }
+                        "owner": to_global_id("UserNode", dog.owner.id),
+                    },
                 },
             },
             context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
         data = Dict(result.data)
-        self.assertEqual("LABRADOR", data.updateDogRegistration.dogRegistration.dog.breed)
+        self.assertEqual(
+            "LABRADOR", data.updateDogRegistration.dogRegistration.dog.breed
+        )
+
+        # Load from database
+        dog_registration.refresh_from_db()
+        dog.refresh_from_db()
+        self.assertEqual(dog.breed, "LABRADOR")
 
 
 class TestCreateWithOneToOneField(TestCase):
@@ -1753,9 +1762,7 @@ class TestCreateWithOneToOneField(TestCase):
         class CreateDogMutation(DjangoCreateMutation):
             class Meta:
                 model = Dog
-                one_to_one_extras = {
-                    "registration": {"type": "auto"}
-                }
+                one_to_one_extras = {"registration": {"type": "auto"}}
 
         class Mutations(graphene.ObjectType):
             create_dog = CreateDogMutation.Field()
@@ -1797,6 +1804,12 @@ class TestCreateWithOneToOneField(TestCase):
         self.assertIsNone(result.errors)
         self.assertEqual("12345", data.createDog.dog.registration.registrationNumber)
 
+        # Load from database
+        dog = Dog.objects.get(pk=disambiguate_id(data.createDog.dog.id))
+        registration = getattr(dog, "registration", None)
+        self.assertIsNotNone(registration)
+        self.assertEqual(registration.registration_number, "12345")
+
     def test__reverse_one_to_one_exists__updates_specified_fields(self):
         # This registers the UserNode type
         # noinspection PyUnresolvedReferences
@@ -1805,9 +1818,7 @@ class TestCreateWithOneToOneField(TestCase):
         class CreateDogRegistrationMutation(DjangoCreateMutation):
             class Meta:
                 model = DogRegistration
-                one_to_one_extras = {
-                    "dog": {"type": "auto"}
-                }
+                one_to_one_extras = {"dog": {"type": "auto"}}
 
         class Mutations(graphene.ObjectType):
             create_dog_registration = CreateDogRegistrationMutation.Field()
@@ -1843,8 +1854,8 @@ class TestCreateWithOneToOneField(TestCase):
                         "name": "Sparky",
                         "breed": "LABRADOR",
                         "tag": "1234",
-                        "owner": user.id
-                    }
+                        "owner": user.id,
+                    },
                 },
             },
             context=Dict(user=user),
@@ -1860,3 +1871,12 @@ class TestCreateWithOneToOneField(TestCase):
 
         self.assertEqual("12345", dog_registration.registrationNumber)
 
+        # Load from database
+        dog_registration = DogRegistration.objects.get(
+            pk=disambiguate_id(dog_registration.id)
+        )
+        dog = getattr(dog_registration, "dog", None)
+        print(dog, dog.id)
+        self.assertIsNotNone(dog)
+        self.assertEqual(dog.name, "Sparky")
+        self.assertEqual(dog.tag, "1234")

@@ -63,7 +63,7 @@ class DjangoCudBase(Mutation):
                 field.related_model,
             )
         else:
-            return cls.update_obj(
+            obj = cls.update_obj(
                 existing_value,
                 value,
                 info,
@@ -74,6 +74,8 @@ class DjangoCudBase(Mutation):
                 input_type_meta.get("one_to_one_extras", {}),
                 field.related_model,
             )
+            obj.save()
+            return obj
 
     @classmethod
     def get_or_create_m2m_objs(cls, field, values, data, operation, info):
@@ -328,34 +330,39 @@ class DjangoCudBase(Mutation):
         obj = Model.objects.create(**model_field_values)
 
         # Handle one to one rels
-        for name, value in one_to_one_rels.items():
-            field = Model._meta.get_field(name)
-            new_value = value
+        if len(one_to_one_rels) > 0:
 
-            value_handle_name = "handle_" + name
-            if hasattr(cls, value_handle_name):
-                handle_func = getattr(cls, value_handle_name)
-                assert callable(
-                    handle_func
-                ), f"Property {value_handle_name} on {cls.__name__} is not a function."
-                new_value = handle_func(value, name, info)
+            for name, value in one_to_one_rels.items():
+                field = Model._meta.get_field(name)
+                new_value = value
 
-            # Value was not transformed
-            if new_value == value:
-                # If the value is an integer or a string, we assume it is an ID
-                if isinstance(value, str) or isinstance(value, int):
-                    name = getattr(field, "db_column", None) or name + "_id"
-                    new_value = disambiguate_id(value)
-                else:
-                    extra_data = one_to_one_extras.get(name, {})
+                value_handle_name = "handle_" + name
+                if hasattr(cls, value_handle_name):
+                    handle_func = getattr(cls, value_handle_name)
+                    assert callable(
+                        handle_func
+                    ), f"Property {value_handle_name} on {cls.__name__} is not a function."
+                    new_value = handle_func(value, name, info)
 
-                    # This is a nested field we need to take care of.
-                    value[field.field.name] = obj.id
-                    new_value = cls.create_or_update_one_to_one_relation(
-                        obj, field, value, extra_data, info
-                    )
+                # Value was not transformed
+                if new_value == value:
+                    # If the value is an integer or a string, we assume it is an ID
+                    if isinstance(value, str) or isinstance(value, int):
+                        name = getattr(field, "db_column", None) or name + "_id"
+                        new_value = disambiguate_id(value)
+                    else:
+                        extra_data = one_to_one_extras.get(name, {})
 
-            setattr(obj, name, new_value)
+                        # This is a nested field we need to take care of.
+                        value[field.field.name] = obj.id
+                        new_value = cls.create_or_update_one_to_one_relation(
+                            obj, field, value, extra_data, info
+                        )
+
+                setattr(obj, name, new_value)
+
+            obj.save()
+
 
         # Handle extras fields
         many_to_many_to_add = {}
