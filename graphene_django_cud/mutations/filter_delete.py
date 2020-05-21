@@ -15,7 +15,7 @@ from graphene_django_cud.mutations.core import DjangoCudBase
 from graphene_django_cud.util import get_filter_fields_input_args, disambiguate_id, disambiguate_ids
 
 
-class DjangoBatchDeleteMutationOptions(MutationOptions):
+class DjangoFilterDeleteMutationOptions(MutationOptions):
     model = None
     filter_fields = None
     filter_class = None
@@ -23,7 +23,7 @@ class DjangoBatchDeleteMutationOptions(MutationOptions):
     login_required = None
 
 
-class DjangoBatchDeleteMutation(DjangoCudBase):
+class DjangoFilterDeleteMutation(DjangoCudBase):
     class Meta:
         abstract = True
 
@@ -57,7 +57,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
         output_fields["deletion_count"] = graphene.Int()
         output_fields["deleted_ids"] = graphene.List(graphene.ID)
 
-        _meta = DjangoBatchDeleteMutationOptions(cls)
+        _meta = DjangoFilterDeleteMutationOptions(cls)
         _meta.model = model
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.filter_fields = filter_fields
