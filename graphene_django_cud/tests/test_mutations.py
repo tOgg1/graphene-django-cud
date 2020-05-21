@@ -33,13 +33,6 @@ def mock_info(context=None):
 
 
 class TestUpdateMutation(TestCase):
-    def test__model_not_registered__raises_error(self):
-        with self.assertRaises(Exception):
-
-            class UpdateMutation(DjangoUpdateMutation):
-                class Meta:
-                    model = User
-
     def test__model_registered__does_not_raise_error(self):
         # This registers the UserNode type
         # noinspection PyUnresolvedReferences

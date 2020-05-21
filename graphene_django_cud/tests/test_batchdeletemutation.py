@@ -5,7 +5,6 @@ from addict import Dict
 from django.test import TestCase
 from graphene import Schema
 
-from graphene_django_cud.mutations import DjangoUpdateMutation
 from graphene_django_cud.mutations.batch_delete import DjangoBatchDeleteMutation
 from graphene_django_cud.tests.factories import UserFactory
 from graphene_django_cud.tests.models import User
