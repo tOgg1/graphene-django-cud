@@ -44,6 +44,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
         output_fields = OrderedDict()
         output_fields["deletion_count"] = graphene.Int()
         output_fields["deleted_ids"] = graphene.List(graphene.ID)
+        output_fields["missed_ids"] = graphene.List(graphene.ID)
 
         _meta = DjangoBatchDeleteMutationOptions(cls)
         _meta.model = model
@@ -106,13 +107,23 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
         if updated_qs:
             qs_to_delete = updated_qs
 
+        # Find out which (global) ids are deleted, and which were not found.
         deleted_ids = [
             to_global_id(get_global_registry().get_type_for_model(Model).__name__, id)
             for id in qs_to_delete.values_list("id", flat=True)
         ]
 
+        all_global_ids = [
+            to_global_id(get_global_registry().get_type_for_model(Model).__name__, id)
+            for id in ids
+        ]
+
+        missed_ids = list(
+            set(all_global_ids).difference(deleted_ids)
+        )
+
         deletion_count, _ = qs_to_delete.delete()
 
         cls.after_mutate(root, info, deletion_count, deleted_ids)
 
-        return cls(deletion_count=deletion_count, deleted_ids=deleted_ids)
+        return cls(deletion_count=deletion_count, deleted_ids=deleted_ids, missed_ids=missed_ids)
