@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import Iterable
 
 import graphene
 from django.core.exceptions import ObjectDoesNotExist
@@ -54,6 +55,30 @@ class DjangoDeleteMutation(DjangoCudBase):
         )
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
+
+    @classmethod
+    def get_permissions(cls, root, info, input) -> Iterable[str]:
+        return super().get_permissions(root, info, input)
+
+    @classmethod
+    def check_permissions(cls, root, info, input) -> None:
+        return super().check_permissions(root, info, input)
+
+    @classmethod
+    def before_mutate(cls, root, info, input):
+        return super().before_mutate(root, info, input)
+
+    @classmethod
+    def before_save(cls, root, info, input, obj):
+        return super().before_save(root, info, input, obj)
+
+    @classmethod
+    def after_mutate(cls, root, info, return_data):
+        return super().after_mutate(root, info, return_data)
+
+    @classmethod
+    def validate(cls, root, info, input):
+        return super().validate(root, info, input)
 
     @classmethod
     def get_queryset(cls, info, **args):

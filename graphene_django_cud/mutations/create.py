@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import Iterable
 
 import graphene
 from django.db import transaction
@@ -132,6 +133,30 @@ class DjangoCreateMutation(DjangoCudBase):
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
     @classmethod
+    def get_permissions(cls, root, info, input) -> Iterable[str]:
+        return super().get_permissions(root, info, input)
+
+    @classmethod
+    def check_permissions(cls, root, info, input) -> None:
+        return super().check_permissions(root, info, input)
+
+    @classmethod
+    def before_mutate(cls, root, info, input):
+        return super().before_mutate(root, info, input)
+
+    @classmethod
+    def before_save(cls, root, info, input, obj):
+        return super().before_save(root, info, input, obj)
+
+    @classmethod
+    def after_mutate(cls, root, info, return_data):
+        return super().after_mutate(root, info, return_data)
+
+    @classmethod
+    def validate(cls, root, info, input):
+        return super().validate(root, info, input)
+
+    @classmethod
     def mutate(cls, root, info, input):
         updated_input = cls.before_mutate(root, info, input)
         if updated_input:
@@ -158,11 +183,11 @@ class DjangoCreateMutation(DjangoCudBase):
                 cls._meta.one_to_one_extras,
                 Model,
             )
-            updated_obj = cls.before_save(root, info, input)
+            updated_obj = cls.before_save(root, info, input, obj)
             if updated_obj:
                 updated_obj.save()
 
-        kwargs = {cls._meta.return_field_name: obj}
-        cls.after_mutate(root, info, kwargs)
+        return_data = {cls._meta.return_field_name: obj}
+        cls.after_mutate(root, info, return_data)
 
-        return cls(**kwargs)
+        return cls(**return_data)

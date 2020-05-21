@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import Iterable
 
 import graphene
 from django.db import transaction
@@ -23,24 +24,24 @@ class DjangoBatchCreateMutation(DjangoCudBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            model=None,
-            permissions=None,
-            login_required=None,
-            only_fields=(),
-            exclude_fields=(),
-            optional_fields=(),
-            required_fields=(),
-            auto_context_fields={},
-            return_field_name=None,
-            many_to_many_extras=None,
-            foreign_key_extras=None,
-            many_to_one_extras=None,
-            one_to_one_extras=None,
-            type_name=None,
-            use_type_name=None,
-            field_types=None,
-            **kwargs,
+        cls,
+        model=None,
+        permissions=None,
+        login_required=None,
+        only_fields=(),
+        exclude_fields=(),
+        optional_fields=(),
+        required_fields=(),
+        auto_context_fields={},
+        return_field_name=None,
+        many_to_many_extras=None,
+        foreign_key_extras=None,
+        many_to_one_extras=None,
+        one_to_one_extras=None,
+        type_name=None,
+        use_type_name=None,
+        field_types=None,
+        **kwargs,
     ):
         registry = get_global_registry()
         meta_registry = get_type_meta_registry()
@@ -89,7 +90,7 @@ class DjangoBatchCreateMutation(DjangoCudBase):
                 one_to_one_extras=one_to_one_extras,
                 parent_type_name=input_type_name,
                 field_types=field_types,
-                )
+            )
 
             InputType = type(input_type_name, (InputObjectType,), model_fields)
 
@@ -132,10 +133,34 @@ class DjangoBatchCreateMutation(DjangoCudBase):
         _meta.InputType = InputType
         _meta.input_type_name = input_type_name
         _meta.login_required = _meta.login_required or (
-                _meta.permissions and len(_meta.permissions) > 0
+            _meta.permissions and len(_meta.permissions) > 0
         )
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
+
+    @classmethod
+    def get_permissions(cls, root, info) -> Iterable[str]:
+        return super().get_permissions(root, info)
+
+    @classmethod
+    def check_permissions(cls, root, info, input) -> None:
+        return super().check_permissions(root, info, input)
+
+    @classmethod
+    def before_mutate(cls, root, info, input):
+        return super().before_mutate(root, info, input)
+
+    @classmethod
+    def before_save(cls, root, info, created_objects):
+        return super().before_save(root, info, created_objects)
+
+    @classmethod
+    def after_mutate(cls, root, info, return_data):
+        return super().after_mutate(root, info, return_data)
+
+    @classmethod
+    def validate(cls, root, info, input, full_input):
+        return super().validate(root, info, input, full_input)
 
     @classmethod
     def mutate(cls, root, info, input):
@@ -156,7 +181,7 @@ class DjangoBatchCreateMutation(DjangoCudBase):
 
         with transaction.atomic():
             for data in input:
-                cls.validate(root, info, data, full_input=input)
+                cls.validate(root, info, data, input)
                 obj = cls.create_obj(
                     data,
                     info,

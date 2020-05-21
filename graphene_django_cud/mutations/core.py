@@ -722,13 +722,13 @@ class DjangoCudBase(Mutation):
                 raise GraphQLError("Not permitted to access this mutation.")
 
     @classmethod
-    def validate(cls, root, info, input, **kwargs):
+    def validate(cls, root, info, input, *args, **kwargs):
         for name, value in super(type(input), input).items():
             validate_field_name = f"validate_{name}"
             validate_field = getattr(cls, validate_field_name, None)
 
             if validate_field and callable(validate_field):
-                validate_field(root, info, value, input, **kwargs)
+                validate_field(root, info, value, input, *args, **kwargs)
 
     @classmethod
     def before_mutate(cls, root, info, *args, **kwargs):

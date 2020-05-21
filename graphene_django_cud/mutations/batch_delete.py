@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import Iterable
 
 import graphene
 from django.core.exceptions import FieldDoesNotExist
@@ -71,6 +72,30 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
     def get_queryset(cls, info, **args):
         Model = cls._meta.model
         return Model.objects
+
+    @classmethod
+    def get_permissions(cls, root, info, input) -> Iterable[str]:
+        return super().get_permissions(root, info, input)
+
+    @classmethod
+    def check_permissions(cls, root, info, input) -> None:
+        return super().check_permissions(root, info, input)
+
+    @classmethod
+    def before_mutate(cls, root, info, input):
+        return super().before_mutate(root, info, input)
+
+    @classmethod
+    def before_save(cls, root, info, filter_qs):
+        return super().before_save(root, info, filter_qs)
+
+    @classmethod
+    def after_mutate(cls, root, info, deletion_count, ids):
+        return super().after_mutate(root, info, deletion_count, ids)
+
+    @classmethod
+    def validate(cls, root, info, input, id, obj):
+        return super().validate(root, info, input)
 
     @classmethod
     def mutate(cls, root, info, input):

@@ -93,8 +93,8 @@ class PatchUserMutation(DjangoPatchMutation):
         }
 
     @classmethod
-    def mutate(cls, root, info, id, input):
-        return super().mutate(root, info, id, input)
+    def mutate(cls, root, info, input, id):
+        return super().mutate(root, info, input, id)
 
 
 class UpdateUserMutation(DjangoUpdateMutation):

@@ -46,7 +46,7 @@ or if the calling user has the ``users.change_user``-permission:
             permissions = ("users.change_user",)
 
         @classmethod
-        def get_permissions(cls, root, info, id, input) -> Iterable[str]:
+        def get_permissions(cls, root, info, input, id) -> Iterable[str]:
             # Use the disambiguate_id utility from graphene_django_cud to parse the id
             if int(disambiguate_id(id)) == info.context.user.id:
                 # Returning an empty array is essentially the same as granting access here.
@@ -55,7 +55,7 @@ or if the calling user has the ``users.change_user``-permission:
 
 
 The ``get_permissions`` method takes slightly different arguments depending on what mutation is being used.
-For patch and update mutations, the method is given ``(root, info, id, input)``. For create mutations,
+For patch and update mutations, the method is given ``(root, info, input, id)``. For create mutations,
 the method is given ``(root, info, input)``.
 
 
@@ -78,7 +78,7 @@ For instance, we *could* implement the permissions-checking above in the followi
             login_required = True
 
         @classmethod
-        def check_permissions(cls, root, info, id, input):
+        def check_permissions(cls, root, info, input, id):
             if int(disambiguate_id(id)) == info.context.user.id \
                or info.context.user.has_perm("users.change_user"):
                 # Not raising an Exception means the calling user has permission to access the mutation
@@ -89,7 +89,7 @@ For instance, we *could* implement the permissions-checking above in the followi
 You can also wrap ``check_permissions`` in decorators, if you so desire.
 
 The ``check_permissions`` method takes slightly different arguments depending on what mutation is being used.
-For patch and update mutations, the method is given ``(root, info, id, input)``. For create mutations,
+For patch and update mutations, the method is given ``(root, info, input, id)``. For create mutations,
 the method is given ``(root, info, input)``.
 
 
@@ -107,9 +107,9 @@ should only be required in very fringe scenarios.
             login_required = True
 
         @classmethod
-        def mutate(cls, root, info, id, input):
+        def mutate(cls, root, info, input, id):
             if int(disambiguate_id(id)) != info.context.user.id \
                and not info.context.user.has_perm("users.change_user"):
                 raise GraphQLError("You do not have permission to access this mutation.")
 
-            return super().mutate(root, info, id, input)
+            return super().mutate(root, info, input, id)

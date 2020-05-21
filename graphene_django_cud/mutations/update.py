@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import Iterable
 
 import graphene
 from django.db import transaction
@@ -140,15 +141,39 @@ class DjangoUpdateMutation(DjangoCudBase):
         return Model.objects
 
     @classmethod
-    def mutate(cls, root, info, id, input):
-        updated_input = cls.before_mutate(root, info, id, input)
+    def get_permissions(cls, root, info, input, id) -> Iterable[str]:
+        return super().get_permissions(root, info, input, id)
+
+    @classmethod
+    def check_permissions(cls, root, info, input, id) -> None:
+        return super().check_permissions(root, info, input, id)
+
+    @classmethod
+    def before_mutate(cls, root, info, input, id):
+        return super().before_mutate(root, info, input, id)
+
+    @classmethod
+    def before_save(cls, root, info, input, id, obj):
+        return super().before_save(root, info, input, id, obj)
+
+    @classmethod
+    def after_mutate(cls, root, info, return_data):
+        return super().after_mutate(root, info, return_data)
+
+    @classmethod
+    def validate(cls, root, info, input, id, obj):
+        return super().validate(root, info, input, id, obj)
+
+    @classmethod
+    def mutate(cls, root, info, input, id):
+        updated_input = cls.before_mutate(root, info, input, id)
         if updated_input:
             input = updated_input
 
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
-        cls.check_permissions(root, info, id, input)
+        cls.check_permissions(root, info, input, id)
 
         id = disambiguate_id(id)
         Model = cls._meta.model
@@ -156,7 +181,7 @@ class DjangoUpdateMutation(DjangoCudBase):
         obj = queryset.get(pk=id)
         auto_context_fields = cls._meta.auto_context_fields or {}
 
-        cls.validate(root, info, input, id=id, obj=obj)
+        cls.validate(root, info, input, id, obj)
 
         with transaction.atomic():
             obj = cls.update_obj(
@@ -171,15 +196,15 @@ class DjangoUpdateMutation(DjangoCudBase):
                 Model,
             )
 
-            updated_obj = cls.before_save(root, info, obj, id, input)
+            updated_obj = cls.before_save(root, info, input, id, obj)
 
             if updated_obj:
                 obj = updated_obj
 
             obj.save()
 
-        kwargs = {cls._meta.return_field_name: obj}
-        cls.after_mutate(root, info, kwargs)
+        return_data = {cls._meta.return_field_name: obj}
+        cls.after_mutate(root, info, return_data)
 
-        return cls(**kwargs)
+        return cls(**return_data)
 

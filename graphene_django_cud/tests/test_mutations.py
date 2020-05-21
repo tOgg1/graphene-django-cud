@@ -234,7 +234,7 @@ class TestUpdateMutation(TestCase):
                 model = Cat
 
             @classmethod
-            def get_permissions(cls, root, info, id, input, *args, **kwargs):
+            def get_permissions(cls, root, info, input, id, *args, **kwargs):
                 owner_id = int(disambiguate_id(input["owner"]))
                 if info.context.user.id == owner_id:
                     return []
@@ -300,7 +300,7 @@ class TestUpdateMutation(TestCase):
                 permissions = ("tests.change_cat",)
 
             @classmethod
-            def check_permissions(cls, root, info, id, input) -> None:
+            def check_permissions(cls, root, info, input, id) -> None:
                 if input["name"] == "Name 2":
                     raise ValueError("Cannot be Name 2")
 
@@ -353,7 +353,7 @@ class TestUpdateMutation(TestCase):
                 model = Cat
 
             @classmethod
-            def validate_name(cls, root, info, value, input, **kwargs):
+            def validate_name(cls, root, info, value, input, id, obj):
                 pass
 
         class Mutations(graphene.ObjectType):
@@ -394,7 +394,7 @@ class TestUpdateMutation(TestCase):
                 model = Cat
 
             @classmethod
-            def validate_name(cls, root, info, value, input, **kwargs):
+            def validate_name(cls, root, info, value, input, id, obj):
                 owner = User.objects.get(pk=disambiguate_id(input["owner"]))
                 if value == owner.get_full_name():
                     raise ValueError("Cat must have different name than owner")
