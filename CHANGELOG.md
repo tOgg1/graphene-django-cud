@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 0.6.0
+* Renamed DjangoBatchDeleteMutation to DjangoFilterDeleteMutation.
+* Added a new DjangoBatchDeleteMutation which takes an array of IDs to delete.
+* Added local versions of all overrideable methods. This makes type hinting more accurate.
+* Changed the argument order of some of the overrideable methods.
+* In particular: Changed the method signature of "get_queryset".
+
 ## Version 0.5.3
 * Change some potential issue with OneToOne persistence
 
