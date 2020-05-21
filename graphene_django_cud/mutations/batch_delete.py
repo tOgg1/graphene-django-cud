@@ -82,7 +82,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
         pass
 
     @classmethod
-    def get_queryset(cls, info, **args):
+    def get_queryset(cls, root, info, ids):
         Model = cls._meta.model
         return Model.objects
 
@@ -100,7 +100,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
 
         cls.validate(root, info, ids)
 
-        qs_to_delete = cls.get_queryset(info).filter(id__in=ids)
+        qs_to_delete = cls.get_queryset(root, info, ids).filter(id__in=ids)
 
         updated_qs = cls.before_save(root, info, qs_to_delete)
 

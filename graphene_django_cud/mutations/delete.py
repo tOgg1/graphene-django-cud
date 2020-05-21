@@ -25,14 +25,14 @@ class DjangoDeleteMutation(DjangoCudBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            model=None,
-            permissions=None,
-            login_required=None,
-            only_fields=(),
-            exclude_fields=(),
-            return_field_name=None,
-            **kwargs,
+        cls,
+        model=None,
+        permissions=None,
+        login_required=None,
+        only_fields=(),
+        exclude_fields=(),
+        return_field_name=None,
+        **kwargs,
     ):
         registry = get_global_registry()
 
@@ -51,7 +51,7 @@ class DjangoDeleteMutation(DjangoCudBase):
         _meta.return_field_name = return_field_name
         _meta.permissions = permissions
         _meta.login_required = _meta.login_required or (
-                _meta.permissions and len(_meta.permissions) > 0
+            _meta.permissions and len(_meta.permissions) > 0
         )
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
@@ -73,15 +73,15 @@ class DjangoDeleteMutation(DjangoCudBase):
         return super().before_save(root, info, input, obj)
 
     @classmethod
-    def after_mutate(cls, root, info, return_data):
-        return super().after_mutate(root, info, return_data)
+    def after_mutate(cls, root, info, deleted_id):
+        return super().after_mutate(root, info, deleted_id)
 
     @classmethod
     def validate(cls, root, info, input):
         return super().validate(root, info, input)
 
     @classmethod
-    def get_queryset(cls, info, **args):
+    def get_queryset(cls, root, info, id):
         Model = cls._meta.model
         return Model.objects
 
@@ -98,13 +98,10 @@ class DjangoDeleteMutation(DjangoCudBase):
         id = disambiguate_id(id)
 
         try:
-            obj = cls.get_queryset(info, id=id).get(pk=id)
+            obj = cls.get_queryset(root, info, id).get(pk=id)
             cls.before_save(root, info, obj, id)
             obj.delete()
-            cls.after_mutate(
-                root, info,
-            )
+            cls.after_mutate(root, info, id)
             return cls(found=True, deleted_id=id)
         except ObjectDoesNotExist:
             return cls(found=False)
-

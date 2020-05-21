@@ -133,7 +133,7 @@ class DjangoPatchMutation(DjangoCudBase):
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
     @classmethod
-    def get_queryset(cls, info, **args):
+    def get_queryset(cls, root, info, input, id):
         Model = cls._meta.model
         return Model.objects
 
@@ -174,7 +174,7 @@ class DjangoPatchMutation(DjangoCudBase):
 
         id = disambiguate_id(id)
         Model = cls._meta.model
-        queryset = cls.get_queryset(info, id=id, input=input)
+        queryset = cls.get_queryset(root, info, input, id)
         obj = queryset.get(pk=id)
         auto_context_fields = cls._meta.auto_context_fields or {}
 

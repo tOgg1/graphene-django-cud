@@ -69,7 +69,7 @@ class DjangoFilterDeleteMutation(DjangoCudBase):
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
     @classmethod
-    def get_queryset(cls, info, **args):
+    def get_queryset(cls, root, info, input):
         Model = cls._meta.model
         return Model.objects
 
@@ -158,7 +158,7 @@ class DjangoFilterDeleteMutation(DjangoCudBase):
 
             model_field_values[name] = new_value
 
-        filter_qs = cls.get_queryset(info, input=input).filter(**model_field_values)
+        filter_qs = cls.get_queryset(root, info, input).filter(**model_field_values)
         updated_qs = cls.before_save(root, info, filter_qs)
 
         if updated_qs:

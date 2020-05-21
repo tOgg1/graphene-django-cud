@@ -24,27 +24,23 @@ class DjangoUpdateMutation(DjangoCudBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            model=None,
-            permissions=None,
-            login_required=None,
-
-            only_fields=(),
-            exclude_fields=(),
-            optional_fields=(),
-            required_fields=(),
-            auto_context_fields=None,
-
-            return_field_name=None,
-
-            many_to_many_extras=None,
-            foreign_key_extras=None,
-            many_to_one_extras=None,
-            one_to_one_extras=None,
-
-            type_name=None,
-            field_types=None,
-            **kwargs,
+        cls,
+        model=None,
+        permissions=None,
+        login_required=None,
+        only_fields=(),
+        exclude_fields=(),
+        optional_fields=(),
+        required_fields=(),
+        auto_context_fields=None,
+        return_field_name=None,
+        many_to_many_extras=None,
+        foreign_key_extras=None,
+        many_to_one_extras=None,
+        one_to_one_extras=None,
+        type_name=None,
+        field_types=None,
+        **kwargs,
     ):
         registry = get_global_registry()
         meta_registry = get_type_meta_registry()
@@ -130,13 +126,13 @@ class DjangoUpdateMutation(DjangoCudBase):
         _meta.InputType = InputType
         _meta.input_type_name = input_type_name
         _meta.login_required = _meta.login_required or (
-                _meta.permissions and len(_meta.permissions) > 0
+            _meta.permissions and len(_meta.permissions) > 0
         )
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
     @classmethod
-    def get_queryset(cls, info, **args):
+    def get_queryset(cls, root, info, input, id):
         Model = cls._meta.model
         return Model.objects
 
@@ -177,7 +173,7 @@ class DjangoUpdateMutation(DjangoCudBase):
 
         id = disambiguate_id(id)
         Model = cls._meta.model
-        queryset = cls.get_queryset(info, id=id, input=input)
+        queryset = cls.get_queryset(root, info, input, id)
         obj = queryset.get(pk=id)
         auto_context_fields = cls._meta.auto_context_fields or {}
 
@@ -207,4 +203,3 @@ class DjangoUpdateMutation(DjangoCudBase):
         cls.after_mutate(root, info, return_data)
 
         return cls(**return_data)
-
