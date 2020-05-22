@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="graphene-django-cud",
-    version="0.6.0-rc.0",
+    version="0.6.0-rc.1",
     author="Tormod Haugland",
     author_email="tormod.haugland@gmail.com",
     description="Create, update and delete mutations for graphene-django",
