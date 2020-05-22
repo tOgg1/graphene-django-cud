@@ -155,8 +155,8 @@ class DjangoBatchCreateMutation(DjangoCudBase):
         return super().before_save(root, info, created_objects)
 
     @classmethod
-    def after_mutate(cls, root, info, return_data):
-        return super().after_mutate(root, info, return_data)
+    def after_mutate(cls, root, info, created_objs, return_data):
+        return super().after_mutate(root, info, created_objs, return_data)
 
     @classmethod
     def validate(cls, root, info, input, full_input):
@@ -198,6 +198,6 @@ class DjangoBatchCreateMutation(DjangoCudBase):
             if updated_objs:
                 created_objs = updated_objs
 
-        kwargs = {cls._meta.return_field_name: created_objs}
-        cls.after_mutate(root, info, kwargs)
-        return cls(**kwargs)
+        return_data = {cls._meta.return_field_name: created_objs}
+        cls.after_mutate(root, info, created_objs, return_data)
+        return cls(**return_data)
