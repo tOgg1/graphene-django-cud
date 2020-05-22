@@ -221,10 +221,13 @@ class DjangoCudBase(Mutation):
     ):
         meta_registry = get_type_meta_registry()
 
-        model_field_values = {}
         many_to_many_to_add = {}
         many_to_many_to_remove = {}
         many_to_many_to_set = {}
+        many_to_one_to_add = {}
+        many_to_one_to_remove = {}
+        many_to_one_to_set = {}
+        model_field_values = {}
         one_to_one_rels = {}
 
         many_to_many_extras_field_names = get_m2m_all_extras_field_names(
@@ -365,9 +368,6 @@ class DjangoCudBase(Mutation):
 
 
         # Handle extras fields
-        many_to_many_to_add = {}
-        many_to_many_to_remove = {}
-        many_to_many_to_set = {}
         for name, extras in many_to_many_extras.items():
             field = Model._meta.get_field(name)
             if not name in many_to_many_to_add:
@@ -400,9 +400,6 @@ class DjangoCudBase(Mutation):
                     else:
                         many_to_many_to_remove[name] += objs
 
-        many_to_one_to_add = {}
-        many_to_one_to_remove = {}
-        many_to_one_to_set = {}
         for name, extras in many_to_one_extras.items():
             field = Model._meta.get_field(name)
 
@@ -498,6 +495,9 @@ class DjangoCudBase(Mutation):
         many_to_many_to_add = {}
         many_to_many_to_remove = {}
         many_to_many_to_set = {}
+        many_to_one_to_add = {}
+        many_to_one_to_remove = {}
+        many_to_one_to_set = {}
 
         many_to_many_extras_field_names = get_m2m_all_extras_field_names(
             many_to_many_extras
@@ -622,9 +622,6 @@ class DjangoCudBase(Mutation):
                 else:
                     many_to_many_to_remove[name] += objs
 
-        many_to_one_to_add = {}
-        many_to_one_to_remove = {}
-        many_to_one_to_set = {}
         for name, extras in many_to_one_extras.items():
             field = Model._meta.get_field(name)
 
