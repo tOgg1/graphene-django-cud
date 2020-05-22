@@ -1,4 +1,5 @@
 from .batch_create import DjangoBatchCreateMutation
+from .batch_delete import DjangoBatchDeleteMutation
 from .filter_delete import DjangoFilterDeleteMutation
 from .create import DjangoCreateMutation
 from .delete import DjangoDeleteMutation
@@ -11,5 +12,6 @@ __all__ = (
     'DjangoPatchMutation',
     'DjangoUpdateMutation',
     'DjangoDeleteMutation',
+    'DjangoBatchDeleteMutation',
     'DjangoFilterDeleteMutation',
 )
