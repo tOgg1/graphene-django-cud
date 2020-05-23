@@ -26,6 +26,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
     @classmethod
     def __init_subclass_with_meta__(
         cls,
+        _meta=None,
         model=None,
         permissions=None,
         login_required=None,
@@ -46,7 +47,9 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
         output_fields["deleted_ids"] = graphene.List(graphene.ID)
         output_fields["missed_ids"] = graphene.List(graphene.ID)
 
-        _meta = DjangoBatchDeleteMutationOptions(cls)
+        if _meta is None:
+            _meta = DjangoBatchDeleteMutationOptions(cls)
+
         _meta.model = model
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.return_field_name = return_field_name

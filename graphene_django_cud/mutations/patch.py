@@ -29,6 +29,7 @@ class DjangoPatchMutation(DjangoCudBase):
     @classmethod
     def __init_subclass_with_meta__(
         cls,
+        _meta=None,
         model=None,
         permissions=None,
         login_required=None,
@@ -112,7 +113,9 @@ class DjangoPatchMutation(DjangoCudBase):
         output_fields = OrderedDict()
         output_fields[return_field_name] = graphene.Field(model_type)
 
-        _meta = DjangoPatchMutationOptions(cls)
+        if _meta is None:
+            _meta = DjangoPatchMutationOptions(cls)
+
         _meta.model = model
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.return_field_name = return_field_name

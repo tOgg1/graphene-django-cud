@@ -30,6 +30,7 @@ class DjangoFilterDeleteMutation(DjangoCudBase):
     @classmethod
     def __init_subclass_with_meta__(
         cls,
+        _meta=None,
         model=None,
         permissions=None,
         login_required=None,
@@ -57,7 +58,9 @@ class DjangoFilterDeleteMutation(DjangoCudBase):
         output_fields["deletion_count"] = graphene.Int()
         output_fields["deleted_ids"] = graphene.List(graphene.ID)
 
-        _meta = DjangoFilterDeleteMutationOptions(cls)
+        if _meta is None:
+            _meta = DjangoFilterDeleteMutationOptions(cls)
+
         _meta.model = model
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.filter_fields = filter_fields

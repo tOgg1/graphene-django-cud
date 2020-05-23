@@ -25,6 +25,7 @@ class DjangoUpdateMutation(DjangoCudBase):
     @classmethod
     def __init_subclass_with_meta__(
         cls,
+        _meta=None,
         model=None,
         permissions=None,
         login_required=None,
@@ -108,12 +109,13 @@ class DjangoUpdateMutation(DjangoCudBase):
         output_fields = OrderedDict()
         output_fields[return_field_name] = graphene.Field(model_type)
 
-        _meta = DjangoUpdateMutationOptions(cls)
+        if _meta is None:
+            _meta = DjangoUpdateMutationOptions(cls)
+
         _meta.model = model
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.return_field_name = return_field_name
         _meta.permissions = permissions
-        _meta.auto_context_fields = auto_context_fields or {}
         _meta.optional_fields = optional_fields
         _meta.required_fields = required_fields
         _meta.auto_context_fields = auto_context_fields

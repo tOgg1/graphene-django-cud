@@ -26,6 +26,7 @@ class DjangoDeleteMutation(DjangoCudBase):
     @classmethod
     def __init_subclass_with_meta__(
         cls,
+        _meta=None,
         model=None,
         permissions=None,
         login_required=None,
@@ -45,7 +46,9 @@ class DjangoDeleteMutation(DjangoCudBase):
         output_fields["found"] = graphene.Boolean()
         output_fields["deleted_id"] = graphene.ID()
 
-        _meta = DjangoDeleteMutationOptions(cls)
+        if _meta is None:
+            _meta = DjangoDeleteMutationOptions(cls)
+
         _meta.model = model
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.return_field_name = return_field_name

@@ -25,6 +25,7 @@ class DjangoBatchCreateMutation(DjangoCudBase):
     @classmethod
     def __init_subclass_with_meta__(
         cls,
+        _meta=None,
         model=None,
         permissions=None,
         login_required=None,
@@ -116,7 +117,9 @@ class DjangoBatchCreateMutation(DjangoCudBase):
         output_fields = OrderedDict()
         output_fields[return_field_name] = graphene.List(model_type)
 
-        _meta = DjangoBatchCreateMutationOptions(cls)
+        if _meta is None:
+            _meta = DjangoBatchCreateMutationOptions(cls)
+
         _meta.model = model
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.return_field_name = return_field_name

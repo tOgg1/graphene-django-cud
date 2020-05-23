@@ -24,27 +24,24 @@ class DjangoCreateMutation(DjangoCudBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            model=None,
-            permissions=None,
-            login_required=None,
-
-            only_fields=(),
-            exclude_fields=(),
-            optional_fields=(),
-            required_fields=(),
-            auto_context_fields={},
-
-            return_field_name=None,
-
-            many_to_many_extras=None,
-            foreign_key_extras=None,
-            many_to_one_extras=None,
-            one_to_one_extras=None,
-
-            type_name=None,
-            field_types=None,
-            **kwargs,
+        cls,
+        _meta=None,
+        model=None,
+        permissions=None,
+        login_required=None,
+        only_fields=(),
+        exclude_fields=(),
+        optional_fields=(),
+        required_fields=(),
+        auto_context_fields={},
+        return_field_name=None,
+        many_to_many_extras=None,
+        foreign_key_extras=None,
+        many_to_one_extras=None,
+        one_to_one_extras=None,
+        type_name=None,
+        field_types=None,
+        **kwargs,
     ):
         registry = get_global_registry()
         meta_registry = get_type_meta_registry()
@@ -110,7 +107,9 @@ class DjangoCreateMutation(DjangoCudBase):
         output_fields = OrderedDict()
         output_fields[return_field_name] = graphene.Field(model_type)
 
-        _meta = DjangoCreateMutationOptions(cls)
+        if _meta is None:
+            _meta = DjangoCreateMutationOptions(cls)
+
         _meta.model = model
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.return_field_name = return_field_name
@@ -127,7 +126,7 @@ class DjangoCreateMutation(DjangoCudBase):
         _meta.InputType = InputType
         _meta.input_type_name = input_type_name
         _meta.login_required = _meta.login_required or (
-                _meta.permissions and len(_meta.permissions) > 0
+            _meta.permissions and len(_meta.permissions) > 0
         )
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
@@ -187,7 +186,6 @@ class DjangoCreateMutation(DjangoCudBase):
             if updated_obj:
                 updated_obj.save()
                 obj = updated_obj
-
 
         return_data = {cls._meta.return_field_name: obj}
         cls.after_mutate(root, info, obj, return_data)
