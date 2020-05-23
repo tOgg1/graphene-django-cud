@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.6.2
+* Update patch and update mutations: Added the resolved object to check_permisions as a final argument.
+
 ## Version 0.6.1
 * Updated all mutations: Only create new meta options when one does not already exist.
 

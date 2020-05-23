@@ -29,7 +29,7 @@ copyright = '2020, Tormod Haugland'
 author = 'Tormod Haugland'
 
 # The full version, including alpha/beta/rc tags
-release = '0.6.1'
+release = '0.6.2'
 
 # -- General configuration ---------------------------------------------------
 
