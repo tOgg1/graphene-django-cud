@@ -293,7 +293,7 @@ class TestUpdateMutation(TestCase):
                 permissions = ("tests.change_cat",)
 
             @classmethod
-            def check_permissions(cls, root, info, input, id) -> None:
+            def check_permissions(cls, root, info, input, id, obj) -> None:
                 if input["name"] == "Name 2":
                     raise ValueError("Cannot be Name 2")
 
