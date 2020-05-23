@@ -141,12 +141,12 @@ class DjangoPatchMutation(DjangoCudBase):
         return Model.objects
 
     @classmethod
-    def get_permissions(cls, root, info, input, id) -> Iterable[str]:
+    def get_permissions(cls, root, info, input, id, obj) -> Iterable[str]:
         return super().get_permissions(root, info, input, id)
 
     @classmethod
-    def check_permissions(cls, root, info, input, id) -> None:
-        return super().check_permissions(root, info, input, id)
+    def check_permissions(cls, root, info, input, id, obj) -> None:
+        return super().check_permissions(root, info, input, id, obj)
 
     @classmethod
     def before_mutate(cls, root, info, input, id):
@@ -173,13 +173,14 @@ class DjangoPatchMutation(DjangoCudBase):
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
-        cls.check_permissions(root, info, input, id)
 
         id = disambiguate_id(id)
         Model = cls._meta.model
         queryset = cls.get_queryset(root, info, input, id)
         obj = queryset.get(pk=id)
         auto_context_fields = cls._meta.auto_context_fields or {}
+
+        cls.check_permissions(root, info, input, id, obj)
 
         cls.validate(root, info, input, id, obj)
 
