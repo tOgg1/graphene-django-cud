@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.6.1
+* Updated all mutations: Only create new meta options when one does not already exist.
+
 ## Version 0.6.0
 * Renamed DjangoBatchDeleteMutation to DjangoFilterDeleteMutation.
 * Added a new DjangoBatchDeleteMutation which takes an array of IDs to delete.
