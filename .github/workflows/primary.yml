@@ -3,7 +3,7 @@ name: Test and push
 on:
   push:
     branches: [ develop, master ]
-    tags: *
+    tags: [ v* ]
   pull_request:
     branches: [ develop, master ]
 
