@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 0.6.3
+* Update DjangoDeleteMutation, change a number of method signatures:
+    * get_permission and check_permissions now takes the obj to be deleted as a parameter.
+    * Renamed all `input` arguments to `id`.
+    * after_mutate now takes a final `found` argument.
+
 ## Version 0.6.2
 * Update patch and update mutations: Added the resolved object to check_permisions as a final argument.
 
