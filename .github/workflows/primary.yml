@@ -1,0 +1,57 @@
+name: Test and push
+
+on:
+  push:
+    branches: [ develop, master ]
+  pull_request:
+    branches: [ develop, master ]
+
+jobs:
+  test:
+
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Poetry
+        run: |
+          pip install poetry==1.0.0
+          poetry config virtualenvs.in-project true
+      - name: Cache pip
+        uses: actions/cache@v1
+        with:
+          path: .venv
+          key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.python-version}}-pip-
+            ${{ runner.os }}-${{ matrix.python-version}}-
+            ${{ runner.os }}-
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: Test with coverage
+        run: |
+          make test-cov
+  release:
+    needs: test
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Install Poetry
+        run: |
+          pip install poetry==1.0.0
+          poetry config virtualenvs.create false
+          poetry install --no-interaction
+      - name: Build package
+        run: make build
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_password }}
