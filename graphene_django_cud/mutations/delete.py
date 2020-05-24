@@ -60,24 +60,24 @@ class DjangoDeleteMutation(DjangoCudBase):
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
     @classmethod
-    def get_permissions(cls, root, info, input) -> Iterable[str]:
-        return super().get_permissions(root, info, input)
+    def get_permissions(cls, root, info, id, obj) -> Iterable[str]:
+        return super().get_permissions(root, info, id, obj)
 
     @classmethod
-    def check_permissions(cls, root, info, input) -> None:
-        return super().check_permissions(root, info, input)
+    def check_permissions(cls, root, info, id, obj) -> None:
+        return super().check_permissions(root, info, id, obj)
 
     @classmethod
-    def before_mutate(cls, root, info, input):
-        return super().before_mutate(root, info, input)
+    def before_mutate(cls, root, info, id):
+        return super().before_mutate(root, info, id)
 
     @classmethod
     def before_save(cls, root, info, input, obj):
         return super().before_save(root, info, input, obj)
 
     @classmethod
-    def after_mutate(cls, root, info, deleted_id):
-        return super().after_mutate(root, info, deleted_id)
+    def after_mutate(cls, root, info, deleted_id, found):
+        return super().after_mutate(root, info, deleted_id, found)
 
     @classmethod
     def validate(cls, root, info, input):
@@ -95,16 +95,21 @@ class DjangoDeleteMutation(DjangoCudBase):
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
-        cls.check_permissions(root, info, id)
 
         Model = cls._meta.model
         id = disambiguate_id(id)
 
         try:
             obj = cls.get_queryset(root, info, id).get(pk=id)
-            cls.before_save(root, info, obj, id)
+            cls.check_permissions(root, info, id, obj)
+
+            updated_obj = cls.before_save(root, info, id, obj)
+            if updated_obj:
+                obj = updated_obj
+
             obj.delete()
-            cls.after_mutate(root, info, id)
+            cls.after_mutate(root, info, id, True)
             return cls(found=True, deleted_id=id)
         except ObjectDoesNotExist:
+            cls.after_mutate(root, info, id, False)
             return cls(found=False)
