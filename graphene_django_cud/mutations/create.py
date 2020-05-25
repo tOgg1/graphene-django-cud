@@ -41,6 +41,7 @@ class DjangoCreateMutation(DjangoCudBase):
         one_to_one_extras=None,
         type_name=None,
         field_types=None,
+        ignore_primary_key=True,
         **kwargs,
     ):
         registry = get_global_registry()
@@ -81,6 +82,7 @@ class DjangoCreateMutation(DjangoCudBase):
             one_to_one_extras=one_to_one_extras,
             parent_type_name=input_type_name,
             field_types=field_types,
+            ignore_primary_key=ignore_primary_key,
         )
 
         InputType = type(input_type_name, (InputObjectType,), model_fields)
