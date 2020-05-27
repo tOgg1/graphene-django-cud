@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.6.4
+* Update DjangoBatchCreateMutation. Fix bad number of arguments on check_permissions.
+
 ## Version 0.6.3
 * Update DjangoDeleteMutation, change a number of method signatures:
     * get_permission and check_permissions now takes the obj to be deleted as a parameter.
