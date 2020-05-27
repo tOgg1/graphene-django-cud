@@ -142,8 +142,8 @@ class DjangoBatchCreateMutation(DjangoCudBase):
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
     @classmethod
-    def get_permissions(cls, root, info) -> Iterable[str]:
-        return super().get_permissions(root, info)
+    def get_permissions(cls, root, info, input) -> Iterable[str]:
+        return super().get_permissions(root, info, input)
 
     @classmethod
     def check_permissions(cls, root, info, input) -> None:
