@@ -15,7 +15,7 @@ from graphene_django_cud.util import get_input_fields_for_model
 
 
 class DjangoCreateMutationOptions(DjangoCudBaseOptions):
-    pass
+    ignore_primary_key = None
 
 
 class DjangoCreateMutation(DjangoCudBase):
