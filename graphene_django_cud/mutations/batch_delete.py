@@ -54,7 +54,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.return_field_name = return_field_name
         _meta.permissions = permissions
-        _meta.login_required = _meta.login_required or (
+        _meta.login_required = login_required or (
             _meta.permissions and len(_meta.permissions) > 0
         )
 
