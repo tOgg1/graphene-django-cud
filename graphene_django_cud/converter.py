@@ -155,7 +155,6 @@ def convert_django_field_to_input(
 @convert_django_field_to_input.register(models.SlugField)
 @convert_django_field_to_input.register(models.URLField)
 @convert_django_field_to_input.register(models.GenericIPAddressField)
-@convert_django_field_to_input.register(models.FileField)
 @convert_django_field_to_input.register(models.FilePathField)
 def convert_field_to_string_extended(
     field,
