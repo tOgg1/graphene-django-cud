@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 0.6.5
+* Fix some bad plain m2m and m2o field handling.
+* login_required now works as intended. Thanks to @janosroden.
+* Add a `ignore_primary_key` option to DjangoCreateMutation. Thanks to @e3oroush.
+
 ## Version 0.6.4
 * Update DjangoBatchCreateMutation. Fix bad number of arguments on check_permissions.
 
