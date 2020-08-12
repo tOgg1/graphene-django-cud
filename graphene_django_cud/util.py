@@ -1,3 +1,5 @@
+import binascii
+import uuid
 from collections import OrderedDict
 
 import graphene
@@ -18,27 +20,39 @@ from graphene_django_cud.converter import (
 from graphene_django_cud.registry import get_type_meta_registry
 
 
-def disambiguate_id(ambiguous_id: Union[int, float, str]):
+def disambiguate_id(ambiguous_id: Union[int, float, str, uuid.UUID]):
     """
     disambiguate_id takes an id which may either be an integer-parsable
     variable, either as a string or a number; or it might be a base64 encoded
-    global relay value.
+    global relay value; or UUID.
 
     The method then attempts to extract from this token the actual id.
 
     :return:
     """
-    # First see if it is an integer, if so
-    # it is definitely not a relay global id
-    final_id = -1
+
+    if isinstance(ambiguous_id, (type(None), int, uuid.UUID)):
+        return ambiguous_id
+
     try:
-        final_id = int(ambiguous_id)
-        return final_id
-    except ValueError:
-        # Try global value
-        (_, final_id) = from_global_id(ambiguous_id)
-    finally:
-        return final_id
+        return int(ambiguous_id)
+    except (ValueError, TypeError):
+        pass
+
+    if isinstance(ambiguous_id, str):
+        try:
+            return from_global_id(ambiguous_id)[1]
+        except (ValueError, TypeError, binascii.Error):
+            pass
+
+        try:
+            return uuid.UUID(ambiguous_id)
+        except (ValueError, TypeError, AttributeError):
+            pass
+        
+        return ambiguous_id
+
+    return None
 
 
 def disambiguate_ids(ids):
