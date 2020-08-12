@@ -1671,6 +1671,7 @@ class TestUpdateWithOneToOneField(TestCase):
             },
             context=Dict(user=user),
         )
+        print(result)
         self.assertIsNone(result.errors)
         data = Dict(result.data)
         self.assertIsNone(result.errors)
@@ -1872,3 +1873,131 @@ class TestCreateWithOneToOneField(TestCase):
         self.assertIsNotNone(dog)
         self.assertEqual(dog.name, "Sparky")
         self.assertEqual(dog.tag, "1234")
+
+
+class TestCreateWithPlainManyToOneRelation(TestCase):
+    def test__many_to_one_relation_exists__creates_specified_fields(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class CreateUserMutation(DjangoCreateMutation):
+            class Meta:
+                model = User
+                exclude_fields = ("password",)
+
+        class Mutations(graphene.ObjectType):
+            create_user = CreateUserMutation.Field()
+
+        user = UserFactory.create()
+        cat = CatFactory.create()
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation CreateUser(
+                $input: CreateUserInput!
+            ){
+                createUser(input: $input){
+                    user{
+                        id
+                        cats{
+                            edges{
+                                node{
+                                    id
+                                }
+                            }
+                        }
+                    } 
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "input": {
+                    "username": "john",
+                    "email": "test@example.com",
+                    "firstName": "John",
+                    "lastName": "Doe",
+                    "cats": [to_global_id("CatNode", cat.id)],
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        self.assertIsNone(result.errors)
+        self.assertEqual(
+            to_global_id("CatNode", cat.id), data.createUser.user.cats.edges[0].node.id
+        )
+
+        new_user = User.objects.get(pk=disambiguate_id(data.createUser.user.id))
+
+        # Load from database
+        cat.refresh_from_db()
+        self.assertEqual(cat, new_user.cats.first())
+
+
+class TestCreateWithPlainManyToManyRelation(TestCase):
+    def test__many_to_one_relation_exists__creates_specified_fields(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class CreateDogMutation(DjangoCreateMutation):
+            class Meta:
+                model = Dog
+
+        class Mutations(graphene.ObjectType):
+            create_dog = CreateDogMutation.Field()
+
+        user = UserFactory.create()
+        cat = CatFactory.create()
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation CreateDog(
+                $input: CreateDogInput!
+            ){
+                createDog(input: $input){
+                    dog{
+                        id
+                        enemies{
+                            edges{
+                                node{
+                                    id
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "input": {
+                    "name": "Sparky",
+                    "breed": "HUSKY",
+                    "tag": "1234",
+                    "owner": to_global_id("UserNode", user.id),
+                    "enemies": [to_global_id("CatNode", cat.id)],
+                },
+            },
+            context=Dict(user=user),
+        )
+
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        self.assertIsNone(result.errors)
+        self.assertEqual(
+            to_global_id("CatNode", cat.id), data.createDog.dog.enemies.edges[0].node.id
+        )
+
+        new_dog = Dog.objects.get(pk=disambiguate_id(data.createDog.dog.id))
+
+        # Load from database
+        cat.refresh_from_db()
+        self.assertEqual(cat, new_dog.enemies.first())

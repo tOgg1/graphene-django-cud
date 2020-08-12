@@ -43,16 +43,22 @@ jobs:
     needs: test
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
     runs-on: ubuntu-18.04
+    env:
+      TWINE_USERNAME: __token__
+      TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
     steps:
-      - name: Install Poetry
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install dependencies
         run: |
+          pip install twine
           pip install poetry==1.0.0
           poetry config virtualenvs.create false
           poetry install --no-interaction
       - name: Build package
         run: make build
       - name: Publish package
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-          user: __token__
-          password: ${{ secrets.pypi_password }}
+        run: make release

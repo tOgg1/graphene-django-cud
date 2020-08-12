@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Union
 
 from django.db import models
 from graphene import Mutation
@@ -14,6 +14,7 @@ from graphene_django_cud.util import (
     disambiguate_ids,
     is_field_many_to_many,
     is_field_one_to_one,
+    is_field_many_to_one,
 )
 
 meta_registry = get_type_meta_registry()
@@ -167,6 +168,18 @@ class DjangoCudBase(Mutation):
         return results
 
     @classmethod
+    def get_all_objs(cls, Model, ids: Iterable[Union[str, int]]):
+        """
+        Helper method for getting a number of objects with Model.objects.get()
+        :return:
+        """
+        objs = []
+        for id in ids:
+            objs.append(Model.objects.get(pk=disambiguate_id(id)))
+
+        return objs
+
+    @classmethod
     def upsert_obj(
         cls,
         input,
@@ -261,6 +274,10 @@ class DjangoCudBase(Mutation):
             # .set()-method, instead of direct assignment
             field_is_many_to_many = is_field_many_to_many(field)
 
+            # We have to handle this case specifically, by using the fields
+            # .set()-method, instead of direct assignment
+            field_is_many_to_one = is_field_many_to_one(field)
+
             # We cannot handle nested one to one rels before we have saved.
             if type(field) == models.OneToOneRel and not (
                 # This case happens if the one to one field is specified as a related id.
@@ -303,7 +320,9 @@ class DjangoCudBase(Mutation):
                             extra_data.get("one_to_one_extras", {}),
                             field.related_model,
                         )
-                elif isinstance(field, models.OneToOneRel) or isinstance(field, models.ForeignKey):
+                elif isinstance(field, models.OneToOneRel) or isinstance(
+                    field, models.ForeignKey
+                ):
                     # Delete auto context field here, if it exists. We have to do this explicitly
                     # as we change the name below
                     if name in auto_context_fields:
@@ -315,7 +334,9 @@ class DjangoCudBase(Mutation):
                     new_value = disambiguate_ids(value)
 
             if field_is_many_to_many:
-                many_to_many_to_set[name] = new_value
+                many_to_many_to_set[name] = cls.get_all_objs(field.related_model, new_value)
+            elif field_is_many_to_one:
+                many_to_one_to_set[name] = cls.get_all_objs(field.related_model, new_value)
             else:
                 model_field_values[name] = new_value
 
@@ -365,7 +386,6 @@ class DjangoCudBase(Mutation):
                 setattr(obj, name, new_value)
 
             obj.save()
-
 
         # Handle extras fields
         for name, extras in many_to_many_extras.items():
@@ -529,6 +549,10 @@ class DjangoCudBase(Mutation):
             # .set()-method, instead of direct assignment
             field_is_many_to_many = is_field_many_to_many(field)
 
+            # We have to handle this case specifically, by using the fields
+            # .set()-method, instead of direct assignment
+            field_is_many_to_one = is_field_many_to_one(field)
+
             field_is_one_to_one = is_field_one_to_one(field)
 
             value_handle_name = "handle_" + name
@@ -579,7 +603,9 @@ class DjangoCudBase(Mutation):
                     new_value = disambiguate_ids(value)
 
             if field_is_many_to_many:
-                many_to_many_to_set[name] = new_value
+                many_to_many_to_set[name] = cls.get_all_objs(field.related_model, new_value)
+            elif field_is_many_to_one:
+                many_to_one_to_set[name] = cls.get_all_objs(field.related_model, new_value)
             else:
                 setattr(obj, name, new_value)
 

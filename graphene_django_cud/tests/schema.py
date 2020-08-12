@@ -58,6 +58,7 @@ class Query(graphene.ObjectType):
 class CreateUserMutation(DjangoCreateMutation):
     class Meta:
         model = User
+        exclude_fields = ("password",)
         many_to_one_extras = {
             "cats": {"exact": {"type": "auto"}},
             "dogs": {

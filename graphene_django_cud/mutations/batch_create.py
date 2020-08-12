@@ -135,7 +135,7 @@ class DjangoBatchCreateMutation(DjangoCudBase):
         _meta.field_types = field_types or {}
         _meta.InputType = InputType
         _meta.input_type_name = input_type_name
-        _meta.login_required = _meta.login_required or (
+        _meta.login_required = login_required or (
             _meta.permissions and len(_meta.permissions) > 0
         )
 

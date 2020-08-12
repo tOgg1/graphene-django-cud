@@ -2,6 +2,7 @@ from collections import OrderedDict
 
 import graphene
 from django.db import models
+from django.db.models import OneToOneRel
 from graphene import InputObjectType
 from graphene.utils.str_converters import to_camel_case
 from graphene_django.registry import get_global_registry
@@ -377,11 +378,14 @@ def get_filter_fields_input_args(filter_fields, model):
 def is_field_many_to_many(field):
     # We check type equality for ManyToManyRel to ensure we don't get false positives for
     # OnetoOneRel
-    return (
-        isinstance(field, models.ManyToManyField)
-        or isinstance(field, models.ManyToManyRel)
-        or type(field) == models.ManyToOneRel
+    return isinstance(field, models.ManyToManyField) or isinstance(
+        field, models.ManyToManyRel
     )
+
+
+def is_field_many_to_one(field):
+    # ForeignObject.is_multiple is False for e.g. OneToOneRel. We don't handle that here.
+    return isinstance(field, models.ManyToOneRel) and field.multiple is True
 
 
 def is_field_one_to_one(field):

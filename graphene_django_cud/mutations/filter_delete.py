@@ -65,7 +65,7 @@ class DjangoFilterDeleteMutation(DjangoCudBase):
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.filter_fields = filter_fields
         _meta.permissions = permissions
-        _meta.login_required = _meta.login_required or (
+        _meta.login_required = login_required or (
             _meta.permissions and len(_meta.permissions) > 0
         )
 
