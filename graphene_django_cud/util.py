@@ -5,7 +5,7 @@ from collections import OrderedDict
 import graphene
 from django.db import models
 from django.db.models import OneToOneRel
-from graphene import InputObjectType, ID
+from graphene import InputObjectType
 from graphene.utils.str_converters import to_camel_case
 from graphene_django.registry import get_global_registry
 from graphene_django.utils import get_model_fields
@@ -149,19 +149,15 @@ def get_input_fields_for_model(
         elif name in required_fields:
             required = True
 
-        if name not in fields:
-            if getattr(field, "primary_key", False):
-                fields[name] = ID(required=True,
-                                  description=getattr(field, "help_text", ""))
-            else:
-                fields[name] = convert_django_field_with_choices(
-                    field,
-                    registry,
-                    required,
-                    many_to_many_extras.get(name, {}).get("exact"),
-                    foreign_key_extras.get(name, {}),
-                    one_to_one_extras.get(name, {}),
-                )
+        converted = convert_django_field_with_choices(
+            field,
+            registry,
+            required,
+            many_to_many_extras.get(name, {}).get("exact"),
+            foreign_key_extras.get(name, {}),
+            one_to_one_extras.get(name, {}),
+        )
+        fields[name] = converted
 
         if type(field) in (models.OneToOneRel, models.OneToOneField):
             one_to_one_fields.append(field)
