@@ -100,11 +100,26 @@ class DjangoCudBase(Mutation):
                 related_obj = cls.create_obj(
                     value,
                     info,
-                    input_type_meta.get("auto_context_fields", {}),
-                    input_type_meta.get("many_to_many_extras", {}),
-                    input_type_meta.get("foreign_key_extras", {}),
-                    input_type_meta.get("many_to_one_extras", {}),
-                    input_type_meta.get("one_to_one_extras", {}),
+                    {
+                        **input_type_meta.get("auto_context_fields", {}),
+                        **data.get("auto_context_fields", {})
+                    },
+                    {
+                        **input_type_meta.get("many_to_many_extras", {}),
+                        **data.get("many_to_many_extras", {})
+                    },
+                    {
+                        **input_type_meta.get("foreign_key_extras", {}),
+                        **data.get("foreign_key_extras", {})
+                    },
+                    {
+                        **input_type_meta.get("many_to_one_extras", {}),
+                        **data.get("many_to_one_extras", {})
+                    },
+                    {
+                        **input_type_meta.get("one_to_one_extras", {}),
+                        **data.get("one_to_one_extras", {})
+                    },
                     field.related_model,
                 )
             results.append(related_obj)
@@ -121,49 +136,70 @@ class DjangoCudBase(Mutation):
         field_type = data.get("type", "auto")
         for value in values:
             if field_type == "ID":
-                related_obj = field.related_model.objects.get(pk=disambiguate_id(value))
-                results.append(related_obj)
-            elif field_type == "auto":
-                # In this case, a new type has been created for us. Let's first find it's name,
-                # then get it's meta, and then create it. We also need to attach the obj as the
-                # foreign key.
-                _type_name = data.get(
-                    "type_name",
-                    f"{operation.capitalize()}{Model.__name__}{field.name.capitalize()}",
-                )
-                input_type_meta = meta_registry.get_meta_for_type(field_type)
-
-                # Ensure the parent relation exists and has the correct id.
-                value[field.field.name] = obj.id
-
-                # We use upsert here, as the operation might be "update", where we
-                # want to update the object.
-                related_obj = cls.upsert_obj(
-                    value,
-                    info,
-                    input_type_meta.get("auto_context_fields", {}),
-                    input_type_meta.get("many_to_many_extras", {}),
-                    input_type_meta.get("foreign_key_extras", {}),
-                    input_type_meta.get("many_to_one_extras", {}),
-                    input_type_meta.get("one_to_one_extras", {}),
-                    field.related_model,
-                )
+                related_obj = field.related_model.objects.get(
+                    pk=disambiguate_id(value))
                 results.append(related_obj)
             else:
-                # This is something that we are going to create
                 input_type_meta = meta_registry.get_meta_for_type(field_type)
-                # Create new obj
-                related_obj = cls.create_obj(
-                    value,
-                    info,
-                    input_type_meta.get("auto_context_fields", {}),
-                    input_type_meta.get("many_to_many_extras", {}),
-                    input_type_meta.get("foreign_key_extras", {}),
-                    input_type_meta.get("many_to_one_extras", {}),
-                    input_type_meta.get("one_to_one_extras", {}),
-                    field.related_model,
-                )
-                results.append(related_obj)
+                auto_context_fields = {
+                    **input_type_meta.get("auto_context_fields", {}),
+                    **data.get("auto_context_fields", {})
+                }
+                many_to_many_extras = {
+                    **input_type_meta.get("many_to_many_extras", {}),
+                    **data.get("many_to_many_extras", {})
+                }
+                foreign_key_extras = {
+                    **input_type_meta.get("foreign_key_extras", {}),
+                    **data.get("foreign_key_extras", {})
+                }
+                many_to_one_extras = {
+                    **input_type_meta.get("many_to_one_extras", {}),
+                    **data.get("many_to_one_extras", {})
+                }
+                one_to_one_extras = {
+                    **input_type_meta.get("one_to_one_extras", {}),
+                    **data.get("one_to_one_extras", {})
+                }
+
+                if field_type == "auto":
+                    # In this case, a new type has been created for us. Let's first find it's name,
+                    # then get it's meta, and then create it. We also need to attach the obj as the
+                    # foreign key.
+                    _type_name = data.get(
+                        "type_name",
+                        f"{operation.capitalize()}{Model.__name__}{field.name.capitalize()}",
+                    )
+
+                    # Ensure the parent relation exists and has the correct id.
+                    value[field.field.name] = obj.id
+
+                    # We use upsert here, as the operation might be "update", where we
+                    # want to update the object.
+                    related_obj = cls.upsert_obj(
+                        value,
+                        info,
+                        auto_context_fields,
+                        many_to_many_extras,
+                        foreign_key_extras,
+                        many_to_one_extras,
+                        one_to_one_extras,
+                        field.related_model,
+                    )
+                    results.append(related_obj)
+                else:
+                    # Create new obj
+                    related_obj = cls.create_obj(
+                        value,
+                        info,
+                        auto_context_fields,
+                        many_to_many_extras,
+                        foreign_key_extras,
+                        many_to_one_extras,
+                        one_to_one_extras,
+                        field.related_model,
+                    )
+                    results.append(related_obj)
 
         return results
 
