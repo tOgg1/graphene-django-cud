@@ -637,8 +637,6 @@ class DjangoCudBase(Mutation):
                     new_value = disambiguate_id(value)
                 elif field_is_many_to_many:
                     new_value = disambiguate_ids(value)
-                elif getattr(field, "primary_key", False):
-                    new_value = disambiguate_id(value)
 
             if field_is_many_to_many:
                 many_to_many_to_set[name] = cls.get_all_objs(field.related_model, new_value)
