@@ -73,7 +73,7 @@ class TestUpdateMutation(TestCase):
         result = schema.execute(
             mutation,
             variables={
-                "id": to_global_id("UserNode", user.id),
+                "id": to_global_id("CatNode", cat.id),
                 "input": {"name": "Name", "owner": to_global_id("UserNode", user.id)},
             },
             context=Dict(user=user),
@@ -111,7 +111,7 @@ class TestUpdateMutation(TestCase):
         result = schema.execute(
             mutation,
             variables={
-                "id": to_global_id("UserNode", user.id),
+                "id": to_global_id("CatNode", cat.id),
                 "input": {"name": "Name", "owner": to_global_id("UserNode", user.id)},
             },
             context=Dict(user=user),
@@ -154,7 +154,7 @@ class TestUpdateMutation(TestCase):
         result = schema.execute(
             mutation,
             variables={
-                "id": to_global_id("UserNode", user.id),
+                "id": to_global_id("CatNode", cat.id),
                 "input": {"name": "Name", "owner": to_global_id("UserNode", user.id)},
             },
             context=Dict(user=user),
@@ -200,7 +200,7 @@ class TestUpdateMutation(TestCase):
         result = schema.execute(
             mutation,
             variables={
-                "id": to_global_id("UserNode", user.id),
+                "id": to_global_id("CatNode", cat.id),
                 "input": {"name": "Name", "owner": to_global_id("UserNode", user.id)},
             },
             context=Dict(user=user),
@@ -210,7 +210,7 @@ class TestUpdateMutation(TestCase):
         result = schema.execute(
             mutation,
             variables={
-                "id": to_global_id("UserNode", user.id),
+                "id": to_global_id("CatNode", cat.id),
                 "input": {"name": "Name", "owner": to_global_id("UserNode", user.id)},
             },
             context=Dict(user=user_with_permissions),
