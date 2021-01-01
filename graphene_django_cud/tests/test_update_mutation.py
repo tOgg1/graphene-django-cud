@@ -5,6 +5,7 @@ from graphene import Schema
 from graphql import ResolveInfo
 from graphql_relay import to_global_id
 
+from graphene_django import DjangoObjectType
 from graphene_django_cud.mutations import DjangoUpdateMutation, DjangoCreateMutation
 from graphene_django_cud.tests.factories import (
     UserFactory,
@@ -1036,6 +1037,60 @@ class TestUpdateMutationManyToManyExtras(TestCase):
 
         dog.refresh_from_db()
         self.assertEqual(dog.enemies.all().count(), 0)
+
+    def test_many_to_many_extras__type_auto__makes_it_possible_to_add_new_full_objects(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateDogMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Dog
+                many_to_many_extras = {"enemies": {"add": {"type": "auto"}}}
+
+        class Mutations(graphene.ObjectType):
+            update_dog = UpdateDogMutation.Field()
+
+        dog = DogFactory.create()
+        user = UserFactory.create()
+
+        self.assertEqual(dog.enemies.all().count(), 0)
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateDog(
+                $id: ID!,
+                $input: UpdateDogInput! 
+            ){
+                updateDog(id: $id, input: $input){
+                    dog{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("DogNode", dog.id),
+                "input": {
+                    "name": "Sparky",
+                    "tag": "tag",
+                    "breed": "HUSKY",
+                    "owner": to_global_id("UserNode", user.id),
+                    "enemiesAdd": [{
+                        "name": "Meowington",
+                        "owner": to_global_id("UserNode", user.id)
+                    }],
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+
+        dog.refresh_from_db()
+        self.assertEqual(dog.enemies.all().count(), 1)
 
 
 class TestUpdateMutationManyToOneExtras(TestCase):

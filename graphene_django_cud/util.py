@@ -1,21 +1,20 @@
 import binascii
 import uuid
 from collections import OrderedDict
+from typing import Union, List, Optional
 
 import graphene
 from django.db import models
-from django.db.models import OneToOneRel
 from graphene import InputObjectType
 from graphene.utils.str_converters import to_camel_case
 from graphene_django.registry import get_global_registry
 from graphene_django.utils import get_model_fields
 from graphql import GraphQLError
 from graphql_relay import from_global_id
-from typing import Union, List
 
 from graphene_django_cud.converter import (
     convert_django_field_with_choices,
-    convert_many_to_many_field,
+    convert_many_to_many_field, is_required,
 )
 from graphene_django_cud.registry import get_type_meta_registry
 
@@ -49,7 +48,7 @@ def disambiguate_id(ambiguous_id: Union[int, float, str, uuid.UUID]):
             return uuid.UUID(ambiguous_id)
         except (ValueError, TypeError, AttributeError):
             pass
-        
+
         return ambiguous_id
 
     return None
@@ -205,9 +204,9 @@ def get_input_fields_for_model(
 
     # Create extra many_to_many_fields
     for name, extras in many_to_many_extras.items():
-        field: Union[models.ManyToManyField, models.ManyToManyRel] = fields_lookup.get(
-            name
-        )
+        field: Optional[
+            Union[models.ManyToManyField, models.ManyToManyRel]
+        ] = fields_lookup.get(name)
         if field is None:
             raise GraphQLError(
                 f"Error adding extras for {name} in model f{model}. Field {name} does not exist."
@@ -215,22 +214,15 @@ def get_input_fields_for_model(
 
         for extra_name, data in extras.items():
 
-            # This is handled above
+            argument_name = data.get("name", name + "_" + extra_name)
+
+            # Override default
             if extra_name == "exact":
-                continue
+                argument_name = name
 
-            if isinstance(data, bool):
-                data = {}
-
-            _type_name = data.get("type")
-            _field = convert_many_to_many_field(field, registry, False, data, None)
-
-            # Default to the same as the "exact" version
-            if not _field:
-                _field = fields[name]
-
-            # operation = data.get('operation') or get_likely_operation_from_name(extra_name)
-            fields[name + "_" + extra_name] = _field
+            fields[argument_name] = convert_many_to_many_like_field(
+                data, name, extra_name, parent_type_name, field, registry, meta_registry
+            )
 
     for name, extras in many_to_one_extras.items():
         field: models.ManyToOneRel = fields_lookup.get(name)
@@ -247,59 +239,79 @@ def get_input_fields_for_model(
             if extra_name == "exact":
                 argument_name = name
 
-            if isinstance(data, bool):
-                data = {"type": "ID"}
-
-            type_name = data.get("type")
-            if type_name and type_name != "ID":
-                # Create new type.
-                operation_name = data.get(
-                    "operation", get_likely_operation_from_name(extra_name)
-                )
-
-                converted_fields = get_input_fields_for_model(
-                    field.related_model,
-                    data.get("only_fields", ()),
-                    data.get(
-                        "exclude_fields", (field.field.name,)
-                    ),  # Exclude the field referring back to the foreign key
-                    data.get("optional_fields", ()),
-                    data.get("required_fields", ()),
-                    data.get("many_to_many_extras"),
-                    data.get("foreign_key_extras"),
-                    data.get("many_to_one_extras"),
-                    data.get("one_to_one_extras"),
-                    parent_type_name=type_name,
-                    field_types=data.get("field_types"),
-                    # Don't ignore the primary key on updates
-                    ignore_primary_key=operation_name != "update",
-                )
-                InputType = type(type_name, (InputObjectType,), converted_fields)
-                registry.register_converted_field(field, InputType)
-                meta_registry.register(
-                    type_name,
-                    {
-                        "auto_context_fields": data.get("auto_context_fields", {}),
-                        "optional_fields": data.get("optional_fields", ()),
-                        "required_fields": data.get("required_fields", ()),
-                        "many_to_many_extras": data.get("many_to_many_extras", {}),
-                        "many_to_one_extras": data.get("many_to_one_extras", {}),
-                        "foreign_key_extras": data.get("auto_context_fields", {}),
-                        "one_to_one_extras": data.get("one_to_one_extras", {}),
-                        "field_types": data.get("field_types", {}),
-                    },
-                )
-                registry.register_converted_field(type_name, InputType)
-                _field = graphene.List(
-                    type(type_name, (InputObjectType,), converted_fields),
-                    required=False,
-                )
-            else:
-                _field = convert_many_to_many_field(field, registry, False, data, None)
-
-            fields[argument_name] = _field
+            fields[argument_name] = convert_many_to_many_like_field(
+                data, name, extra_name, parent_type_name, field, registry, meta_registry
+            )
 
     return fields
+
+
+def convert_many_to_many_like_field(
+    data, name, extra_name, parent_type_name, field, registry, meta_registry
+):
+    if isinstance(data, bool):
+        data = {"type": "ID"}
+
+    type_name = data.get("type")
+
+    if type_name and type_name != "ID":
+        # Check if type already exists
+        existing_type = registry.get_converted_field(type_name)
+
+        if existing_type:
+            return graphene.List(existing_type, required=False)
+
+        is_auto_field = data.get("auto", False)
+        if not is_auto_field:
+            return create_dynamic_type(field, type_name, registry, False)
+
+        # Create new type.
+        operation_name = data.get(
+            "operation", get_likely_operation_from_name(extra_name)
+        )
+
+        exclude_fields = ()
+        if isinstance(field, models.ManyToOneRel):
+            exclude_fields = (field.field.name,)
+
+        converted_fields = get_input_fields_for_model(
+            field.related_model,
+            data.get("only_fields", ()),
+            data.get(
+                "exclude_fields", exclude_fields
+            ),  # Exclude the field referring back to the foreign key
+            data.get("optional_fields", ()),
+            data.get("required_fields", ()),
+            data.get("many_to_many_extras"),
+            data.get("foreign_key_extras"),
+            data.get("many_to_one_extras"),
+            data.get("one_to_one_extras"),
+            parent_type_name=type_name,
+            field_types=data.get("field_types"),
+            # Don't ignore the primary key on updates
+            ignore_primary_key=operation_name != "update",
+        )
+        InputType = type(type_name, (InputObjectType,), converted_fields)
+        registry.register_converted_field(field, InputType)
+        meta_registry.register(
+            type_name,
+            {
+                "auto_context_fields": data.get("auto_context_fields", {}),
+                "optional_fields": data.get("optional_fields", ()),
+                "required_fields": data.get("required_fields", ()),
+                "many_to_many_extras": data.get("many_to_many_extras", {}),
+                "many_to_one_extras": data.get("many_to_one_extras", {}),
+                "foreign_key_extras": data.get("auto_context_fields", {}),
+                "one_to_one_extras": data.get("one_to_one_extras", {}),
+                "field_types": data.get("field_types", {}),
+            },
+        )
+        registry.register_converted_field(type_name, InputType)
+        _field = graphene.List(InputType, required=False,)
+    else:
+        _field = convert_many_to_many_field(field, registry, False, data, None)
+
+    return _field
 
 
 def get_likely_operation_from_name(extra_name):
@@ -452,6 +464,8 @@ def resolve_many_to_many_extra_auto_field_names(
                 )
                 new_extras[extra_name] = {
                     **data,
+                    # Add auto marker. This will become important when actually creating the types
+                    "auto": True,
                     "type": f"{parent_type_name or ''}{operation_name.capitalize()}{model.__name__}{to_camel_case(name).capitalize()}",
                 }
             else:
@@ -479,6 +493,7 @@ def resolve_many_to_one_extra_auto_field_names(
                 )
                 new_extras[extra_name] = {
                     **data,
+                    "auto": True,
                     "type": f"{parent_type_name or ''}{operation_name.capitalize()}{model.__name__}{to_camel_case(name).capitalize()}",
                 }
             else:
@@ -520,3 +535,21 @@ def resolve_one_to_one_extra_auto_field_names(
         else:
             new_one_to_one_extras[name] = data
     return new_one_to_one_extras
+
+
+def create_dynamic_type(field, type_name, registry, required):
+    # Use the Input type node from registry in a dynamic type, and create a union with that
+    # and the ID
+    def dynamic_type():
+        _type = registry.get_converted_field(type_name)
+
+        if not _type:
+            raise GraphQLError(f"The type {type_name} does not exist.")
+
+        return graphene.List(
+            _type,
+            description=getattr(field, "help_text", ""),
+            required=is_required(field, required, True),
+        )
+
+    return graphene.Dynamic(dynamic_type)
