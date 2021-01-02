@@ -750,7 +750,7 @@ class TestUpdateMutationManyToManyOnReverseField(TestCase):
                         {
                             "name": dog.name,
                             "breed": dog.breed,
-                            "tag": dog.tag,
+                            "tag": dog.tag + "-new",
                             "owner": dog.owner.id,
                         }
                         for dog in dog

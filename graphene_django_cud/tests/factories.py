@@ -89,7 +89,7 @@ class DogFactory(factory.DjangoModelFactory):
 
     owner = factory.SubFactory(UserFactory)
     name = "dog"
-    tag = "tag"
+    tag = factory.Sequence(lambda n: f"tag-{n}")
     breed = "HUSKY"
 
 

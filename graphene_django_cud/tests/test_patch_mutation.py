@@ -762,7 +762,7 @@ class TestPatchMutationManyToManyOnReverseField(TestCase):
         user = UserFactory.create()
 
         # Create some enemies
-        dog = DogFactory.create_batch(5)
+        dogs = DogFactory.create_batch(5)
         self.assertEqual(cat.enemies.all().count(), 0)
 
         schema = Schema(mutation=Mutations)
@@ -790,15 +790,16 @@ class TestPatchMutationManyToManyOnReverseField(TestCase):
                         {
                             "name": dog.name,
                             "breed": dog.breed,
-                            "tag": dog.tag,
+                            "tag": dog.tag + "-new",
                             "owner": dog.owner.id,
                         }
-                        for dog in dog
+                        for dog in dogs
                     ],
                 },
             },
             context=Dict(user=user),
         )
+        print([dog.tag for dog in dogs])
         self.assertIsNone(result.errors)
 
         cat.refresh_from_db()

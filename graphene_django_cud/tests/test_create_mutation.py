@@ -677,7 +677,7 @@ class TestCreateMutationCustomFields(TestCase):
             variables={
                 "input": {
                     "name": "Sparky",
-                    "tag": "tag",
+                    "tag": "tag-2",
                     "breed": "HUSKY",
                     "owner": to_global_id("UserNode", user.id)
                 },
