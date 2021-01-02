@@ -2,9 +2,9 @@
 Nested fields
 ================================
 
-There are three meta fields which allow us to extend the handling of
-both sides of a foreign key relationship (foreign key extras and many to
-one extras), as well as many to many relationships.
+There are four meta fields which allow us to extend the handling of
+both sides of a foreign key relationship (foreign key extras, many to
+one extras and one to one extras), as well as many to many relationships.
 
 Foreign key extras
 ~~~~~~~~~~~~~~~~~~
@@ -281,6 +281,23 @@ used in a ``DjangoCreateMutation`` it will simply function as an initial
 populator of the relationship.
 
 A TODO here is adding the type ``auto`` for many to many extras.
+
+One to one extras
+~~~~~~~~~~~~~~~~~
+
+The ``one_to_one_extras`` field is a dictionary containing information
+regarding how to handle a model's OneToOne fields. Here is an example:
+
+.. code:: python
+
+    class CreateDogMutation(DjangoCreateMutation):
+        class Meta:
+            model = Dog
+            one_to_one_extras = {"registration": {"type": "auto"}}
+
+By default, the registration field is a type ``ID!``, but using ``auto``,
+this will make a new type to accept create a ``registration`` object, called
+``CreateDogCreateRegistrationInput``.
 
 Other aliases
 ~~~~~~~~~~~~~
