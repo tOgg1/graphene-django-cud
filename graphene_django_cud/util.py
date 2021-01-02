@@ -14,7 +14,8 @@ from graphql_relay import from_global_id
 
 from graphene_django_cud.converter import (
     convert_django_field_with_choices,
-    convert_many_to_many_field, is_required,
+    convert_many_to_many_field,
+    is_required,
 )
 from graphene_django_cud.registry import get_type_meta_registry
 
@@ -161,6 +162,48 @@ def get_input_fields_for_model(
         if type(field) in (models.OneToOneRel, models.OneToOneField):
             one_to_one_fields.append(field)
 
+    # Create the foreign key extra types here.
+    # Note that the dynamic field setup already has been fixed in the first conversion setup.
+    for name, data in foreign_key_extras.items():
+        field: models.ForeignKey = fields_lookup.get(name)
+
+        if field is None:
+            raise ValueError(
+                f"Error adding extras for {name} in model f{model}. Field {name} does not exist."
+            )
+
+        type_name = data.get("type")
+
+        if type_name == "ID":
+            continue
+
+        # Non auto fields already have their type created
+        is_auto_field = data.get("auto")
+        if not is_auto_field:
+            continue
+
+        # On ForeignKeys we can get the reverse field via field.remote_field
+        reverse_field_name = field.remote_field.name
+
+        converted_fields = get_input_fields_for_model(
+            field.related_model,
+            data.get("only_fields", ()),
+            data.get(
+                "exclude_fields", (reverse_field_name,)
+            ),  # Exclude the field referring back to the foreign key
+            data.get("optional_fields", ()),
+            data.get("required_fields", ()),
+            data.get("many_to_many_extras"),
+            data.get("foreign_key_extras"),
+            data.get("many_to_one_extras"),
+            parent_type_name=type_name,
+            field_types=data.get("field_types"),
+        )
+
+        InputType = type(type_name, (InputObjectType,), converted_fields)
+        registry.register_converted_field(type_name, InputType)
+        meta_registry.register(type_name, data)
+
     # Create the one to one field types here.
     for name, data in one_to_one_extras.items():
         field: Union[models.OneToOneRel, models.OneToOneField] = fields_lookup.get(name)
@@ -263,7 +306,7 @@ def convert_many_to_many_like_field(
 
         is_auto_field = data.get("auto", False)
         if not is_auto_field:
-            return create_dynamic_type(field, type_name, registry, False)
+            return create_dynamic_list_type(field, type_name, registry, False)
 
         # Create new type.
         operation_name = data.get(
@@ -513,6 +556,7 @@ def resolve_foreign_key_extra_auto_field_names(
         if type_name == "auto":
             new_foreign_key_extras[name] = {
                 **data,
+                "auto": True,
                 "type": f"{parent_type_name or ''}Create{to_camel_case(name).capitalize()}",
             }
         else:
@@ -537,7 +581,7 @@ def resolve_one_to_one_extra_auto_field_names(
     return new_one_to_one_extras
 
 
-def create_dynamic_type(field, type_name, registry, required):
+def create_dynamic_list_type(field, type_name, registry, required):
     # Use the Input type node from registry in a dynamic type, and create a union with that
     # and the ID
     def dynamic_type():
@@ -548,6 +592,23 @@ def create_dynamic_type(field, type_name, registry, required):
 
         return graphene.List(
             _type,
+            description=getattr(field, "help_text", ""),
+            required=is_required(field, required, True),
+        )
+
+    return graphene.Dynamic(dynamic_type)
+
+
+def create_dynamic_type(field, type_name, registry, required):
+    # Use the Input type node from registry in a dynamic type, and create a union with that
+    # and the ID
+    def dynamic_type():
+        _type = registry.get_converted_field(type_name)
+
+        if not _type:
+            raise GraphQLError(f"The type {type_name} does not exist.")
+
+        return _type(
             description=getattr(field, "help_text", ""),
             required=is_required(field, required, True),
         )

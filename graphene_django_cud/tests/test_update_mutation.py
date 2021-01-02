@@ -17,6 +17,7 @@ from graphene_django_cud.tests.factories import (
 from graphene_django_cud.tests.models import User, Cat, Dog
 from graphene_django_cud.util import disambiguate_id
 
+
 def mock_info(context=None):
     return ResolveInfo(
         None,
@@ -30,7 +31,6 @@ def mock_info(context=None):
         variable_values=None,
         context=context,
     )
-
 
 
 class TestUpdateMutation(TestCase):
@@ -163,7 +163,7 @@ class TestUpdateMutation(TestCase):
         self.assertIsNone(result.errors)
 
     def test_get_permissions__list_with_permissions__requires_returned_permissions(
-            self,
+        self,
     ):
         # This registers the UserNode type
         # noinspection PyUnresolvedReferences
@@ -281,7 +281,7 @@ class TestUpdateMutation(TestCase):
         self.assertIsNone(result.errors)
 
     def test_check_permissions__override__uses_new_check_permissions_to_grant_access(
-            self,
+        self,
     ):
         # This registers the UserNode type
         # noinspection PyUnresolvedReferences
@@ -496,6 +496,7 @@ class TestUpdateMutation(TestCase):
             context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
+
 
 class TestUpdateMutationManyToManyOnReverseField(TestCase):
     def test_default_setup__adding_resource_by_id__adds_resource(self):
@@ -1038,7 +1039,9 @@ class TestUpdateMutationManyToManyExtras(TestCase):
         dog.refresh_from_db()
         self.assertEqual(dog.enemies.all().count(), 0)
 
-    def test_many_to_many_extras__type_auto__makes_it_possible_to_add_new_full_objects(self):
+    def test_many_to_many_extras__type_auto__makes_it_possible_to_add_new_full_objects(
+        self,
+    ):
         # This registers the UserNode type
         # noinspection PyUnresolvedReferences
         from .schema import UserNode
@@ -1079,10 +1082,12 @@ class TestUpdateMutationManyToManyExtras(TestCase):
                     "tag": "tag",
                     "breed": "HUSKY",
                     "owner": to_global_id("UserNode", user.id),
-                    "enemiesAdd": [{
-                        "name": "Meowington",
-                        "owner": to_global_id("UserNode", user.id)
-                    }],
+                    "enemiesAdd": [
+                        {
+                            "name": "Meowington",
+                            "owner": to_global_id("UserNode", user.id),
+                        }
+                    ],
                 },
             },
             context=Dict(user=user),
@@ -1095,7 +1100,7 @@ class TestUpdateMutationManyToManyExtras(TestCase):
 
 class TestUpdateMutationManyToOneExtras(TestCase):
     def test_many_to_one_extras__auto_calling_mutation_with_setting_field__does_nothing(
-            self,
+        self,
     ):
         # This registers the UserNode type
         # noinspection PyUnresolvedReferences
@@ -1472,3 +1477,58 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         self.assertEqual(user.mice.all().count(), 0)
 
 
+class TestUpdateMutationForeignKeyExtras(TestCase):
+    def test_auto_type__with_proper_setup__generates_new_auto_type(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateDogMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Dog
+                foreign_key_extras = {
+                    "owner": {"type": "auto", "exclude_fields": ["password"]}
+                }
+
+        class Mutations(graphene.ObjectType):
+            update_dog = UpdateDogMutation.Field()
+
+        dog = DogFactory.create()
+        user = UserFactory.create()
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateDog(
+                $id: ID!,
+                $input: UpdateDogInput! 
+            ){
+                updateDog(id: $id, input: $input){
+                    dog{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("DogNode", dog.id),
+                "input": {
+                    "name": "Sparky",
+                    "tag": "tag",
+                    "breed": "HUSKY",
+                    "owner": {
+                        "username": "new-user",
+                        "email": "new-user@example.com",
+                        "firstName": "Tormod",
+                        "lastName": "Haugland",
+                    },
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+
+        dog.refresh_from_db()
+        self.assertEqual("new-user@example.com", dog.owner.email)

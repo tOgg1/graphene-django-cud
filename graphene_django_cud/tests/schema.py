@@ -232,7 +232,6 @@ class FilterDeleteMouseMutation(DjangoFilterDeleteMutation):
         filter_fields = ("id__in", "name__contains", "friends__owner__first_name")
 
 class Mutations(graphene.ObjectType):
-    """
 
     create_user = CreateUserMutation.Field()
 
@@ -241,10 +240,8 @@ class Mutations(graphene.ObjectType):
     update_user = UpdateUserMutation.Field()
     delete_user = DeleteUserMutation.Field()
 
-    """
     create_dog = CreateDogMutation.Field()
     patch_dog = PatchDogMutation.Field()
-    """
     update_dog = UpdateDogMutation.Field()
     delete_dog = DeleteDogMutation.Field()
 
@@ -261,7 +258,6 @@ class Mutations(graphene.ObjectType):
     update_mouse = UpdateMouseMutation.Field()
     delete_mouse = DeleteMouseMutation.Field()
     batch_delete_mouse = FilterDeleteMouseMutation.Field()
-    """
 
 
 schema = Schema(query=Query, mutation=Mutations)
