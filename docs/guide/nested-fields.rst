@@ -16,7 +16,7 @@ regarding how to handle a model's foreign keys. Here is an example:
 
     class Cat(models.Model):
         owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="cats")
-        name = models.TextField(
+        name = models.TextField()
 
     class CreateCatMutation(DjangoCreateMutation):
         class Meta:
@@ -47,9 +47,9 @@ which has to have been created before, typically via a
         }
     }
 
-A current TODO here is to allow the type to be ``auto``, which will
-automatically create a new type. This is useful in cases where you don't
-want to reuse an existing type.
+If you don't have an existing type for creating a user, e.g. the "CreateUserInput" we used above,
+you can set the type to "auto", which will create a new type.
+
 
 Many to one extras
 ~~~~~~~~~~~~~~~~~~
@@ -280,7 +280,8 @@ words it exists as a sort of ``purge and create`` functionality. When
 used in a ``DjangoCreateMutation`` it will simply function as an initial
 populator of the relationship.
 
-A TODO here is adding the type ``auto`` for many to many extras.
+If you don't have an existing type for creating a user, e.g. the "CreateCatInput" we used above,
+you can set the type to "auto", which will create a new type.
 
 One to one extras
 ~~~~~~~~~~~~~~~~~
