@@ -612,3 +612,78 @@ class TestCreateWithPlainManyToManyRelation(TestCase):
         # Load from database
         cat.refresh_from_db()
         self.assertEqual(cat, new_dog.enemies.first())
+
+
+class TestCreateMutationCustomFields(TestCase):
+    def test_custom_field__separate_from_model_fields__adds_new_field_which_can_be_handled(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class CreateDogMutation(DjangoCreateMutation):
+            class Meta:
+                model = Dog
+                custom_fields = {
+                    "bark": graphene.Boolean()
+                }
+
+            @classmethod
+            def before_save(cls, root, info, input, obj):
+                if input.get("bark"):
+                    obj.bark_count += 1
+                return obj
+
+        class Mutations(graphene.ObjectType):
+            create_dog = CreateDogMutation.Field()
+
+        dog = DogFactory.create()
+        user = UserFactory.create()
+
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation CreateDog(
+                $input: CreateDogInput! 
+            ){
+                createDog(input: $input){
+                    dog{
+                        id
+                        barkCount
+                    }
+                }
+            }
+        """
+
+        self.assertEqual(0, dog.bark_count)
+        result = schema.execute(
+            mutation,
+            variables={
+                "input": {
+                    "name": "Sparky",
+                    "tag": "tag",
+                    "breed": "HUSKY",
+                    "bark": True,
+                    "owner": to_global_id("UserNode", user.id)
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+
+        self.assertEqual(1, result.data["createDog"]["dog"]["barkCount"])
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "input": {
+                    "name": "Sparky",
+                    "tag": "tag",
+                    "breed": "HUSKY",
+                    "owner": to_global_id("UserNode", user.id)
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+
+        self.assertEqual(0, result.data["createDog"]["dog"]["barkCount"])

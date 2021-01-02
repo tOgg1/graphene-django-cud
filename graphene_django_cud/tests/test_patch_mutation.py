@@ -1459,3 +1459,137 @@ class TestPatchMutationManyToOneExtras(TestCase):
         self.assertEqual(user.mice.all().count(), 0)
 
 
+class TestPatchMutationForeignKeyExtras(TestCase):
+    def test_auto_type__with_proper_setup__generates_new_auto_type(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class PatchDogMutation(DjangoPatchMutation):
+            class Meta:
+                model = Dog
+                foreign_key_extras = {
+                    "owner": {"type": "auto", "exclude_fields": ["password"]}
+                }
+
+        class Mutations(graphene.ObjectType):
+            patch_dog = PatchDogMutation.Field()
+
+        dog = DogFactory.create()
+        user = UserFactory.create()
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation PatchDog(
+                $id: ID!,
+                $input: PatchDogInput! 
+            ){
+                patchDog(id: $id, input: $input){
+                    dog{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("DogNode", dog.id),
+                "input": {
+                    "name": "Sparky",
+                    "tag": "tag",
+                    "breed": "HUSKY",
+                    "owner": {
+                        "username": "new-user",
+                        "email": "new-user@example.com",
+                        "firstName": "Tormod",
+                        "lastName": "Haugland",
+                    },
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+
+        dog.refresh_from_db()
+        self.assertEqual("new-user@example.com", dog.owner.email)
+
+
+class TestPatchMutationCustomFields(TestCase):
+    def test_custom_field__separate_from_model_fields__adds_new_field_which_can_be_handled(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class PatchDogMutation(DjangoPatchMutation):
+            class Meta:
+                model = Dog
+                custom_fields = {
+                    "bark": graphene.Boolean()
+                }
+
+            @classmethod
+            def before_save(cls, root, info, input, id, obj: Dog):
+                if input.get("bark"):
+                    obj.bark_count += 1
+                return obj
+
+        class Mutations(graphene.ObjectType):
+            patch_dog = PatchDogMutation.Field()
+
+        dog = DogFactory.create()
+        user = UserFactory.create()
+
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation PatchDog(
+                $id: ID!,
+                $input: PatchDogInput! 
+            ){
+                patchDog(id: $id, input: $input){
+                    dog{
+                        id
+                    }
+                }
+            }
+        """
+
+        self.assertEqual(0, dog.bark_count)
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("DogNode", dog.id),
+                "input": {
+                    "name": "Sparky",
+                    "tag": "tag",
+                    "breed": "HUSKY",
+                    "bark": True,
+                    "owner": to_global_id("UserNode", user.id)
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+
+        dog.refresh_from_db()
+        self.assertEqual(1, dog.bark_count)
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("DogNode", dog.id),
+                "input": {
+                    "name": "Sparky",
+                    "tag": "tag",
+                    "breed": "HUSKY",
+                    "owner": to_global_id("UserNode", user.id)
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+
+        dog.refresh_from_db()
+        self.assertEqual(1, dog.bark_count)

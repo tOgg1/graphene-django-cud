@@ -14,7 +14,7 @@ from graphene_django_cud.util import (
     disambiguate_ids,
     is_field_many_to_many,
     is_field_one_to_one,
-    is_field_many_to_one,
+    is_field_many_to_one, get_model_field_or_none,
 )
 
 meta_registry = get_type_meta_registry()
@@ -303,7 +303,12 @@ class DjangoCudBase(Mutation):
             ):
                 continue
 
-            field = Model._meta.get_field(name)
+            field = get_model_field_or_none(name, Model)
+
+            # Custom fields are not handled here
+            if field is None:
+                continue
+
             new_value = value
 
             # We have to handle this case specifically, by using the fields
@@ -578,7 +583,12 @@ class DjangoCudBase(Mutation):
             ):
                 continue
 
-            field = Model._meta.get_field(name)
+            field = get_model_field_or_none(name, Model)
+
+            # Custom fields are not handled here
+            if field is None:
+                continue
+
             new_value = value
 
             # We have to handle this case specifically, by using the fields
@@ -823,3 +833,5 @@ class DjangoCudBaseOptions(MutationOptions):
     one_to_one_extras = None
 
     field_types = None
+
+    custom_fields = None

@@ -42,6 +42,7 @@ class DjangoCreateMutation(DjangoCudBase):
         type_name=None,
         field_types=None,
         ignore_primary_key=True,
+        custom_fields=None,
         **kwargs,
     ):
         registry = get_global_registry()
@@ -62,6 +63,9 @@ class DjangoCreateMutation(DjangoCudBase):
 
         if one_to_one_extras is None:
             one_to_one_extras = {}
+
+        if custom_fields is None:
+            custom_fields = {}
 
         assert model_type, f"Model type must be registered for model {model}"
 
@@ -84,6 +88,9 @@ class DjangoCreateMutation(DjangoCudBase):
             field_types=field_types,
             ignore_primary_key=ignore_primary_key,
         )
+
+        for name, field in custom_fields.items():
+            model_fields[name] = field
 
         InputType = type(input_type_name, (InputObjectType,), model_fields)
 

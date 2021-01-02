@@ -41,6 +41,7 @@ class DjangoUpdateMutation(DjangoCudBase):
         one_to_one_extras=None,
         type_name=None,
         field_types=None,
+        custom_fields=None,
         **kwargs,
     ):
         registry = get_global_registry()
@@ -64,6 +65,9 @@ class DjangoUpdateMutation(DjangoCudBase):
         if one_to_one_extras is None:
             one_to_one_extras = {}
 
+        if custom_fields is None:
+            custom_fields = {}
+
         if not return_field_name:
             return_field_name = to_snake_case(model.__name__)
 
@@ -82,6 +86,9 @@ class DjangoUpdateMutation(DjangoCudBase):
             parent_type_name=input_type_name,
             field_types=field_types,
         )
+
+        for name, field in custom_fields.items():
+            model_fields[name] = field
 
         InputType = type(input_type_name, (InputObjectType,), model_fields)
 

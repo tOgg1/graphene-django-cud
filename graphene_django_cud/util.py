@@ -4,6 +4,7 @@ from collections import OrderedDict
 from typing import Union, List, Optional
 
 import graphene
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from graphene import InputObjectType
 from graphene.utils.str_converters import to_camel_case
@@ -461,6 +462,13 @@ def is_field_one_to_one(field):
     # We check type equality for OneToOneRel to ensure we don't get false positives for
     # ManyToOneRels
     return isinstance(field, models.OneToOneField) or type(field) == models.OneToOneRel
+
+
+def get_model_field_or_none(field_name, Model):
+    try:
+        return Model._meta.get_field(field_name)
+    except FieldDoesNotExist:
+        return None
 
 
 def get_m2m_all_extras_field_names(extras):
