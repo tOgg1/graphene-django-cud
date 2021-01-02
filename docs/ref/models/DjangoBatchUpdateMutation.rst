@@ -1,10 +1,8 @@
-.. _djangobatchcreatemutation:
-
 ================================
-DjangoBatchCreateMutation
+DjangoBatchUpdateMutation
 ================================
 
-Will create a new mutation which will create multiple *new* objects of
+Will create a new mutation which can be used to update multiple objects of
 the supplied model.
 
 Mutation input arguments:
@@ -54,7 +52,11 @@ Meta fields:
 .. code::
 
     mutation{
-        batchCreateUser(input: [{name: "John Doe", address: "Downing Street 10"}]){
+        batchUpdateUser(input: [{
+            id: "VXNlck5vZGU6MQ==",
+            name: "John Doe",
+            address: "Downing Street 10"
+        }]){
             user{
                 id
                 name

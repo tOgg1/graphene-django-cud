@@ -1,29 +1,30 @@
-.. _djangopatchmutation:
-
 ================================
-DjangoPatchMutation
+DjangoFilterUpdateMutation
 ================================
 
-Will update an existing instance of a model. The PatchMutation (in
-contrast to the UpdateMutation) does not require all fields to be
-supplied. I.e. all are fields are optional.
+Will update multiple instances of a model depending on supplied filters.
+The returned arguments are:
+
+-  ``updatedCount``: The number of updated instances.
+-  ``updatedObjects``: The ids of the deleted instances.
 
 Mutation input arguments:
-
 +------------+-----------+
 | Argument   | Type      |
 +============+===========+
-| id         | ID!       |
+| filter     | Object!   |
 +------------+-----------+
-| input      | Object!   |
+| data       | Object!   |
 +------------+-----------+
 
 All meta arguments:
 
 +--------------------------+------------+-----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Argument                 | type       | Default   | Description                                                                                                                                                                       |
-+==========================+============+===========+===================================================================================================================================================================================+
++--------------------------+------------+-----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | model                    | Model      | None      | The model. **Required**.                                                                                                                                                          |
++--------------------------+------------+-----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| filter\_fields           | Tuple      | ()        | A number of filter fields which allow us to restrict the instances to be deleted.                                                                                                 |
 +--------------------------+------------+-----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | only\_fields             | Iterable   | None      | If supplied, only these fields will be added as input variables for the model                                                                                                     |
 +--------------------------+------------+-----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -43,28 +44,25 @@ All meta arguments:
 +--------------------------+------------+-----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | type\_name               | String     | None      | If supplied, the input variable in the mutation will have its typename set to this string. This is useful when creating multiple mutations of the same type for a single model.   |
 +--------------------------+------------+-----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| many\_to\_many\_extras   | Dict       | {}        | A dict with extra information regarding many-to-many fields. See below.                                                                                                           |
-+--------------------------+------------+-----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| many\_to\_one\_extras    | Dict       | {}        | A dict with extra information regarding many-to-one relations. See below.                                                                                                         |
-+--------------------------+------------+-----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| foreign\_key\_extras     | Dict       | {}        | A dict with extra information regarding foreign key extras.                                                                                                                       |
-+--------------------------+------------+-----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| one\_to\_one\_extras     | Dict       | {}        | A dict with extra information regarding one to one extras.                                                                                                                                                                                                   |
-+--------------------------+------------+-----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-Example mutation
-^^^^^^^^^^^^^^^^
+If there are multiple filters, these will be combined with
+**and**-clauses. For or-clauses, use multiple mutation calls.
+
+.. code:: python
+
+    class FilterUpdateUserMutation(DjangoFilterDeleteMutation):
+        class Meta:
+            model = User
+            filter_fields = ('name',)
 
 .. code::
 
     mutation {
-        updateUser(id: "VXNlck5vZGU6MQ==", input: {
-            name: "John Doe",
-        }){
-            user{
+        filterUpdateUser(filter: {name: 'John'}, data: {name: 'Ola'}){
+            updateObjects{
                 id
                 name
-                address
             }
         }
     }
+

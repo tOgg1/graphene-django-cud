@@ -10,7 +10,6 @@ from graphene.types.utils import yank_fields_from_attrs
 from graphene_django.registry import get_global_registry
 from graphene_django.utils import get_model_fields
 from graphql import GraphQLError
-from graphql_relay import to_global_id
 
 from graphene_django_cud.mutations.core import DjangoCudBase, meta_registry
 from graphene_django_cud.util import (

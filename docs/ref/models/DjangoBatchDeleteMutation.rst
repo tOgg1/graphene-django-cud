@@ -7,44 +7,42 @@ The returned arguments are:
 
 -  ``deletionCount``: True if the instance was found and deleted.
 -  ``deletedIds``: The ids of the deleted instances.
+-  ``missedIds``: The ids of the missed instances.
 
 Mutation input arguments:
 
 +------------+-----------+
 | Argument   | Type      |
 +============+===========+
-| input      | Object!   |
+| ids        | [ID]!     |
 +------------+-----------+
 
 All meta arguments:
 
-+-------------------+-----------+-----------+-------------------------------------------------------------------------------------+
-| Argument          | type      | Default   | Description                                                                         |
-+===================+===========+===========+=====================================================================================+
-| model             | Model     | None      | The model. **Required**.                                                            |
-+-------------------+-----------+-----------+-------------------------------------------------------------------------------------+
-| filter\_fields    | Tuple     | ()        | A number of filter fields which allow us to restrict the instances to be deleted.   |
-+-------------------+-----------+-----------+-------------------------------------------------------------------------------------+
-| permissions       | Tuple     | None      | The permissions required to access the mutation                                     |
-+-------------------+-----------+-----------+-------------------------------------------------------------------------------------+
-| login\_required   | Boolean   | None      | If true, the calling user has to be authenticated                                   |
-+-------------------+-----------+-----------+-------------------------------------------------------------------------------------+
-
-If there are multiple filters, these will be combined with
-**and**-clauses. For or-clauses, use multiple mutation calls.
++--------------------------+-----------+-----------+-------------------------------------------------------------------------------------+
+| Argument                 | type      | Default   | Description                                                                         |
++--------------------------+-----------+-----------+-------------------------------------------------------------------------------------+
+| model                    | Model     | None      | The model. **Required**.                                                            |
++--------------------------+-----------+-----------+-------------------------------------------------------------------------------------+
+| permissions              | Tuple     | None      | The permissions required to access the mutation                                     |
++--------------------------+-----------+-----------+-------------------------------------------------------------------------------------+
+| login\_required          | Boolean   | None      | If true, the calling user has to be authenticated                                   |
++--------------------------+-----------+-----------+-------------------------------------------------------------------------------------+
+| return\_field\_name      | String    | None      | The name of the return field within the mutation. The default is the camelCased name of the model                                                                                 |
++--------------------------+-----------+-----------+-------------------------------------------------------------------------------------+
 
 .. code:: python
 
     class BatchDeleteUser(DjangoBatchDeleteMutation):
         class Meta:
             model = User
-            filter_fields = ('name', 'house__address',)
 
 .. code::
 
     mutation {
-        batchDeleteUser(input: {name: 'John'}){
+        batchDeleteUser(ids: ["VXNlck5vZGU6MQ=="]){
             deletedIds
+            missedIds
             deletionCount
         }
     }

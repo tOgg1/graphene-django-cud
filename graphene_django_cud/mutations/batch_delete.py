@@ -10,7 +10,7 @@ from graphql import GraphQLError
 from graphql_relay import to_global_id
 
 from graphene_django_cud.mutations.core import DjangoCudBase
-from graphene_django_cud.util import disambiguate_id, disambiguate_ids
+from graphene_django_cud.util import disambiguate_ids
 
 
 class DjangoBatchDeleteMutationOptions(MutationOptions):
