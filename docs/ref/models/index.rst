@@ -12,4 +12,8 @@ Documentation for all models.
    DjangoPatchMutation
    DjangoDeleteMutation
    DjangoBatchCreateMutation
+   DjangoBatchUpdateMutation
+   DjangoBatchPatchMutation
    DjangoBatchDeleteMutation
+   DjangoFilterDeleteMutation
+   DjangoFilterUpdateMutation
