@@ -1,5 +1,18 @@
 # Changelog
 
+## Version 0.7.0
+* Allow nested overrides in extras (@janosroden)
+* Allow UUID primary keys (@janosroden)
+* Make DjangoPatchMutation a subclass of DjangoUpdateMutation
+* Improve documentation (@bigtimecriminal)
+* Add auto-type handling to many to many extras
+* Add auto-type handling to foreign keys
+* Add DjangoBatchPatchMutation
+* Add DjangoBatchUpdateMutation
+* Add DjangoFilterUpdateMutation
+* Add custom fields for input types
+* Restructure some test files
+
 ## Version 0.6.5
 * Fix some bad plain m2m and m2o field handling.
 * login_required now works as intended. Thanks to @janosroden.
