@@ -1542,7 +1542,6 @@ class TestPatchMutationCustomFields(TestCase):
         dog = DogFactory.create()
         user = UserFactory.create()
 
-
         schema = Schema(mutation=Mutations)
         mutation = """
             mutation PatchDog(
