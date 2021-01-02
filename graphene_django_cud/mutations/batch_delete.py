@@ -39,6 +39,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
 
         if not return_field_name:
             return_field_name = to_snake_case(model.__name__)
+
         arguments = OrderedDict(ids=graphene.List(graphene.ID, required=True))
 
         output_fields = OrderedDict()

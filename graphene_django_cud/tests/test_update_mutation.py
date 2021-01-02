@@ -5,7 +5,6 @@ from graphene import Schema
 from graphql import ResolveInfo
 from graphql_relay import to_global_id
 
-from graphene_django import DjangoObjectType
 from graphene_django_cud.mutations import DjangoUpdateMutation, DjangoCreateMutation
 from graphene_django_cud.tests.factories import (
     UserFactory,
