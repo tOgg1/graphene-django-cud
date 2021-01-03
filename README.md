@@ -9,11 +9,15 @@ This package contains a number of helper mutations making it easy to construct c
 
 The helper mutations are:
  * `DjangoCreateMutation`
- * `DjangoBatchCreateMutation`
  * `DjangoPatchMutation`
  * `DjangoUpdateMutation`
  * `DjangoDeleteMutation`
+ * `DjangoBatchCreateMutation`
+ * `DjangoBatchPatchMutation`
+ * `DjangoBatchUpdateMutation`
  * `DjangoBatchDeleteMutation`
+ * `DjangoFilterUpdateMutation`
+ * `DjangoFilterDeleteMutation`
 
 The package handles both regular ids and relay ids automatically.
 
