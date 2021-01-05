@@ -10,6 +10,7 @@ from graphene import InputObjectType
 from graphene.utils.str_converters import to_camel_case
 from graphene_django.registry import get_global_registry
 from graphene_django.utils import get_model_fields
+from graphene_django.utils.str_converters import to_const
 from graphql import GraphQLError
 from graphql_relay import from_global_id
 
