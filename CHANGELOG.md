@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.7.1
+* Add missing exports
+
 ## Version 0.7.0
 * Allow nested overrides in extras (@janosroden)
 * Allow UUID primary keys (@janosroden)
