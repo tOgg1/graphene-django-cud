@@ -72,16 +72,16 @@ class DjangoDeleteMutation(DjangoCudBase):
         return super().before_mutate(root, info, id)
 
     @classmethod
-    def before_save(cls, root, info, input, obj):
-        return super().before_save(root, info, input, obj)
+    def before_save(cls, root, info, id, obj):
+        return super().before_save(root, info, id, obj)
 
     @classmethod
     def after_mutate(cls, root, info, deleted_id, found):
         return super().after_mutate(root, info, deleted_id, found)
 
     @classmethod
-    def validate(cls, root, info, input):
-        return super().validate(root, info, input)
+    def validate(cls, root, info, id):
+        return
 
     @classmethod
     def get_queryset(cls, root, info, id):
@@ -95,6 +95,7 @@ class DjangoDeleteMutation(DjangoCudBase):
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
+        cls.validate(root, info, id)
 
         Model = cls._meta.model
         id = disambiguate_id(id)
