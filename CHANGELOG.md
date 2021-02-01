@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.7.2
+* Ensure DeleteMutation calls "validate"
+
 ## Version 0.7.1
 * Add missing exports
 
