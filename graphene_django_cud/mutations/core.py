@@ -820,6 +820,7 @@ class DjangoCudBaseOptions(MutationOptions):
     optional_fields = None
     required_fields = None
     auto_context_fields = None
+    auto_context_queryset_filter = None
 
     permissions = None
     login_required = None

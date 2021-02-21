@@ -3,6 +3,7 @@ from typing import Iterable
 
 import graphene
 from django.db import transaction
+from django.db.models import Q
 from graphene import InputObjectType
 from graphene.types.utils import yank_fields_from_attrs
 from graphene.utils.str_converters import to_snake_case
@@ -34,6 +35,7 @@ class DjangoUpdateMutation(DjangoCudBase):
         optional_fields=(),
         required_fields=(),
         auto_context_fields=None,
+        auto_context_queryset_filter=None,
         return_field_name=None,
         many_to_many_extras=None,
         foreign_key_extras=None,
@@ -52,6 +54,9 @@ class DjangoUpdateMutation(DjangoCudBase):
 
         if auto_context_fields is None:
             auto_context_fields = {}
+
+        if auto_context_queryset_filter is None:
+            auto_context_queryset_filter = {}
 
         if many_to_one_extras is None:
             many_to_one_extras = {}
@@ -97,6 +102,7 @@ class DjangoUpdateMutation(DjangoCudBase):
             input_type_name,
             {
                 "auto_context_fields": auto_context_fields or {},
+                "auto_context_queryset_filter": auto_context_queryset_filter or {},
                 "optional_fields": optional_fields,
                 "required_fields": required_fields,
                 "many_to_many_extras": many_to_many_extras,
@@ -126,6 +132,7 @@ class DjangoUpdateMutation(DjangoCudBase):
         _meta.optional_fields = optional_fields
         _meta.required_fields = required_fields
         _meta.auto_context_fields = auto_context_fields
+        _meta.auto_context_queryset_filter = auto_context_queryset_filter
         _meta.many_to_many_extras = many_to_many_extras
         _meta.many_to_one_extras = many_to_one_extras
         _meta.foreign_key_extras = foreign_key_extras
@@ -178,10 +185,21 @@ class DjangoUpdateMutation(DjangoCudBase):
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
-
         id = disambiguate_id(id)
         Model = cls._meta.model
         queryset = cls.get_queryset(root, info, input, id)
+
+        extend_query = False
+        query_extension = Q()
+        auto_context_queryset_filter = cls._meta.auto_context_queryset_filter or {}
+        for field_name, context_name in auto_context_queryset_filter.items():
+            if hasattr(info.context, context_name):
+                extend_query = True
+                query_extension &= Q(**{field_name: getattr(info.context, context_name)})
+
+        if extend_query:
+            queryset = queryset.filter(query_extension)
+
         obj = queryset.get(pk=id)
         auto_context_fields = cls._meta.auto_context_fields or {}
 
