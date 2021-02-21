@@ -1610,3 +1610,101 @@ class TestUpdateMutationCustomFields(TestCase):
 
         dog.refresh_from_db()
         self.assertEqual(1, dog.bark_count)
+
+
+class TestUpdateMutationAutoContextQuerysetFilter(TestCase):
+    def test_auto_context_queryset_filter__correct_owner__does_update(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateDogMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Dog
+                auto_context_queryset_filter = {"owner": "user"}
+
+        class Mutations(graphene.ObjectType):
+            update_dog = UpdateDogMutation.Field()
+
+        user = UserFactory.create()
+        dog = DogFactory.create(owner=user)
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateDog(
+                $id: ID!,
+                $input: UpdateDogInput!
+            ){
+                updateDog(id: $id, input: $input){
+                    dog{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("DogNode", dog.id),
+                "input": {
+                    "name": "Lassie",
+                    "tag": "tag",
+                    "breed": "LABRADOR",  # Yes I know Lassie isn't a labrador
+                    "owner": to_global_id("UserNode", user.id)
+                }
+            },
+            context=Dict(user=user)
+        )
+        self.assertIsNone(result.errors)
+
+        dog.refresh_from_db()
+        self.assertEqual("Lassie", dog.name)
+
+    def test_auto_context_queryset_filter__wrong_owner__does_not_update(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class UpdateDogMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Dog
+                auto_context_queryset_filter = {"owner": "user"}
+
+        class Mutations(graphene.ObjectType):
+            update_dog = UpdateDogMutation.Field()
+
+        user = UserFactory.create()
+        dog = DogFactory.create(name="Lyng")
+
+        schema = Schema(mutation=Mutations)
+        mutation = """
+            mutation UpdateDog(
+                $id: ID!,
+                $input: UpdateDogInput!
+            ){
+                updateDog(id: $id, input: $input){
+                    dog{
+                        id
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("DogNode", dog.id),
+                "input": {
+                    "name": "Lassie",
+                    "tag": "tag",
+                    "breed": "LABRADOR",  # Yes I know Lassie isn't a labrador
+                    "owner": to_global_id("UserNode", user.id)
+                }
+            },
+            context=Dict(user=user)
+        )
+        self.assertIsNotNone(result.errors)
+
+        dog.refresh_from_db()
+        self.assertEqual("Lyng", dog.name)
