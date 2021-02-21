@@ -1613,7 +1613,7 @@ class TestUpdateMutationCustomFields(TestCase):
 
 
 class TestUpdateMutationAutoContextQuerysetFilter(TestCase):
-    def test_auto_context_queryset_filter__correct_owner__does_update(self):
+    def setUp(self) -> None:
         # This registers the UserNode type
         # noinspection PyUnresolvedReferences
         from .schema import UserNode
@@ -1626,11 +1626,8 @@ class TestUpdateMutationAutoContextQuerysetFilter(TestCase):
         class Mutations(graphene.ObjectType):
             update_dog = UpdateDogMutation.Field()
 
-        user = UserFactory.create()
-        dog = DogFactory.create(owner=user)
-
-        schema = Schema(mutation=Mutations)
-        mutation = """
+        self.schema = Schema(mutation=Mutations)
+        self.mutation = """
             mutation UpdateDog(
                 $id: ID!,
                 $input: UpdateDogInput!
@@ -1643,8 +1640,12 @@ class TestUpdateMutationAutoContextQuerysetFilter(TestCase):
             }
         """
 
-        result = schema.execute(
-            mutation,
+    def test_auto_context_queryset_filter__correct_owner__does_update(self):
+        user = UserFactory.create()
+        dog = DogFactory.create(owner=user)
+
+        result = self.schema.execute(
+            self.mutation,
             variables={
                 "id": to_global_id("DogNode", dog.id),
                 "input": {
@@ -1662,37 +1663,11 @@ class TestUpdateMutationAutoContextQuerysetFilter(TestCase):
         self.assertEqual("Lassie", dog.name)
 
     def test_auto_context_queryset_filter__wrong_owner__does_not_update(self):
-        # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
-
-        class UpdateDogMutation(DjangoUpdateMutation):
-            class Meta:
-                model = Dog
-                auto_context_queryset_filter = {"owner": "user"}
-
-        class Mutations(graphene.ObjectType):
-            update_dog = UpdateDogMutation.Field()
-
         user = UserFactory.create()
         dog = DogFactory.create(name="Lyng")
 
-        schema = Schema(mutation=Mutations)
-        mutation = """
-            mutation UpdateDog(
-                $id: ID!,
-                $input: UpdateDogInput!
-            ){
-                updateDog(id: $id, input: $input){
-                    dog{
-                        id
-                    }
-                }
-            }
-        """
-
-        result = schema.execute(
-            mutation,
+        result = self.schema.execute(
+            self.mutation,
             variables={
                 "id": to_global_id("DogNode", dog.id),
                 "input": {
