@@ -11,8 +11,7 @@ from graphql import GraphQLError
 
 from graphene_django_cud.mutations.core import DjangoCudBaseOptions, DjangoCudBase
 from graphene_django_cud.registry import get_type_meta_registry
-from graphene_django_cud.util import get_input_fields_for_model, disambiguate_id
-
+from graphene_django_cud.util import get_input_fields_for_model
 
 class DjangoUpdateMutationOptions(DjangoCudBaseOptions):
     pass
@@ -179,7 +178,7 @@ class DjangoUpdateMutation(DjangoCudBase):
             raise GraphQLError("Must be logged in to access this mutation.")
 
 
-        id = disambiguate_id(id)
+        id = cls.resolve_id(id)
         Model = cls._meta.model
         queryset = cls.get_queryset(root, info, input, id)
         obj = queryset.get(pk=id)
