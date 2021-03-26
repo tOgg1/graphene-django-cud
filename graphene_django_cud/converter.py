@@ -27,6 +27,7 @@ from graphene import (
     Time,
     InputField,
     Dynamic,
+    Decimal,
 )
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
@@ -292,7 +293,6 @@ def convert_field_to_nullboolean(
     return Boolean(description=field.help_text, required=is_required(field, required))
 
 
-@convert_django_field_to_input.register(models.DecimalField)
 @convert_django_field_to_input.register(models.FloatField)
 def convert_field_to_float(
     field,
@@ -303,6 +303,18 @@ def convert_field_to_float(
     field_one_to_one_extras=None,
 ):
     return Float(description=field.help_text, required=is_required(field, required))
+
+
+@convert_django_field_to_input.register(models.DecimalField)
+def convert_field_to_decimal(
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
+):
+    return Decimal(description=field.help_text, required=is_required(field, required))
 
 
 @convert_django_field_to_input.register(models.DurationField)
