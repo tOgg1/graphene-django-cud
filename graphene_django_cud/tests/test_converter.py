@@ -3,7 +3,7 @@ from django.db import models
 from django.test import TestCase
 from graphene_django.registry import get_global_registry
 
-from graphene_django_cud.converter import convert_choices_field, convert_django_field_with_choices
+from graphene_django_cud.converter import convert_choices_field, convert_django_field_with_choices, convert_django_field_to_input
 
 
 class TestConvertChoicesField(TestCase):
@@ -28,6 +28,20 @@ class TestConvertChoicesField(TestCase):
         self.assertEqual(result.kwargs.get("required"), True)
 
 
+class TestConvertDjangoFieldToInput(TestCase):
+    def test__decimal_field__is_converted_to_graphene_decimal(self):
+        class MockModel(models.Model):
+            percent = models.DecimalField(
+                max_digits=6,
+                decimal_places=3,
+                default="100.0",
+            )
+
+        field = MockModel._meta.get_field("percent")
+        result = convert_django_field_to_input(field)
+
+        self.assertIsInstance(result, graphene.types.Decimal)
+        self.assertEqual(result.kwargs.get("required"), False)
 
 
 class ConvertDjangoFieldWithChoices(TestCase):
@@ -110,4 +124,3 @@ class ConvertDjangoFieldWithChoices(TestCase):
         )
 
         self.assertIsInstance(result, graphene.types.ID)
-
