@@ -78,7 +78,7 @@ def get_choices(choices):
 
 def convert_choices_field(field, choices, required=None):
     meta = field.model._meta
-    name = to_camel_case("{}_{}_{}".format(meta.object_name, field.name, "Input"))
+    name = to_camel_case("{}_{}".format(meta.object_name, field.name))
     choices = list(get_choices(choices))
     named_choices = [(c[0], c[1]) for c in choices]
     named_choices_descriptions = {c[0]: c[2] for c in choices}
@@ -106,16 +106,16 @@ def convert_django_field_with_choices(
     choices = getattr(field, "choices", None)
     if choices:
         registry_name = to_camel_case(
-            "{}_{}_{}".format(field.model._meta.object_name, field.name, "Input")
+            "{}_{}".format(field.model._meta.object_name, field.name)
         )
         # Fetch this from registry, if exists. We don't want to duplicate enum fields.
         enum = None
         if registry:
-            from_registry = registry.get_converted_field(registry_name)
+            from_registry = registry.get_converted_field(field)
             if from_registry:
-                return from_registry(
-                    description=field.help_text, required=is_required(field, required)
-                )
+                from_registry.kwargs['description'] = field.help_text
+                from_registry.kwargs['required'] = is_required(field, required)
+                return from_registry
 
         converted = convert_choices_field(field, choices, required)
         # Register enum fields
