@@ -11,7 +11,7 @@ from graphql import GraphQLError
 
 from graphene_django_cud.mutations.core import DjangoCudBase, DjangoCudBaseOptions
 from graphene_django_cud.registry import get_type_meta_registry
-from graphene_django_cud.util import get_input_fields_for_model, disambiguate_id
+from graphene_django_cud.util import get_input_fields_for_model
 
 
 class DjangoBatchUpdateMutationOptions(DjangoCudBaseOptions):
@@ -181,7 +181,7 @@ class DjangoBatchUpdateMutation(DjangoCudBase):
     @classmethod
     def get_object(cls, root, info, input, full_input):
         return cls.get_queryset(root, info, full_input).get(
-            pk=disambiguate_id(input["id"])
+            pk=cls.resolve_id(input["id"])
         )
 
     @classmethod

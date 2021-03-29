@@ -92,7 +92,7 @@ class DjangoCudBase(Mutation):
 
         for value in values:
             if field_type == "ID":
-                related_obj = field.related_model.objects.get(pk=disambiguate_id(value))
+                related_obj = field.related_model.objects.get(pk=cls.resolve_id(value))
             else:
                 # This is something that we are going to create
                 input_type_meta = meta_registry.get_meta_for_type(field_type)
@@ -137,7 +137,7 @@ class DjangoCudBase(Mutation):
         for value in values:
             if field_type == "ID":
                 related_obj = field.related_model.objects.get(
-                    pk=disambiguate_id(value))
+                    pk=cls.resolve_id(value))
                 results.append(related_obj)
             else:
                 input_type_meta = meta_registry.get_meta_for_type(field_type)
@@ -211,7 +211,7 @@ class DjangoCudBase(Mutation):
         """
         objs = []
         for id in ids:
-            objs.append(Model.objects.get(pk=disambiguate_id(id)))
+            objs.append(Model.objects.get(pk=cls.resolve_id(id)))
 
         return objs
 
@@ -227,7 +227,7 @@ class DjangoCudBase(Mutation):
         one_to_one_extras,
         Model,
     ):
-        id = disambiguate_id(input.get("id"))
+        id = cls.resolve_id(input.get("id"))
         obj = Model.objects.filter(pk=id).first()
 
         if obj:
@@ -339,13 +339,13 @@ class DjangoCudBase(Mutation):
             # On some fields we perform some default conversion, if the value was not transformed above.
             if new_value == value and value is not None:
                 if isinstance(field, models.AutoField):
-                    new_value = disambiguate_id(value)
+                    new_value = cls.resolve_id(value)
                 # The order here is important
                 elif isinstance(field, models.OneToOneField):
                     # If the value is an integer or a string, we assume it is an ID
                     if isinstance(value, str) or isinstance(value, int):
                         name = getattr(field, "db_column", None) or name + "_id"
-                        new_value = disambiguate_id(value)
+                        new_value = cls.resolve_id(value)
                     else:
                         # We can use create obj directly here, as we know the foreign object does
                         # not already exist.
@@ -370,9 +370,9 @@ class DjangoCudBase(Mutation):
                         del model_field_values[name]
 
                     name = getattr(field, "db_column", None) or name + "_id"
-                    new_value = disambiguate_id(value)
+                    new_value = cls.resolve_id(value)
                 elif field_is_many_to_many:
-                    new_value = disambiguate_ids(value)
+                    new_value = cls.resolve_ids(value)
 
             if field_is_many_to_many:
                 many_to_many_to_set[name] = cls.get_all_objs(field.related_model, new_value)
@@ -414,7 +414,7 @@ class DjangoCudBase(Mutation):
                     # If the value is an integer or a string, we assume it is an ID
                     if isinstance(value, str) or isinstance(value, int):
                         name = getattr(field, "db_column", None) or name + "_id"
-                        new_value = disambiguate_id(value)
+                        new_value = cls.resolve_id(value)
                     else:
                         extra_data = one_to_one_extras.get(name, {})
 
@@ -499,7 +499,7 @@ class DjangoCudBase(Mutation):
                     )
                     many_to_one_to_add[name] += objs
                 else:
-                    many_to_one_to_remove[name] += disambiguate_ids(values)
+                    many_to_one_to_remove[name] += cls.resolve_ids(values)
 
         for name, objs in many_to_one_to_set.items():
             if objs is not None:
@@ -612,12 +612,12 @@ class DjangoCudBase(Mutation):
             # On some fields we perform some default conversion, if the value was not transformed above.
             if new_value == value and value is not None:
                 if isinstance(field, models.AutoField):
-                    new_value = disambiguate_id(value)
+                    new_value = cls.resolve_id(value)
                 elif isinstance(field, models.OneToOneField):
                     # If the value is an integer or a string, we assume it is an ID
                     if isinstance(value, str) or isinstance(value, int):
                         name = getattr(field, "db_column", None) or name + "_id"
-                        new_value = disambiguate_id(value)
+                        new_value = cls.resolve_id(value)
                     else:
                         extra_data = one_to_one_extras.get(name, {})
                         # This is a nested field we need to take care of.
@@ -629,7 +629,7 @@ class DjangoCudBase(Mutation):
                     # If the value is an integer or a string, we assume it is an ID
                     if isinstance(value, str) or isinstance(value, int):
                         name = getattr(field, "db_column", None) or name + "_id"
-                        new_value = disambiguate_id(value)
+                        new_value = cls.resolve_id(value)
                     else:
                         extra_data = one_to_one_extras.get(name, {})
                         # This is a nested field we need to take care of.
@@ -644,9 +644,9 @@ class DjangoCudBase(Mutation):
                         setattr(obj, name, None)
 
                     name = getattr(field, "db_column", None) or name + "_id"
-                    new_value = disambiguate_id(value)
+                    new_value = cls.resolve_id(value)
                 elif field_is_many_to_many:
-                    new_value = disambiguate_ids(value)
+                    new_value = cls.resolve_ids(value)
 
             if field_is_many_to_many:
                 many_to_many_to_set[name] = cls.get_all_objs(field.related_model, new_value)
@@ -732,7 +732,7 @@ class DjangoCudBase(Mutation):
                     )
                     many_to_one_to_add[name] += objs
                 else:
-                    many_to_one_to_remove[name] += disambiguate_ids(values)
+                    many_to_one_to_remove[name] += cls.resolve_ids(values)
 
         for name, objs in many_to_one_to_set.items():
             if objs is not None:
@@ -810,6 +810,14 @@ class DjangoCudBase(Mutation):
     @classmethod
     def after_mutate(cls, root, info, *args, **kwargs):
         return None
+
+    @classmethod
+    def resolve_id(cls, id):
+        return disambiguate_id(id)
+
+    @classmethod
+    def resolve_ids(cls, ids):
+        return disambiguate_ids(ids)
 
 
 class DjangoCudBaseOptions(MutationOptions):

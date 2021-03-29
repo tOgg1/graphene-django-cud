@@ -10,7 +10,6 @@ from graphene_django.registry import get_global_registry
 from graphql import GraphQLError
 
 from graphene_django_cud.mutations.core import DjangoCudBase
-from graphene_django_cud.util import disambiguate_id
 
 
 class DjangoDeleteMutationOptions(MutationOptions):
@@ -98,7 +97,7 @@ class DjangoDeleteMutation(DjangoCudBase):
         cls.validate(root, info, id)
 
         Model = cls._meta.model
-        id = disambiguate_id(id)
+        id = cls.resolve_id(id)
 
         try:
             obj = cls.get_queryset(root, info, id).get(pk=id)

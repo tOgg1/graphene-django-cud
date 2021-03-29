@@ -10,7 +10,6 @@ from graphql import GraphQLError
 from graphql_relay import to_global_id
 
 from graphene_django_cud.mutations.core import DjangoCudBase
-from graphene_django_cud.util import disambiguate_ids
 
 
 class DjangoBatchDeleteMutationOptions(MutationOptions):
@@ -99,7 +98,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
         cls.check_permissions(root, info, ids)
 
         Model = cls._meta.model
-        ids = disambiguate_ids(ids)
+        ids = cls.resolve_ids(ids)
 
         cls.validate(root, info, ids)
 

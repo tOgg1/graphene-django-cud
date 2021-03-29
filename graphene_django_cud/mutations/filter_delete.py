@@ -12,7 +12,7 @@ from graphql import GraphQLError
 from graphql_relay import to_global_id
 
 from graphene_django_cud.mutations.core import DjangoCudBase
-from graphene_django_cud.util import get_filter_fields_input_args, disambiguate_id, disambiguate_ids
+from graphene_django_cud.util import get_filter_fields_input_args
 
 
 class DjangoFilterDeleteMutationOptions(MutationOptions):
@@ -147,7 +147,7 @@ class DjangoFilterDeleteMutation(DjangoCudBase):
             if new_value == value and value is not None:
                 if type(field) in (models.ForeignKey, models.OneToOneField):
                     name = getattr(field, "db_column", None) or name + "_id"
-                    new_value = disambiguate_id(value)
+                    new_value = cls.resolve_id(value)
                 elif (
                     type(field)
                     in (
@@ -157,7 +157,7 @@ class DjangoFilterDeleteMutation(DjangoCudBase):
                     )
                     or filter_field_is_list
                 ):
-                    new_value = disambiguate_ids(value)
+                    new_value = cls.resolve_ids(value)
 
             model_field_values[name] = new_value
 
