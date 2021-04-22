@@ -2,8 +2,8 @@
 
 ## Version 0.8.0
 * Add customisation of resolving IDs via the resolve_id(s) methods (@bjmc)
-* Django model DecimalFields are now properly resolved to graphene.Decimal
-* (BREAKING) Django fields with choices are now reused from the associated DjangoObjectType. This implies that the created GraphQL field no longer has an extra "Input" at the end of the name.
+* Django model DecimalFields are now properly resolved to graphene.Decimal (@sjdemartini)
+* (BREAKING) Django fields with choices are now reused from the associated DjangoObjectType. This implies that the created GraphQL field no longer has an extra "Input" at the end of the name. (@keithhackbarth)
 * (BREAKING) Update DjangoBatch-mutations. All hooks now take an "input" parameter.
 * Added after_update_obj hook for DjangoBatchPatchMutation and DjangoBatchUpdateMutation. This will be called after each object is updated.
 * Added after_create_obj hook for DjangoBatchCreateMutation. This will be called after each object is created.
