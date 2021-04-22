@@ -167,12 +167,16 @@ class DjangoBatchUpdateMutation(DjangoCudBase):
         return super().before_mutate(root, info, input)
 
     @classmethod
-    def before_save(cls, root, info, updated_objects):
-        return super().before_save(root, info, updated_objects)
+    def before_save(cls, root, info, input, updated_objects):
+        return super().before_save(root, info, input, updated_objects)
 
     @classmethod
-    def after_mutate(cls, root, info, updated_objs, return_data):
-        return super().after_mutate(root, info, updated_objs, return_data)
+    def after_mutate(cls, root, info, input, updated_objs, return_data):
+        return super().after_mutate(root, info, input, updated_objs, return_data)
+
+    @classmethod
+    def after_update_obj(cls, root, info, input, obj, full_input):
+        return None
 
     @classmethod
     def validate(cls, root, info, input, full_input):
@@ -217,9 +221,15 @@ class DjangoBatchUpdateMutation(DjangoCudBase):
                     cls._meta.one_to_one_extras,
                     Model,
                 )
+
+                new_obj = cls.after_update_obj(root, info, data, obj, input)
+
+                if new_obj is not None:
+                    obj = new_obj
+
                 updated_objs.append(obj)
 
-            before_save_updated_objs = cls.before_save(root, info, updated_objs)
+            before_save_updated_objs = cls.before_save(root, info, input, updated_objs)
             if before_save_updated_objs:
                 updated_objs = before_save_updated_objs
 
@@ -227,5 +237,5 @@ class DjangoBatchUpdateMutation(DjangoCudBase):
                 obj.save()
 
         return_data = {cls._meta.return_field_name: updated_objs}
-        cls.after_mutate(root, info, updated_objs, return_data)
+        cls.after_mutate(root, info, input, updated_objs, return_data)
         return cls(**return_data)
