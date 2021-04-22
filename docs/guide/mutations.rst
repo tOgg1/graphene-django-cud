@@ -53,7 +53,7 @@ By default, all :ref:`included fields<included_and_excluded>` of the model are m
 .. code::
 
     mutation {
-        updateUser(input: {name: "John Doe", address: "161 Lexington Avenue"}){
+        updateUser(id: "VXNlck5vZGU6MQ==", input: {name: "John Doe", address: "161 Lexington Avenue"}){
             user{
                 id
                 name
@@ -86,7 +86,7 @@ All fields of the model are marked as **not required**.
 .. code::
 
     mutation {
-        patchUser(input: {name: "John Doe"}){
+        patchUser(id: "VXNlck5vZGU6MQ==", input: {name: "John Doe"}){
             user{
                 id
                 name
