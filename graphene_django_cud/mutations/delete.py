@@ -3,11 +3,13 @@ from typing import Iterable
 
 import graphene
 from django.core.exceptions import ObjectDoesNotExist
+from graphene import GlobalID
 from graphene.types.mutation import MutationOptions
 from graphene.types.utils import yank_fields_from_attrs
 from graphene.utils.str_converters import to_snake_case
 from graphene_django.registry import get_global_registry
 from graphql import GraphQLError
+from graphql_relay import to_global_id
 
 from graphene_django_cud.mutations.core import DjangoCudBase
 
@@ -35,6 +37,9 @@ class DjangoDeleteMutation(DjangoCudBase):
         **kwargs,
     ):
         registry = get_global_registry()
+        model_type = registry.get_type_for_model(model)
+
+        assert model_type, f"Model type must be registered for model {model}"
 
         if not return_field_name:
             return_field_name = to_snake_case(model.__name__)
@@ -43,12 +48,15 @@ class DjangoDeleteMutation(DjangoCudBase):
 
         output_fields = OrderedDict()
         output_fields["found"] = graphene.Boolean()
+        output_fields["deleted_input_id"] = graphene.ID()
         output_fields["deleted_id"] = graphene.ID()
+        output_fields["deleted_raw_id"] = graphene.ID()
 
         if _meta is None:
             _meta = DjangoDeleteMutationOptions(cls)
 
         _meta.model = model
+        _meta.model_type = model_type
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.return_field_name = return_field_name
         _meta.permissions = permissions
@@ -88,6 +96,17 @@ class DjangoDeleteMutation(DjangoCudBase):
         return Model.objects
 
     @classmethod
+    def get_return_id(cls, obj):
+        model_type = cls._meta.model_type
+
+        id_field = model_type._meta.fields.get("id", None)
+
+        if isinstance(id_field, GlobalID):
+            return to_global_id(cls._meta.model_type._meta.name, obj.id)
+        else:
+            return obj.id
+
+    @classmethod
     def mutate(cls, root, info, id):
         cls.before_mutate(root, info, id)
 
@@ -97,19 +116,26 @@ class DjangoDeleteMutation(DjangoCudBase):
         cls.validate(root, info, id)
 
         Model = cls._meta.model
-        id = cls.resolve_id(id)
+        resolved_id = cls.resolve_id(id)
 
         try:
-            obj = cls.get_queryset(root, info, id).get(pk=id)
+            obj = cls.get_queryset(root, info, id).get(pk=resolved_id)
             cls.check_permissions(root, info, id, obj)
 
             updated_obj = cls.before_save(root, info, id, obj)
             if updated_obj:
                 obj = updated_obj
 
+            return_id = cls.get_return_id(obj)
+            raw_id = obj.id
             obj.delete()
             cls.after_mutate(root, info, id, True)
-            return cls(found=True, deleted_id=id)
+            return cls(
+                found=True,
+                deleted_raw_id=raw_id,
+                deleted_id=return_id,
+                deleted_input_id=id,
+            )
         except ObjectDoesNotExist:
             cls.after_mutate(root, info, id, False)
             return cls(found=False)

@@ -38,6 +38,8 @@ class TestDeleteMutation(TestCase):
                 deleteCat(id: $id){
                     found
                     deletedId
+                    deletedRawId
+                    deletedInputId
                 }
             }
         """
@@ -50,7 +52,7 @@ class TestDeleteMutation(TestCase):
         data = Dict(result.data)
         self.assertIsNone(Cat.objects.filter(id=cat.id).first())
         self.assertTrue(data.deleteCat.found)
-        self.assertEqual(cat.id, disambiguate_id(data.deleteCat.deletedId))
+        self.assertEqual(cat.id, int(disambiguate_id(data.deleteCat.deletedId)))
 
     def test_mutate__object_does_not_exist__returns_found_false_and_null_id(self):
         # This registers the UserNode type
