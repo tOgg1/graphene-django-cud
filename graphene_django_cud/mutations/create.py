@@ -157,8 +157,8 @@ class DjangoCreateMutation(DjangoCudBase):
         return super().before_save(root, info, input, obj)
 
     @classmethod
-    def after_mutate(cls, root, info, obj, return_data):
-        return super().after_mutate(root, info, obj, return_data)
+    def after_mutate(cls, root, info, input, obj, return_data):
+        return super().after_mutate(root, info, input, obj, return_data)
 
     @classmethod
     def validate(cls, root, info, input):
@@ -197,6 +197,6 @@ class DjangoCreateMutation(DjangoCudBase):
                 obj = updated_obj
 
         return_data = {cls._meta.return_field_name: obj}
-        cls.after_mutate(root, info, obj, return_data)
+        cls.after_mutate(root, info, input, obj, return_data)
 
         return cls(**return_data)

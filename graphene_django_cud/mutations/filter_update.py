@@ -146,8 +146,8 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
         return super().before_save(root, info, filter, data)
 
     @classmethod
-    def after_mutate(cls, root, info, filter_qs):
-        return super().after_mutate(root, info, filter_qs)
+    def after_mutate(cls, root, info, filter, data, filter_qs):
+        return super().after_mutate(root, info, filter, data, filter_qs)
 
     @classmethod
     def validate(cls, root, info, filter, data):
@@ -225,5 +225,5 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
 
         filter_qs.update(**data)
 
-        cls.after_mutate(root, info, filter_qs)
+        cls.after_mutate(root, info, filter, data, filter_qs)
         return cls(updated_objects=filter_qs, updated_count=filter_qs.count())

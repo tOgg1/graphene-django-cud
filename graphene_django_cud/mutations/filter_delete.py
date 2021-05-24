@@ -93,8 +93,8 @@ class DjangoFilterDeleteMutation(DjangoCudBase):
         return super().before_save(root, info, filter_qs)
 
     @classmethod
-    def after_mutate(cls, root, info, deletion_count, ids):
-        return super().after_mutate(root, info, deletion_count, ids)
+    def after_mutate(cls, root, info, input, deletion_count, ids):
+        return super().after_mutate(root, info, input, deletion_count, ids)
 
     @classmethod
     def validate(cls, root, info, input, id, obj):
@@ -174,6 +174,6 @@ class DjangoFilterDeleteMutation(DjangoCudBase):
 
         deletion_count, _ = filter_qs.delete()
 
-        cls.after_mutate(root, info, deletion_count, ids)
+        cls.after_mutate(root, info, input, deletion_count, ids)
 
         return cls(deletion_count=deletion_count, deleted_ids=ids)
