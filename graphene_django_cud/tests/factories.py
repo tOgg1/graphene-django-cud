@@ -24,7 +24,7 @@ class UserAdminFactory(factory.DjangoModelFactory):
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
     username = factory.Sequence(lambda n: "superusername%d" % n)
-    email = factory.Faker("email")
+    email = factory.Sequence(lambda n: f"user{n}@example.com")
     is_superuser = True
     is_staff = True
 
