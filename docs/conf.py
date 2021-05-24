@@ -29,7 +29,7 @@ copyright = '2021, Tormod Haugland'
 author = 'Tormod Haugland'
 
 # The full version, including alpha/beta/rc tags
-release = '0.8.1'
+release = '0.9.0'
 
 # -- General configuration ---------------------------------------------------
 

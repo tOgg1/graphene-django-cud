@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.9.0
+* (BREAKING) Ensure inputs are sent to all after_mutate hooks.
+
 ## Version 0.8.1
 * (BREAKING) DjangoDeleteMutation now returns three id fields: deletedId, deletedRawId and deletedInputId. The default behaviour of deletedId is now to return a global id if the associated model type has a GlobalIDField for the "id" field. 
 
