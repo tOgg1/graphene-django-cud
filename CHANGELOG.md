@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.8.1
+* (BREAKING) DjangoDeleteMutation now returns three id fields: deletedId, deletedRawId and deletedInputId. The default behaviour of deletedId is now to return a global id if the associated model type has a GlobalIDField for the "id" field. 
+
 ## Version 0.8.0
 * Add customisation of resolving IDs via the resolve_id(s) methods (@bjmc)
 * Django model DecimalFields are now properly resolved to graphene.Decimal (@sjdemartini)

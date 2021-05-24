@@ -25,11 +25,11 @@ from pygments.token import *
 from sphinx.highlighting import lexers
 
 project = 'graphene-django-cud'
-copyright = '2020, Tormod Haugland'
+copyright = '2021, Tormod Haugland'
 author = 'Tormod Haugland'
 
 # The full version, including alpha/beta/rc tags
-release = '0.8.0'
+release = '0.8.1'
 
 # -- General configuration ---------------------------------------------------
 
