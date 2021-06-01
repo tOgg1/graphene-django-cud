@@ -11,7 +11,7 @@ from graphql import GraphQLError
 from graphql_relay import to_global_id
 
 from graphene_django_cud.mutations.core import DjangoCudBase
-from graphene_django_cud.util import to_snake_case
+from graphene_django_cud.str_converters import to_snake_case
 
 
 class DjangoDeleteMutationOptions(MutationOptions):

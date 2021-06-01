@@ -11,7 +11,7 @@ from graphql import GraphQLError
 from graphene_django_cud.mutations.core import DjangoCudBase, DjangoCudBaseOptions
 from graphene_django_cud.registry import get_type_meta_registry
 from graphene_django_cud.util import get_input_fields_for_model
-from graphene_django_cud.util import to_snake_case
+from graphene_django_cud.str_converters import to_snake_case
 
 
 class DjangoBatchUpdateMutationOptions(DjangoCudBaseOptions):

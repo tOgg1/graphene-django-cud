@@ -35,7 +35,7 @@ from graphene_file_upload.scalars import Upload
 from graphql import assert_valid_name, GraphQLError
 
 from graphene_django_cud.types import TimeDelta
-from graphene_django_cud.util import to_camel_case, to_const
+from graphene_django_cud.str_converters import to_camel_case, to_const
 
 
 def is_required(field, required=None, is_many_to_many=False):
