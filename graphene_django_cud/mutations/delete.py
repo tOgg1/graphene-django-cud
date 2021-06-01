@@ -6,12 +6,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from graphene import GlobalID
 from graphene.types.mutation import MutationOptions
 from graphene.types.utils import yank_fields_from_attrs
-from graphene.utils.str_converters import to_snake_case
 from graphene_django.registry import get_global_registry
 from graphql import GraphQLError
 from graphql_relay import to_global_id
 
 from graphene_django_cud.mutations.core import DjangoCudBase
+from graphene_django_cud.util import to_snake_case
 
 
 class DjangoDeleteMutationOptions(MutationOptions):

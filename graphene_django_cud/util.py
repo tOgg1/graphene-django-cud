@@ -1,13 +1,14 @@
 import binascii
+import re
 import uuid
 from collections import OrderedDict
 from typing import Union, List, Optional
+from text_unidecode import unidecode
 
 import graphene
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from graphene import InputObjectType
-from graphene.utils.str_converters import to_camel_case
 from graphene_django.registry import get_global_registry
 from graphene_django.utils import get_model_fields
 from graphql import GraphQLError
@@ -622,3 +623,22 @@ def create_dynamic_type(field, type_name, registry, required):
         )
 
     return graphene.Dynamic(dynamic_type)
+
+
+# Adapted from this response in Stackoverflow
+# http://stackoverflow.com/a/19053800/1072990
+def to_camel_case(snake_str):
+    components = snake_str.split("_")
+    # We capitalize the first letter of each component except the first one
+    # with the 'capitalize' method and join them together.
+    return components[0] + "".join(x.capitalize() if x else "_" for x in components[1:])
+
+
+# From this response in Stackoverflow
+# http://stackoverflow.com/a/1176023/1072990
+def to_snake_case(name):
+    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+
+def to_const(string):
+    return re.sub(r"[\W|^]+", "_", unidecode(string)).upper()
