@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 0.9.1
+* Improve atomicity of patch/update-calls (thanks @keithhackbarth)
+* Improve documentation
+* Security-critical package updates
+
 ## Version 0.9.0
 * (BREAKING) Ensure inputs are sent to all after_mutate hooks.
 
