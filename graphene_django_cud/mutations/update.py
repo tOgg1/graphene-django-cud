@@ -177,18 +177,18 @@ class DjangoUpdateMutation(DjangoCudBase):
         if cls._meta.login_required and not info.context.user.is_authenticated:
             raise GraphQLError("Must be logged in to access this mutation.")
 
-
-        id = cls.resolve_id(id)
-        Model = cls._meta.model
-        queryset = cls.get_queryset(root, info, input, id)
-        obj = queryset.get(pk=id)
-        auto_context_fields = cls._meta.auto_context_fields or {}
-
-        cls.check_permissions(root, info, input, id, obj)
-
-        cls.validate(root, info, input, id, obj)
-
         with transaction.atomic():
+
+            id = cls.resolve_id(id)
+            Model = cls._meta.model
+            queryset = cls.get_queryset(root, info, input, id)
+            obj = queryset.select_for_update().get(pk=id)
+            auto_context_fields = cls._meta.auto_context_fields or {}
+
+            cls.check_permissions(root, info, input, id, obj)
+
+            cls.validate(root, info, input, id, obj)
+
             obj = cls.update_obj(
                 obj,
                 input,
