@@ -157,8 +157,8 @@ class DjangoUpdateMutation(DjangoCudBase):
         return super().before_mutate(root, info, input, id)
 
     @classmethod
-    def before_save(cls, root, info, input, id, obj):
-        return super().before_save(root, info, input, id, obj)
+    def before_save(cls, info, input, obj):
+        return super().before_save(info, input, obj)
 
     @classmethod
     def after_mutate(cls, root, info, id, input, obj, return_data):
@@ -201,7 +201,7 @@ class DjangoUpdateMutation(DjangoCudBase):
                 Model,
             )
 
-            updated_obj = cls.before_save(root, info, input, id, obj)
+            updated_obj = cls.before_save(info, input, obj)
 
             if updated_obj:
                 obj = updated_obj

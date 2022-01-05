@@ -142,8 +142,8 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
         return super().before_mutate(root, info, filter, data)
 
     @classmethod
-    def before_save(cls, root, info, filter_qs, filter, data):
-        return super().before_save(root, info, filter, data)
+    def before_save(cls, info, input, obj):
+        return super().before_save(info, input, obj)
 
     @classmethod
     def after_mutate(cls, root, info, filter, data, filter_qs):
@@ -218,12 +218,13 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
         filter_qs = cls.get_queryset(root, info, filter, data).filter(
             **model_field_values
         )
-        updated_qs = cls.before_save(root, info, filter_qs, filter, data)
 
-        if updated_qs:
-            filter_qs = updated_qs
-
-        filter_qs.update(**data)
+        updated_count = len(filter_qs)
+        for obj in filter_qs:
+            cls.before_save(info, input, obj)
+            for attr, value in data.items():
+                setattr(obj, attr, value)
+            obj.save()
 
         cls.after_mutate(root, info, filter, data, filter_qs)
-        return cls(updated_objects=filter_qs, updated_count=filter_qs.count())
+        return cls(updated_objects=filter_qs, updated_count=updated_count)

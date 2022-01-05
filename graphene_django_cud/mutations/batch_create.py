@@ -161,8 +161,8 @@ class DjangoBatchCreateMutation(DjangoCudBase):
         return super().before_mutate(root, info, input)
 
     @classmethod
-    def before_save(cls, root, info, input, created_objects):
-        return super().before_save(root, info, input, created_objects)
+    def before_save(cls, info, input, obj):
+        return super().before_save(info, input, obj)
 
     @classmethod
     def after_mutate(cls, root, info, input, created_objs, return_data):
@@ -213,10 +213,6 @@ class DjangoBatchCreateMutation(DjangoCudBase):
                     obj = new_obj
 
                 created_objs.append(obj)
-
-            updated_objs = cls.before_save(root, info, input, created_objs)
-            if updated_objs:
-                created_objs = updated_objs
 
         return_data = {cls._meta.return_field_name: created_objs}
         cls.after_mutate(root, info, input, created_objs, return_data)

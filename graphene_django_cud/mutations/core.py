@@ -392,7 +392,9 @@ class DjangoCudBase(Mutation):
             model_field_values[name + "_id"] = obj_id
 
         # Foreign keys are added, we are ready to create our object
-        obj = Model.objects.create(**model_field_values)
+        obj = Model(**model_field_values)
+        cls.before_save(info, input, obj)
+        obj.save()
 
         # Handle one to one rels
         if len(one_to_one_rels) > 0:
@@ -804,8 +806,8 @@ class DjangoCudBase(Mutation):
         return None
 
     @classmethod
-    def before_save(cls, root, info, *args, **kwargs):
-        return None
+    def before_save(cls, info, input, obj):
+        return obj
 
     @classmethod
     def after_mutate(cls, root, info, *args, **kwargs):

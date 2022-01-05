@@ -153,8 +153,8 @@ class DjangoCreateMutation(DjangoCudBase):
         return super().before_mutate(root, info, input)
 
     @classmethod
-    def before_save(cls, root, info, input, obj):
-        return super().before_save(root, info, input, obj)
+    def before_save(cls, info, input, obj):
+        return super().before_save(info, input, obj)
 
     @classmethod
     def after_mutate(cls, root, info, input, obj, return_data):
@@ -191,10 +191,6 @@ class DjangoCreateMutation(DjangoCudBase):
                 cls._meta.one_to_one_extras,
                 Model,
             )
-            updated_obj = cls.before_save(root, info, input, obj)
-            if updated_obj:
-                updated_obj.save()
-                obj = updated_obj
 
         return_data = {cls._meta.return_field_name: obj}
         cls.after_mutate(root, info, input, obj, return_data)

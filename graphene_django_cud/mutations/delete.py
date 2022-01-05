@@ -79,8 +79,8 @@ class DjangoDeleteMutation(DjangoCudBase):
         return super().before_mutate(root, info, id)
 
     @classmethod
-    def before_save(cls, root, info, id, obj):
-        return super().before_save(root, info, id, obj)
+    def before_save(cls, info, input, obj):
+        return super().before_save(info, input, obj)
 
     @classmethod
     def after_mutate(cls, root, info, deleted_id, found):
@@ -122,9 +122,7 @@ class DjangoDeleteMutation(DjangoCudBase):
             obj = cls.get_queryset(root, info, id).get(pk=resolved_id)
             cls.check_permissions(root, info, id, obj)
 
-            updated_obj = cls.before_save(root, info, id, obj)
-            if updated_obj:
-                obj = updated_obj
+            obj = cls.before_save(info, None, obj)
 
             return_id = cls.get_return_id(obj)
             raw_id = obj.id

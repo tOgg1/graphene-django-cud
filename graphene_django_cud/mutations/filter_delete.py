@@ -89,8 +89,8 @@ class DjangoFilterDeleteMutation(DjangoCudBase):
         return super().before_mutate(root, info, input)
 
     @classmethod
-    def before_save(cls, root, info, filter_qs):
-        return super().before_save(root, info, filter_qs)
+    def before_save(cls, info, id, obj):
+        return super().before_save(info, id, obj)
 
     @classmethod
     def after_mutate(cls, root, info, input, deletion_count, ids):
@@ -162,17 +162,16 @@ class DjangoFilterDeleteMutation(DjangoCudBase):
             model_field_values[name] = new_value
 
         filter_qs = cls.get_queryset(root, info, input).filter(**model_field_values)
-        updated_qs = cls.before_save(root, info, filter_qs)
-
-        if updated_qs:
-            filter_qs = updated_qs
 
         ids = [
             to_global_id(get_global_registry().get_type_for_model(Model).__name__, id)
             for id in filter_qs.values_list("id", flat=True)
         ]
 
-        deletion_count, _ = filter_qs.delete()
+        deletion_count = len(filter_qs)
+        for obj in filter_qs:
+            cls.before_save(info, obj.id, obj)
+            obj.delete()
 
         cls.after_mutate(root, info, input, deletion_count, ids)
 
