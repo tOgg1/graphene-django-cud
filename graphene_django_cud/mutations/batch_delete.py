@@ -60,6 +60,10 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
     @classmethod
+    def get_return_id(cls, id):
+        return to_global_id(get_global_registry().get_type_for_model(cls._meta.model).__name__, id)
+
+    @classmethod
     def get_permissions(cls, root, info, input) -> Iterable[str]:
         return super().get_permissions(root, info, input)
 
@@ -110,15 +114,9 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
             qs_to_delete = updated_qs
 
         # Find out which (global) ids are deleted, and which were not found.
-        deleted_ids = [
-            to_global_id(get_global_registry().get_type_for_model(Model).__name__, id)
-            for id in qs_to_delete.values_list("id", flat=True)
-        ]
+        deleted_ids = [cls.get_return_id(id) for id in qs_to_delete.values_list("id", flat=True)]
 
-        all_global_ids = [
-            to_global_id(get_global_registry().get_type_for_model(Model).__name__, id)
-            for id in ids
-        ]
+        all_global_ids = [cls.get_return_id(id) for id in ids]
 
         missed_ids = list(set(all_global_ids).difference(deleted_ids))
 
