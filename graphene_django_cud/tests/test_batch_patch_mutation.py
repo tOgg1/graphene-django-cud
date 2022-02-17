@@ -32,7 +32,7 @@ class TestBatchPatchMutation(TestCase):
                 $input: [BatchPatchDogInput]! 
             ){
                 batchPatchDog(input: $input){
-                    dogs{
+                    dogs {
                         id
                         name
                     }
@@ -68,3 +68,88 @@ class TestBatchPatchMutation(TestCase):
         dog_2.refresh_from_db()
         self.assertEqual("New name 1", dog_1.name)
         self.assertEqual("New name 2", dog_2.name)
+
+
+class TestBatchPatchMutationRequiredFields(TestCase):
+    def setUp(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class PatchDogMutation(DjangoBatchPatchMutation):
+            class Meta:
+                model = Dog
+                required_fields = ("owner",)
+
+        class Mutations(graphene.ObjectType):
+            batch_patch_dog = PatchDogMutation.Field()
+
+        self.user1 = UserFactory.create()
+        self.user2 = UserFactory.create()
+        self.dog1 = DogFactory.create(owner=self.user1)
+        self.dog2 = DogFactory.create(owner=self.user2)
+
+        self.user1_id = to_global_id("UserNode", self.user1.id)
+        self.user2_id = to_global_id("UserNode", self.user2.id)
+        self.dog1_id = to_global_id("DogNode", self.dog1.id)
+        self.dog2_id = to_global_id("DogNode", self.dog2.id)
+
+        self.schema = Schema(mutation=Mutations)
+        self.mutation = """
+            mutation BatchPatchDog(
+                $input: [BatchPatchDogInput]!
+            ){
+                batchPatchDog(input: $input){
+                    dogs {
+                        id
+                    }
+                }
+            }
+        """
+        self.context = Dict(user=self.user1)
+
+    def test_required_fields__when_set_and_not_provided__returns_error(self):
+        result = self.schema.execute(
+            self.mutation,
+            variables={
+                "id": to_global_id("DogNode", self.dog1.id),
+                "input": [
+                    {
+                        "id": self.dog1_id,
+                        "name": "Lassie",
+                    },
+                    {
+                        "id": self.dog2_id,
+                        "name": "Richard",
+                    }
+                ]
+            },
+            context=self.context,
+        )
+        self.assertIsNotNone(result.errors)
+
+    def test_required_fields__when_set_and_provided__returns_no_error(self):
+        result = self.schema.execute(
+            self.mutation,
+            variables={
+                "input": [
+                    {
+                        "id": self.dog1_id,
+                        "name": "Lassie",
+                        "owner": self.user2_id,
+                    },
+                    {
+                        "id": self.dog2_id,
+                        "name": "Richard",
+                        "owner": self.user1_id,
+                    }
+                ]
+            },
+            context=self.context,
+        )
+        self.assertIsNone(result.errors)
+
+        self.dog1.refresh_from_db()
+        self.dog2.refresh_from_db()
+        self.assertEqual(self.dog1.owner.id, self.user2.id)
+        self.assertEqual(self.dog2.owner.id, self.user1.id)
