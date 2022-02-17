@@ -29,8 +29,8 @@ class DjangoBatchPatchMutation(DjangoBatchUpdateMutation):
         if optional_fields is None:
             optional_fields = all_field_names
 
-            if required_fields is not None:
-                optional_fields = tuple(set(optional_fields) - set(required_fields))
+        if required_fields is not None:
+            optional_fields = tuple(set(optional_fields) - set(required_fields))
 
         input_type_name = type_name or f"BatchPatch{model.__name__}Input"
 
