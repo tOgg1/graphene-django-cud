@@ -2,7 +2,7 @@ import graphene
 from addict import Dict
 from django.test import TestCase
 from graphene import Schema
-from graphql import ResolveInfo
+from graphene import ResolveInfo
 from graphql_relay import to_global_id
 
 from graphene_django_cud.mutations import DjangoUpdateMutation, DjangoCreateMutation
@@ -11,6 +11,7 @@ from graphene_django_cud.tests.factories import (
     CatFactory,
     DogFactory,
 )
+from graphene_django_cud.tests.dummy_query import DummyQuery
 from graphene_django_cud.tests.models import User, Cat, Dog, DogRegistration
 from graphene_django_cud.util import disambiguate_id
 
@@ -48,7 +49,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
 
         user = UserFactory.build()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
                 $input: CreateUserInput! 
@@ -96,7 +97,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         user = UserFactory.build()
         other_cats = CatFactory.create_batch(5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
                 $input: CreateUserInput! 
@@ -145,7 +146,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         user = UserFactory.build()
         other_cats = CatFactory.create_batch(5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
                 $input: CreateUserInput! 
@@ -198,7 +199,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
 
         user = UserFactory.build()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
                 $input: CreateUserInput! 
@@ -250,7 +251,7 @@ class TestUpdateWithOneToOneField(TestCase):
         dog = DogFactory.create()
         DogRegistration.objects.create(dog=dog, registration_number="1234")
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateDog(
                 $id: ID!,
@@ -311,7 +312,7 @@ class TestUpdateWithOneToOneField(TestCase):
             dog=dog, registration_number="1234"
         )
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateDogRegistration(
                 $id: ID!,
@@ -352,9 +353,12 @@ class TestUpdateWithOneToOneField(TestCase):
             "LABRADOR", data.updateDogRegistration.dogRegistration.dog.breed
         )
 
+        print(dog.breed, type(dog.breed))
         # Load from database
         dog_registration.refresh_from_db()
         dog.refresh_from_db()
+        print(dog.breed, type(dog.breed))
+
         self.assertEqual(dog.breed, "LABRADOR")
 
 
@@ -374,7 +378,7 @@ class TestCreateWithOneToOneField(TestCase):
 
         user = UserFactory.create()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateDog(
                 $input: CreateDogInput!
@@ -430,7 +434,7 @@ class TestCreateWithOneToOneField(TestCase):
 
         user = UserFactory.create()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateDogRegistration(
                 $input: CreateDogRegistrationInput!
@@ -503,7 +507,7 @@ class TestCreateWithPlainManyToOneRelation(TestCase):
         user = UserFactory.create()
         cat = CatFactory.create()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
                 $input: CreateUserInput!
@@ -566,7 +570,7 @@ class TestCreateWithPlainManyToManyRelation(TestCase):
         user = UserFactory.create()
         cat = CatFactory.create()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateDog(
                 $input: CreateDogInput!
@@ -639,7 +643,7 @@ class TestCreateMutationCustomFields(TestCase):
         dog = DogFactory.create()
         user = UserFactory.create()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateDog(
                 $input: CreateDogInput! 

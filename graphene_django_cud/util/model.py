@@ -1,4 +1,5 @@
 import binascii
+import re
 import uuid
 from collections import OrderedDict
 from typing import Union, List, Optional
@@ -19,7 +20,6 @@ from graphene_django_cud.converter import (
     is_required,
 )
 from graphene_django_cud.registry import get_type_meta_registry
-
 
 def disambiguate_id(ambiguous_id: Union[int, float, str, uuid.UUID]):
     """
@@ -83,18 +83,18 @@ def overload_nested_fields(nested_fields):
 
 
 def get_input_fields_for_model(
-    model,
-    only_fields,
-    exclude_fields,
-    optional_fields=(),
-    required_fields=(),
-    many_to_many_extras=None,
-    foreign_key_extras=None,
-    many_to_one_extras=None,
-    one_to_one_extras=None,
-    parent_type_name="",
-    field_types=None,
-    ignore_primary_key=True,
+        model,
+        only_fields,
+        exclude_fields,
+        optional_fields=(),
+        required_fields=(),
+        many_to_many_extras=None,
+        foreign_key_extras=None,
+        many_to_one_extras=None,
+        one_to_one_extras=None,
+        parent_type_name="",
+        field_types=None,
+        ignore_primary_key=True,
 ) -> OrderedDict:
 
     registry = get_global_registry()
@@ -291,7 +291,7 @@ def get_input_fields_for_model(
 
 
 def convert_many_to_many_like_field(
-    data, name, extra_name, parent_type_name, field, registry, meta_registry
+        data, name, extra_name, parent_type_name, field, registry, meta_registry
 ):
     if isinstance(data, bool):
         data = {"type": "ID"}
@@ -351,7 +351,10 @@ def convert_many_to_many_like_field(
             },
         )
         registry.register_converted_field(type_name, InputType)
-        _field = graphene.List(InputType, required=False,)
+        _field = graphene.List(
+            InputType,
+            required=False,
+        )
     else:
         _field = convert_many_to_many_field(field, registry, False, data, None)
 
@@ -498,7 +501,7 @@ def get_fk_all_extras_field_names(extras):
 
 
 def resolve_many_to_many_extra_auto_field_names(
-    many_to_many_extras, model, parent_type_name
+        many_to_many_extras, model, parent_type_name
 ):
     new_many_to_many_extras = {}
     for name, extras in many_to_many_extras.items():
@@ -527,7 +530,7 @@ def resolve_many_to_many_extra_auto_field_names(
 
 
 def resolve_many_to_one_extra_auto_field_names(
-    many_to_one_extras, model, parent_type_name
+        many_to_one_extras, model, parent_type_name
 ):
     new_many_to_one_extras = {}
     for name, extras in many_to_one_extras.items():
@@ -555,7 +558,7 @@ def resolve_many_to_one_extra_auto_field_names(
 
 
 def resolve_foreign_key_extra_auto_field_names(
-    foreign_key_extras, model, parent_type_name
+        foreign_key_extras, model, parent_type_name
 ):
     new_foreign_key_extras = {}
     for name, data in foreign_key_extras.items():
@@ -573,7 +576,7 @@ def resolve_foreign_key_extra_auto_field_names(
 
 
 def resolve_one_to_one_extra_auto_field_names(
-    one_to_one_extras, model, parent_type_name
+        one_to_one_extras, model, parent_type_name
 ):
     new_one_to_one_extras = {}
     for name, data in one_to_one_extras.items():

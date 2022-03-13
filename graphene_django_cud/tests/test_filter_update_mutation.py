@@ -5,6 +5,7 @@ from graphene import Schema
 
 from graphene_django_cud.mutations.filter_update import DjangoFilterUpdateMutation
 from graphene_django_cud.tests.factories import DogFactory, UserFactory
+from graphene_django_cud.tests.dummy_query import DummyQuery
 from graphene_django_cud.tests.models import Dog
 
 
@@ -25,7 +26,7 @@ class TestFilterUpdateMutation(TestCase):
         dog = DogFactory.create(name="Simen")
         user = UserFactory.create()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation FilterUpdateDog(
                 $filter: FilterUpdateDogFilterInput!,

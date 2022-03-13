@@ -1,8 +1,7 @@
 import graphene
 from addict import Dict
 from django.test import TestCase
-from graphene import Schema
-from graphql import ResolveInfo
+from graphene import Schema, ResolveInfo
 from graphql_relay import to_global_id
 
 from graphene_django_cud.mutations import DjangoPatchMutation, DjangoCreateMutation
@@ -13,6 +12,7 @@ from graphene_django_cud.tests.factories import (
     DogFactory,
     MouseFactory,
 )
+from graphene_django_cud.tests.dummy_query import DummyQuery
 from graphene_django_cud.tests.models import User, Cat, Dog
 from graphene_django_cud.util import disambiguate_id
 
@@ -57,7 +57,7 @@ class TestPatchMutation(TestCase):
 
         user = UserWithPermissionsFactory.create(permissions=["tests.change_cat"])
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchCat(
                 $id: ID!,
@@ -99,7 +99,7 @@ class TestPatchMutation(TestCase):
 
         user = UserFactory.create()
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchCat(
                 $id: ID!,
@@ -137,7 +137,7 @@ class TestPatchMutation(TestCase):
 
         user = UserWithPermissionsFactory.create(permissions=["tests.change_cat"])
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchCat(
                 $id: ID!,
@@ -180,7 +180,7 @@ class TestPatchMutation(TestCase):
 
         user = UserFactory.create()
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchCat(
                 $id: ID!,
@@ -226,7 +226,7 @@ class TestPatchMutation(TestCase):
             permissions=["tests.change_cat"]
         )
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchCat(
                 $id: ID!,
@@ -282,7 +282,7 @@ class TestPatchMutation(TestCase):
         user = UserFactory.create()
         new_cat_owner = UserFactory.create()
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchCat(
                 $id: ID!,
@@ -346,7 +346,7 @@ class TestPatchMutation(TestCase):
 
         user = UserFactory.create()
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchCat(
                 $id: ID!,
@@ -396,7 +396,7 @@ class TestPatchMutation(TestCase):
 
         user = UserFactory.create()
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchCat(
                 $id: ID!,
@@ -439,7 +439,7 @@ class TestPatchMutation(TestCase):
 
         user = UserFactory.create(first_name="John", last_name="Doe")
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchCat(
                 $id: ID!,
@@ -494,7 +494,7 @@ class TestPatchMutation(TestCase):
 
         dog = DogFactory.create()
         user = UserFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchDog(
                 $id: ID!,
@@ -556,7 +556,7 @@ class TestPatchMutationManyToManyOnReverseField(TestCase):
         user = UserFactory.create()
         dog = DogFactory.create()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchCat(
                 $id: ID!,
@@ -607,7 +607,7 @@ class TestPatchMutationManyToManyOnReverseField(TestCase):
         cat.enemies.set(dog)
         self.assertEqual(cat.enemies.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchCat(
                 $id: ID!,
@@ -659,7 +659,7 @@ class TestPatchMutationManyToManyOnReverseField(TestCase):
         cat.enemies.set(dog)
         self.assertEqual(cat.enemies.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchCat(
                 $id: ID!,
@@ -710,7 +710,7 @@ class TestPatchMutationManyToManyOnReverseField(TestCase):
         dog = DogFactory.create_batch(5)
         self.assertEqual(cat.enemies.all().count(), 0)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchCat(
                 $id: ID!,
@@ -766,7 +766,7 @@ class TestPatchMutationManyToManyOnReverseField(TestCase):
         dogs = DogFactory.create_batch(5)
         self.assertEqual(cat.enemies.all().count(), 0)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchCat(
                 $id: ID!,
@@ -827,7 +827,7 @@ class TestPatchMutationManyToManyOnReverseField(TestCase):
         cat.enemies.set(dog)
         self.assertEqual(cat.enemies.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchCat(
                 $id: ID!,
@@ -881,7 +881,7 @@ class TestPatchMutationManyToManyExtras(TestCase):
         dog.enemies.set(cats)
         self.assertEqual(dog.enemies.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchDog(
                 $id: ID!,
@@ -934,7 +934,7 @@ class TestPatchMutationManyToManyExtras(TestCase):
         cats = CatFactory.create_batch(5)
         self.assertEqual(dog.enemies.all().count(), 0)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchDog(
                 $id: ID!,
@@ -992,7 +992,7 @@ class TestPatchMutationManyToManyExtras(TestCase):
         cats = CatFactory.create_batch(5)
         self.assertEqual(dog.enemies.all().count(), 0)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchDog(
                 $id: ID!,
@@ -1048,7 +1048,7 @@ class TestPatchMutationManyToManyExtras(TestCase):
         dog.enemies.set(cats)
         self.assertEqual(dog.enemies.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchDog(
                 $id: ID!,
@@ -1103,7 +1103,7 @@ class TestPatchMutationManyToOneExtras(TestCase):
 
         self.assertEqual(user.cats.all().count(), 0)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchUser(
                 $id: ID!,
@@ -1155,7 +1155,7 @@ class TestPatchMutationManyToOneExtras(TestCase):
         cats = CatFactory.create_batch(5, owner=user)
         self.assertEqual(user.cats.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchUser(
                 $id: ID!,
@@ -1208,7 +1208,7 @@ class TestPatchMutationManyToOneExtras(TestCase):
         cats = CatFactory.create_batch(5)
         self.assertEqual(user.cats.all().count(), 0)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchUser(
                 $id: ID!,
@@ -1262,7 +1262,7 @@ class TestPatchMutationManyToOneExtras(TestCase):
         other_cats = CatFactory.create_batch(5)
         self.assertEqual(user.cats.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchUser(
                 $id: ID!,
@@ -1319,7 +1319,7 @@ class TestPatchMutationManyToOneExtras(TestCase):
         # Create some cats
         self.assertEqual(user.cats.all().count(), 0)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchUser(
                 $id: ID!,
@@ -1373,7 +1373,7 @@ class TestPatchMutationManyToOneExtras(TestCase):
         user.cats.set(cats)
         self.assertEqual(user.cats.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchUser(
                 $id: ID!,
@@ -1427,7 +1427,7 @@ class TestPatchMutationManyToOneExtras(TestCase):
         user.mice.set(mice)
         self.assertEqual(user.mice.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchUser(
                 $id: ID!,
@@ -1480,7 +1480,7 @@ class TestPatchMutationForeignKeyExtras(TestCase):
         dog = DogFactory.create()
         user = UserFactory.create()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchDog(
                 $id: ID!,
@@ -1543,7 +1543,7 @@ class TestPatchMutationCustomFields(TestCase):
         dog = DogFactory.create()
         user = UserFactory.create()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation PatchDog(
                 $id: ID!,
@@ -1618,7 +1618,7 @@ class TestPatchMutationRequiredFields(TestCase):
         self.user2_id = to_global_id("UserNode", self.user2.id)
         self.dog_id = to_global_id("DogNode", self.dog.id)
 
-        self.schema = Schema(mutation=Mutations)
+        self.schema = Schema(query=DummyQuery, mutation=Mutations)
         self.mutation = """
             mutation PatchDog(
                 $id: ID!,

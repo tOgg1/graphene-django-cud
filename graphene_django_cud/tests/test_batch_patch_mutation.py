@@ -6,6 +6,7 @@ from graphql_relay import to_global_id
 
 from graphene_django_cud.mutations.batch_patch import DjangoBatchPatchMutation
 from graphene_django_cud.tests.factories import DogFactory, UserFactory
+from graphene_django_cud.tests.dummy_query import DummyQuery
 from graphene_django_cud.tests.models import Dog
 
 
@@ -26,7 +27,7 @@ class TestBatchPatchMutation(TestCase):
         dog_2 = DogFactory.create()
         user = UserFactory.create()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation BatchPatchDog(
                 $input: [BatchPatchDogInput]! 
@@ -94,7 +95,7 @@ class TestBatchPatchMutationRequiredFields(TestCase):
         self.dog1_id = to_global_id("DogNode", self.dog1.id)
         self.dog2_id = to_global_id("DogNode", self.dog2.id)
 
-        self.schema = Schema(mutation=Mutations)
+        self.schema = Schema(query=DummyQuery, mutation=Mutations)
         self.mutation = """
             mutation BatchPatchDog(
                 $input: [BatchPatchDogInput]!
