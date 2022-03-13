@@ -1,8 +1,7 @@
 import graphene
 from addict import Dict
 from django.test import TestCase
-from graphene import Schema
-from graphql import ResolveInfo
+from graphene import Schema, ResolveInfo
 from graphql_relay import to_global_id
 
 from graphene_django_cud.mutations import DjangoUpdateMutation, DjangoCreateMutation
@@ -15,6 +14,7 @@ from graphene_django_cud.tests.factories import (
 )
 from graphene_django_cud.tests.models import User, Cat, Dog
 from graphene_django_cud.util import disambiguate_id
+from graphene_django_cud.tests.dummy_query import DummyQuery
 
 
 def mock_info(context=None):
@@ -57,7 +57,7 @@ class TestUpdateMutation(TestCase):
 
         user = UserFactory.create()
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateCat(
                 $id: ID!,
@@ -95,7 +95,7 @@ class TestUpdateMutation(TestCase):
 
         user = UserWithPermissionsFactory.create(permissions=["tests.change_cat"])
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateCat(
                 $id: ID!,
@@ -138,7 +138,7 @@ class TestUpdateMutation(TestCase):
 
         user = UserFactory.create()
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateCat(
                 $id: ID!,
@@ -184,7 +184,7 @@ class TestUpdateMutation(TestCase):
             permissions=["tests.change_cat"]
         )
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateCat(
                 $id: ID!,
@@ -240,7 +240,7 @@ class TestUpdateMutation(TestCase):
         user = UserFactory.create()
         new_cat_owner = UserFactory.create()
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateCat(
                 $id: ID!,
@@ -304,7 +304,7 @@ class TestUpdateMutation(TestCase):
 
         user = UserFactory.create()
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateCat(
                 $id: ID!,
@@ -354,7 +354,7 @@ class TestUpdateMutation(TestCase):
 
         user = UserFactory.create()
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateCat(
                 $id: ID!,
@@ -397,7 +397,7 @@ class TestUpdateMutation(TestCase):
 
         user = UserFactory.create(first_name="John", last_name="Doe")
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateCat(
                 $id: ID!,
@@ -452,7 +452,7 @@ class TestUpdateMutation(TestCase):
 
         dog = DogFactory.create()
         user = UserFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateDog(
                 $id: ID!,
@@ -514,7 +514,7 @@ class TestUpdateMutationManyToManyOnReverseField(TestCase):
         user = UserFactory.create()
         dog = DogFactory.create()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateCat(
                 $id: ID!,
@@ -565,7 +565,7 @@ class TestUpdateMutationManyToManyOnReverseField(TestCase):
         cat.enemies.set(dog)
         self.assertEqual(cat.enemies.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateCat(
                 $id: ID!,
@@ -617,7 +617,7 @@ class TestUpdateMutationManyToManyOnReverseField(TestCase):
         cat.enemies.set(dog)
         self.assertEqual(cat.enemies.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateCat(
                 $id: ID!,
@@ -668,7 +668,7 @@ class TestUpdateMutationManyToManyOnReverseField(TestCase):
         dog = DogFactory.create_batch(5)
         self.assertEqual(cat.enemies.all().count(), 0)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateCat(
                 $id: ID!,
@@ -724,7 +724,7 @@ class TestUpdateMutationManyToManyOnReverseField(TestCase):
         dog = DogFactory.create_batch(5)
         self.assertEqual(cat.enemies.all().count(), 0)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateCat(
                 $id: ID!,
@@ -784,7 +784,7 @@ class TestUpdateMutationManyToManyOnReverseField(TestCase):
         cat.enemies.set(dog)
         self.assertEqual(cat.enemies.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateCat(
                 $id: ID!,
@@ -838,7 +838,7 @@ class TestUpdateMutationManyToManyExtras(TestCase):
         dog.enemies.set(cats)
         self.assertEqual(dog.enemies.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateDog(
                 $id: ID!,
@@ -891,7 +891,7 @@ class TestUpdateMutationManyToManyExtras(TestCase):
         cats = CatFactory.create_batch(5)
         self.assertEqual(dog.enemies.all().count(), 0)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateDog(
                 $id: ID!,
@@ -949,7 +949,7 @@ class TestUpdateMutationManyToManyExtras(TestCase):
         cats = CatFactory.create_batch(5)
         self.assertEqual(dog.enemies.all().count(), 0)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateDog(
                 $id: ID!,
@@ -1005,7 +1005,7 @@ class TestUpdateMutationManyToManyExtras(TestCase):
         dog.enemies.set(cats)
         self.assertEqual(dog.enemies.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateDog(
                 $id: ID!,
@@ -1058,7 +1058,7 @@ class TestUpdateMutationManyToManyExtras(TestCase):
 
         self.assertEqual(dog.enemies.all().count(), 0)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateDog(
                 $id: ID!,
@@ -1108,7 +1108,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         class UpdateUserMutation(DjangoUpdateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"exact": {"type": "auto"}}}
 
         class Mutations(graphene.ObjectType):
@@ -1118,7 +1118,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
 
         self.assertEqual(user.cats.all().count(), 0)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateUser(
                 $id: ID!,
@@ -1158,7 +1158,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         class UpdateUserMutation(DjangoUpdateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"exact": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
@@ -1170,7 +1170,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         cats = CatFactory.create_batch(5, owner=user)
         self.assertEqual(user.cats.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateUser(
                 $id: ID!,
@@ -1211,7 +1211,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         class UpdateUserMutation(DjangoUpdateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"exact": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
@@ -1223,7 +1223,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         cats = CatFactory.create_batch(5)
         self.assertEqual(user.cats.all().count(), 0)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateUser(
                 $id: ID!,
@@ -1264,7 +1264,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         class UpdateUserMutation(DjangoUpdateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"add": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
@@ -1277,7 +1277,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         other_cats = CatFactory.create_batch(5)
         self.assertEqual(user.cats.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateUser(
                 $id: ID!,
@@ -1322,7 +1322,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         class UpdateUserMutation(DjangoUpdateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"add": {"type": "auto"}}}
 
         class Mutations(graphene.ObjectType):
@@ -1334,7 +1334,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         # Create some cats
         self.assertEqual(user.cats.all().count(), 0)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateUser(
                 $id: ID!,
@@ -1375,7 +1375,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         class UpdateUserMutation(DjangoUpdateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"remove": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
@@ -1388,7 +1388,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         user.cats.set(cats)
         self.assertEqual(user.cats.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateUser(
                 $id: ID!,
@@ -1429,7 +1429,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         class UpdateUserMutation(DjangoUpdateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"mice": {"remove": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
@@ -1442,7 +1442,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         user.mice.set(mice)
         self.assertEqual(user.mice.all().count(), 5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateUser(
                 $id: ID!,
@@ -1486,7 +1486,7 @@ class TestUpdateMutationForeignKeyExtras(TestCase):
             class Meta:
                 model = Dog
                 foreign_key_extras = {
-                    "owner": {"type": "auto", "exclude_fields": ["password"]}
+                    "owner": {"type": "auto", "exclude": ["password"]}
                 }
 
         class Mutations(graphene.ObjectType):
@@ -1495,7 +1495,7 @@ class TestUpdateMutationForeignKeyExtras(TestCase):
         dog = DogFactory.create()
         user = UserFactory.create()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateDog(
                 $id: ID!,
@@ -1534,7 +1534,9 @@ class TestUpdateMutationForeignKeyExtras(TestCase):
 
 
 class TestUpdateMutationCustomFields(TestCase):
-    def test_custom_field__separate_from_model_fields__adds_new_field_which_can_be_handled(self):
+    def test_custom_field__separate_from_model_fields__adds_new_field_which_can_be_handled(
+        self,
+    ):
         # This registers the UserNode type
         # noinspection PyUnresolvedReferences
         from .schema import UserNode
@@ -1542,9 +1544,7 @@ class TestUpdateMutationCustomFields(TestCase):
         class UpdateDogMutation(DjangoUpdateMutation):
             class Meta:
                 model = Dog
-                custom_fields = {
-                    "bark": graphene.Boolean()
-                }
+                custom_fields = {"bark": graphene.Boolean()}
 
             @classmethod
             def before_save(cls, root, info, input, id, obj: Dog):
@@ -1558,8 +1558,7 @@ class TestUpdateMutationCustomFields(TestCase):
         dog = DogFactory.create()
         user = UserFactory.create()
 
-
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateDog(
                 $id: ID!,
@@ -1583,7 +1582,7 @@ class TestUpdateMutationCustomFields(TestCase):
                     "tag": "tag",
                     "breed": "HUSKY",
                     "bark": True,
-                    "owner": to_global_id("UserNode", user.id)
+                    "owner": to_global_id("UserNode", user.id),
                 },
             },
             context=Dict(user=user),
@@ -1601,7 +1600,7 @@ class TestUpdateMutationCustomFields(TestCase):
                     "name": "Sparky",
                     "tag": "tag",
                     "breed": "HUSKY",
-                    "owner": to_global_id("UserNode", user.id)
+                    "owner": to_global_id("UserNode", user.id),
                 },
             },
             context=Dict(user=user),

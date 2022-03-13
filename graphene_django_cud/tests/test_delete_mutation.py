@@ -10,6 +10,7 @@ from graphene_django_cud.tests.factories import (
     CatFactory,
     UserFactory,
 )
+from graphene_django_cud.tests.dummy_query import DummyQuery
 from graphene_django_cud.tests.models import Cat
 from graphene_django_cud.util import disambiguate_id
 
@@ -30,7 +31,7 @@ class TestDeleteMutation(TestCase):
 
         user = UserWithPermissionsFactory.create(permissions=["tests.delete_cat"])
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation DeleteCat(
                 $id: ID!
@@ -68,7 +69,7 @@ class TestDeleteMutation(TestCase):
             delete_cat = DeleteCatMutation.Field()
 
         user = UserWithPermissionsFactory.create(permissions=["tests.delete_cat"])
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation DeleteCat(
                 $id: ID!
@@ -104,7 +105,7 @@ class TestDeleteMutation(TestCase):
 
         user = UserFactory.create()
         cat = CatFactory.create()
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation DeleteCat(
                 $id: ID!

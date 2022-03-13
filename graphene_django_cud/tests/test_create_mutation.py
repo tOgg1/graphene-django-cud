@@ -2,7 +2,7 @@ import graphene
 from addict import Dict
 from django.test import TestCase
 from graphene import Schema
-from graphql import ResolveInfo
+from graphene import ResolveInfo
 from graphql_relay import to_global_id
 
 from graphene_django_cud.mutations import DjangoUpdateMutation, DjangoCreateMutation
@@ -11,8 +11,10 @@ from graphene_django_cud.tests.factories import (
     CatFactory,
     DogFactory,
 )
+from graphene_django_cud.tests.dummy_query import DummyQuery
 from graphene_django_cud.tests.models import User, Cat, Dog, DogRegistration
 from graphene_django_cud.util import disambiguate_id
+
 
 def mock_info(context=None):
     return ResolveInfo(
@@ -31,7 +33,7 @@ def mock_info(context=None):
 
 class TestCreateMutationManyToOneExtras(TestCase):
     def test_many_to_one_extras__auto_calling_mutation_with_setting_field__does_nothing(
-            self,
+        self,
     ):
         # This registers the UserNode type
         # noinspection PyUnresolvedReferences
@@ -40,7 +42,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         class CreateUserMutation(DjangoCreateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"exact": {"type": "auto"}}}
 
         class Mutations(graphene.ObjectType):
@@ -48,7 +50,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
 
         user = UserFactory.build()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
                 $input: CreateUserInput! 
@@ -87,7 +89,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         class CreateUserMutation(DjangoCreateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"exact": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
@@ -96,7 +98,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         user = UserFactory.build()
         other_cats = CatFactory.create_batch(5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
                 $input: CreateUserInput! 
@@ -136,7 +138,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         class CreateUserMutation(DjangoCreateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"add": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
@@ -145,7 +147,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         user = UserFactory.build()
         other_cats = CatFactory.create_batch(5)
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
                 $input: CreateUserInput! 
@@ -189,7 +191,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         class CreateUserMutation(DjangoCreateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"add": {"type": "auto"}}}
 
         class Mutations(graphene.ObjectType):
@@ -198,7 +200,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
 
         user = UserFactory.build()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
                 $input: CreateUserInput! 
@@ -250,7 +252,7 @@ class TestUpdateWithOneToOneField(TestCase):
         dog = DogFactory.create()
         DogRegistration.objects.create(dog=dog, registration_number="1234")
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateDog(
                 $id: ID!,
@@ -311,7 +313,7 @@ class TestUpdateWithOneToOneField(TestCase):
             dog=dog, registration_number="1234"
         )
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation UpdateDogRegistration(
                 $id: ID!,
@@ -352,9 +354,12 @@ class TestUpdateWithOneToOneField(TestCase):
             "LABRADOR", data.updateDogRegistration.dogRegistration.dog.breed
         )
 
+        print(dog.breed, type(dog.breed))
         # Load from database
         dog_registration.refresh_from_db()
         dog.refresh_from_db()
+        print(dog.breed, type(dog.breed))
+
         self.assertEqual(dog.breed, "LABRADOR")
 
 
@@ -374,7 +379,7 @@ class TestCreateWithOneToOneField(TestCase):
 
         user = UserFactory.create()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateDog(
                 $input: CreateDogInput!
@@ -430,7 +435,7 @@ class TestCreateWithOneToOneField(TestCase):
 
         user = UserFactory.create()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateDogRegistration(
                 $input: CreateDogRegistrationInput!
@@ -495,7 +500,7 @@ class TestCreateWithPlainManyToOneRelation(TestCase):
         class CreateUserMutation(DjangoCreateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
 
         class Mutations(graphene.ObjectType):
             create_user = CreateUserMutation.Field()
@@ -503,7 +508,7 @@ class TestCreateWithPlainManyToOneRelation(TestCase):
         user = UserFactory.create()
         cat = CatFactory.create()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
                 $input: CreateUserInput!
@@ -566,7 +571,7 @@ class TestCreateWithPlainManyToManyRelation(TestCase):
         user = UserFactory.create()
         cat = CatFactory.create()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateDog(
                 $input: CreateDogInput!
@@ -615,7 +620,9 @@ class TestCreateWithPlainManyToManyRelation(TestCase):
 
 
 class TestCreateMutationCustomFields(TestCase):
-    def test_custom_field__separate_from_model_fields__adds_new_field_which_can_be_handled(self):
+    def test_custom_field__separate_from_model_fields__adds_new_field_which_can_be_handled(
+        self,
+    ):
         # This registers the UserNode type
         # noinspection PyUnresolvedReferences
         from .schema import UserNode
@@ -623,9 +630,7 @@ class TestCreateMutationCustomFields(TestCase):
         class CreateDogMutation(DjangoCreateMutation):
             class Meta:
                 model = Dog
-                custom_fields = {
-                    "bark": graphene.Boolean()
-                }
+                custom_fields = {"bark": graphene.Boolean()}
 
             @classmethod
             def before_save(cls, root, info, input, obj):
@@ -639,7 +644,7 @@ class TestCreateMutationCustomFields(TestCase):
         dog = DogFactory.create()
         user = UserFactory.create()
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateDog(
                 $input: CreateDogInput! 
@@ -662,7 +667,7 @@ class TestCreateMutationCustomFields(TestCase):
                     "tag": "tag",
                     "breed": "HUSKY",
                     "bark": True,
-                    "owner": to_global_id("UserNode", user.id)
+                    "owner": to_global_id("UserNode", user.id),
                 },
             },
             context=Dict(user=user),
@@ -678,7 +683,7 @@ class TestCreateMutationCustomFields(TestCase):
                     "name": "Sparky",
                     "tag": "tag-2",
                     "breed": "HUSKY",
-                    "owner": to_global_id("UserNode", user.id)
+                    "owner": to_global_id("UserNode", user.id),
                 },
             },
             context=Dict(user=user),
@@ -686,3 +691,73 @@ class TestCreateMutationCustomFields(TestCase):
         self.assertIsNone(result.errors)
 
         self.assertEqual(0, result.data["createDog"]["dog"]["barkCount"])
+
+
+class TestCreateWithManyToManyThroughModel(TestCase):
+    def test__creating_a_related_entity_with_a_through_model__works_as_intended(self):
+        # This registers the UserNode type
+        # noinspection PyUnresolvedReferences
+        from .schema import UserNode
+
+        class CreateCatMutation(DjangoCreateMutation):
+            class Meta:
+                model = Cat
+                many_to_one_extras = {
+                    "cat_user_relations": {
+                        "add": {
+                            "type": "auto",
+                        }
+                    }
+                }
+
+        owner = UserFactory.create()
+        other_user = UserFactory.create()
+
+        class Mutations(graphene.ObjectType):
+            create_cat = CreateCatMutation.Field()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+        mutation = """
+            mutation CreateCat(
+                $input: CreateCatInput! 
+            ){
+                createCat(input: $input){
+                    cat{
+                        id
+                        catUserRelations{
+                            edges{
+                                node {
+                                    id
+                                    friends
+                                    user{
+                                        id
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        """
+        result = schema.execute(
+            mutation,
+            variables={
+                "input": {
+                    "name": "Garfield",
+                    "owner": to_global_id("UserNode", owner.id),
+                    "catUserRelationsAdd": [
+                        {
+                            "user": to_global_id("UserNode", other_user.id),
+                            "friends": True,
+                        }
+                    ],
+                }
+            },
+        )
+
+        self.assertIsNone(result.errors)
+        cat = result.data["createCat"]["cat"]
+        self.assertEqual(
+            cat["catUserRelations"]["edges"][0]["node"]["user"]["id"],
+            to_global_id("UserNode", other_user.id),
+        )

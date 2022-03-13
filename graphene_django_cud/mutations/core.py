@@ -1,5 +1,7 @@
+import enum
 from typing import Iterable, Union
 
+import graphene
 from django.db import models
 from graphene import Mutation
 from graphene.types.mutation import MutationOptions
@@ -14,7 +16,8 @@ from graphene_django_cud.util import (
     disambiguate_ids,
     is_field_many_to_many,
     is_field_one_to_one,
-    is_field_many_to_one, get_model_field_or_none,
+    is_field_many_to_one,
+    get_model_field_or_none,
 )
 
 meta_registry = get_type_meta_registry()
@@ -102,23 +105,23 @@ class DjangoCudBase(Mutation):
                     info,
                     {
                         **input_type_meta.get("auto_context_fields", {}),
-                        **data.get("auto_context_fields", {})
+                        **data.get("auto_context_fields", {}),
                     },
                     {
                         **input_type_meta.get("many_to_many_extras", {}),
-                        **data.get("many_to_many_extras", {})
+                        **data.get("many_to_many_extras", {}),
                     },
                     {
                         **input_type_meta.get("foreign_key_extras", {}),
-                        **data.get("foreign_key_extras", {})
+                        **data.get("foreign_key_extras", {}),
                     },
                     {
                         **input_type_meta.get("many_to_one_extras", {}),
-                        **data.get("many_to_one_extras", {})
+                        **data.get("many_to_one_extras", {}),
                     },
                     {
                         **input_type_meta.get("one_to_one_extras", {}),
-                        **data.get("one_to_one_extras", {})
+                        **data.get("one_to_one_extras", {}),
                     },
                     field.related_model,
                 )
@@ -136,30 +139,29 @@ class DjangoCudBase(Mutation):
         field_type = data.get("type", "auto")
         for value in values:
             if field_type == "ID":
-                related_obj = field.related_model.objects.get(
-                    pk=cls.resolve_id(value))
+                related_obj = field.related_model.objects.get(pk=cls.resolve_id(value))
                 results.append(related_obj)
             else:
                 input_type_meta = meta_registry.get_meta_for_type(field_type)
                 auto_context_fields = {
                     **input_type_meta.get("auto_context_fields", {}),
-                    **data.get("auto_context_fields", {})
+                    **data.get("auto_context_fields", {}),
                 }
                 many_to_many_extras = {
                     **input_type_meta.get("many_to_many_extras", {}),
-                    **data.get("many_to_many_extras", {})
+                    **data.get("many_to_many_extras", {}),
                 }
                 foreign_key_extras = {
                     **input_type_meta.get("foreign_key_extras", {}),
-                    **data.get("foreign_key_extras", {})
+                    **data.get("foreign_key_extras", {}),
                 }
                 many_to_one_extras = {
                     **input_type_meta.get("many_to_one_extras", {}),
-                    **data.get("many_to_one_extras", {})
+                    **data.get("many_to_one_extras", {}),
                 }
                 one_to_one_extras = {
                     **input_type_meta.get("one_to_one_extras", {}),
-                    **data.get("one_to_one_extras", {})
+                    **data.get("one_to_one_extras", {}),
                 }
 
                 if field_type == "auto":
@@ -373,11 +375,17 @@ class DjangoCudBase(Mutation):
                     new_value = cls.resolve_id(value)
                 elif field_is_many_to_many:
                     new_value = cls.resolve_ids(value)
+                elif isinstance(new_value, enum.Enum):
+                    new_value = new_value.value
 
             if field_is_many_to_many:
-                many_to_many_to_set[name] = cls.get_all_objs(field.related_model, new_value)
+                many_to_many_to_set[name] = cls.get_all_objs(
+                    field.related_model, new_value
+                )
             elif field_is_many_to_one:
-                many_to_one_to_set[name] = cls.get_all_objs(field.related_model, new_value)
+                many_to_one_to_set[name] = cls.get_all_objs(
+                    field.related_model, new_value
+                )
             else:
                 model_field_values[name] = new_value
 
@@ -391,6 +399,7 @@ class DjangoCudBase(Mutation):
 
             model_field_values[name + "_id"] = obj_id
 
+        print(model_field_values)
         # Foreign keys are added, we are ready to create our object
         obj = Model.objects.create(**model_field_values)
 
@@ -647,12 +656,19 @@ class DjangoCudBase(Mutation):
                     new_value = cls.resolve_id(value)
                 elif field_is_many_to_many:
                     new_value = cls.resolve_ids(value)
+                elif isinstance(new_value, enum.Enum):
+                    new_value = new_value.value
 
             if field_is_many_to_many:
-                many_to_many_to_set[name] = cls.get_all_objs(field.related_model, new_value)
+                many_to_many_to_set[name] = cls.get_all_objs(
+                    field.related_model, new_value
+                )
             elif field_is_many_to_one:
-                many_to_one_to_set[name] = cls.get_all_objs(field.related_model, new_value)
+                many_to_one_to_set[name] = cls.get_all_objs(
+                    field.related_model, new_value
+                )
             else:
+                print(obj, name, new_value)
                 setattr(obj, name, new_value)
 
         # Handle extras fields
@@ -823,10 +839,15 @@ class DjangoCudBase(Mutation):
 class DjangoCudBaseOptions(MutationOptions):
     model = None
 
-    only_fields = None
-    exclude_fields = None
+    only_fields = None  # Deprecated in favor of `fields`
+    exclude_fields = None  # Deprecated in favor of `exclude`
+
+    fields = None
+    exclude = None
+
     optional_fields = None
     required_fields = None
+
     auto_context_fields = None
 
     permissions = None

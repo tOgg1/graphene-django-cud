@@ -18,6 +18,10 @@ class Cat(models.Model):
     name = models.TextField()
     targets = models.ManyToManyField(Mouse, blank=True, related_name="predators")
 
+    user_relations = models.ManyToManyField(
+        User, through="CatUserRelation", blank=True, related_name="related_to_cats"
+    )
+
 
 class Dog(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="dogs")
@@ -36,7 +40,7 @@ class Dog(models.Model):
             ("BULLDOG", "BULLDOG"),
             ("FLATCOAT", "Flatcoat retriever"),
             ("MALAMUTE", "Alaskan Malamuate"),
-        ),
+        )
     )
 
     enemies = models.ManyToManyField(Cat, blank=True, related_name="enemies")
@@ -51,3 +55,15 @@ class DogRegistration(models.Model):
         Dog, related_name="registration", on_delete=models.CASCADE
     )
     registration_number = models.CharField(max_length=32)
+
+
+class CatUserRelation(models.Model):
+    cat = models.ForeignKey(Cat, on_delete=models.CASCADE, related_name="cat_user_relations")
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="cat_user_relations"
+    )
+
+    friends = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = (("cat", "user"),)

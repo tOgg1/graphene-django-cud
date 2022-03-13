@@ -6,6 +6,7 @@ from django.test import TestCase
 from graphene import Schema
 
 from graphene_django_cud.mutations.batch_delete import DjangoBatchDeleteMutation
+from graphene_django_cud.tests.dummy_query import DummyQuery
 from graphene_django_cud.tests.factories import UserFactory
 from graphene_django_cud.tests.models import User
 from graphene_django_cud.util import disambiguate_ids
@@ -25,7 +26,7 @@ class TestBatchDeleteMutation(TestCase):
             batch_delete_user = BatchDeleteUserMutation.Field()
 
         users = UserFactory.create_batch(10)
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation BatchDeleteUser(
                 $ids: [ID]!,
@@ -68,7 +69,7 @@ class TestBatchDeleteMutation(TestCase):
 
         ids_to_delete = [user.id for user in selection] + non_existing_ids
 
-        schema = Schema(mutation=Mutations)
+        schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation BatchDeleteUser(
                 $ids: [ID]!,
@@ -84,6 +85,7 @@ class TestBatchDeleteMutation(TestCase):
         result = schema.execute(
             mutation, variables={"ids": ids_to_delete},
         )
+        print(result)
         data = Dict(result.data)
         self.assertEqual(5, data.batchDeleteUser.deletionCount)
         self.assertListEqual(

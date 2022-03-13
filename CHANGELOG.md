@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 0.10.0
+* Put `select_for_update` behind a new option `use_select_for_update`, which is enabled by default.
+* Rename `only_fields` -> `fields` and `exclude_fields` -> `exclude`. Alias the old names but add deprecation warnings.
+* Make the library graphene(-django) 3.x compatible.
+* Respect required_fields in Patch and BatchPatch mutations (thanks @mbuvarp).
+
 ## Version 0.9.1
 * Improve atomicity of patch/update-calls (thanks @keithhackbarth)
 * Improve documentation

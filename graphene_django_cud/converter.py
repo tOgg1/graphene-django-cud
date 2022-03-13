@@ -30,12 +30,12 @@ from graphene import (
     Decimal,
 )
 from graphene.types.json import JSONString
-from graphene.utils.str_converters import to_camel_case, to_const
 from graphene_django.compat import ArrayField, HStoreField, JSONField, RangeField
 from graphene_file_upload.scalars import Upload
 from graphql import assert_valid_name, GraphQLError
 
 from graphene_django_cud.types import TimeDelta
+from graphene_django_cud.util.string import to_camel_case, to_const
 
 
 def is_required(field, required=None, is_many_to_many=False):

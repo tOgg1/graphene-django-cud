@@ -1,4 +1,5 @@
 import binascii
+import re
 import uuid
 from collections import OrderedDict
 from typing import Union, List, Optional
@@ -84,8 +85,8 @@ def overload_nested_fields(nested_fields):
 
 def get_input_fields_for_model(
     model,
-    only_fields,
-    exclude_fields,
+    fields,
+    exclude,
     optional_fields=(),
     required_fields=(),
     many_to_many_extras=None,
@@ -117,7 +118,7 @@ def get_input_fields_for_model(
     field_types = field_types or {}
     one_to_one_fields: List[Union[models.OneToOneRel, models.OneToOneField]] = []
 
-    fields = OrderedDict()
+    converted_input_fields = OrderedDict()
     fields_lookup = {}
 
     for name, field in model_fields:
@@ -127,15 +128,15 @@ def get_input_fields_for_model(
 
         # If the field has an override, use that
         if name in field_types:
-            fields[name] = field_types[name]
+            converted_input_fields[name] = field_types[name]
             continue
 
         # Save for later
         fields_lookup[name] = field
 
-        is_not_in_only = only_fields and name not in only_fields
+        is_not_in_only = fields and name not in fields
         # is_already_created = name in options.fields
-        is_excluded = name in exclude_fields  # or is_already_created
+        is_excluded = name in exclude  # or is_already_created
         # https://docs.djangoproject.com/en/1.10/ref/models/fields/#django.db.models.ForeignKey.related_query_name
         is_no_backref = str(name).endswith("+")
         if is_not_in_only or is_excluded or is_no_backref:
@@ -158,7 +159,7 @@ def get_input_fields_for_model(
             foreign_key_extras.get(name, {}),
             one_to_one_extras.get(name, {}),
         )
-        fields[name] = converted
+        converted_input_fields[name] = converted
 
         if type(field) in (models.OneToOneRel, models.OneToOneField):
             one_to_one_fields.append(field)
@@ -186,11 +187,13 @@ def get_input_fields_for_model(
         # On ForeignKeys we can get the reverse field via field.remote_field
         reverse_field_name = field.remote_field.name
 
-        converted_fields = get_input_fields_for_model(
+        foreign_key_converted_fields = get_input_fields_for_model(
             field.related_model,
-            data.get("only_fields", ()),
-            data.get(
-                "exclude_fields", (reverse_field_name,)
+            # TODO: Remove only_fields and exclude_fields when the deprecated fields are removed.
+            tuple(data.get("fields", data.get("only_fields", ()))),
+            tuple(data.get("exclude", data.get("exclude_fields", ())))
+            + (
+                reverse_field_name,
             ),  # Exclude the field referring back to the foreign key
             data.get("optional_fields", ()),
             data.get("required_fields", ()),
@@ -201,7 +204,7 @@ def get_input_fields_for_model(
             field_types=data.get("field_types"),
         )
 
-        InputType = type(type_name, (InputObjectType,), converted_fields)
+        InputType = type(type_name, (InputObjectType,), foreign_key_converted_fields)
         registry.register_converted_field(type_name, InputType)
         meta_registry.register(type_name, data)
 
@@ -227,11 +230,13 @@ def get_input_fields_for_model(
             else field.remote_field.name
         )
 
-        converted_fields = get_input_fields_for_model(
+        one_to_one_converted_fields = get_input_fields_for_model(
             field.related_model,
-            data.get("only_fields", ()),
-            data.get(
-                "exclude_fields", (reverse_field_name,)
+            # TODO: Remove only_fields and exclude_fields when the deprecated fields are removed.
+            tuple(data.get("fields", data.get("only_fields", ()))),
+            tuple(data.get("exclude", data.get("exclude_fields", ())))
+            + (
+                reverse_field_name,
             ),  # Exclude the field referring back to the foreign key
             data.get("optional_fields", ()),
             data.get("required_fields", ()),
@@ -242,7 +247,7 @@ def get_input_fields_for_model(
             field_types=data.get("field_types"),
         )
 
-        InputType = type(type_name, (InputObjectType,), converted_fields)
+        InputType = type(type_name, (InputObjectType,), one_to_one_converted_fields)
         registry.register_converted_field(type_name, InputType)
         meta_registry.register(type_name, data)
 
@@ -264,7 +269,7 @@ def get_input_fields_for_model(
             if extra_name == "exact":
                 argument_name = name
 
-            fields[argument_name] = convert_many_to_many_like_field(
+            converted_input_fields[argument_name] = convert_many_to_many_like_field(
                 data, name, extra_name, parent_type_name, field, registry, meta_registry
             )
 
@@ -283,11 +288,11 @@ def get_input_fields_for_model(
             if extra_name == "exact":
                 argument_name = name
 
-            fields[argument_name] = convert_many_to_many_like_field(
+            converted_input_fields[argument_name] = convert_many_to_many_like_field(
                 data, name, extra_name, parent_type_name, field, registry, meta_registry
             )
 
-    return fields
+    return converted_input_fields
 
 
 def convert_many_to_many_like_field(
@@ -351,7 +356,10 @@ def convert_many_to_many_like_field(
             },
         )
         registry.register_converted_field(type_name, InputType)
-        _field = graphene.List(InputType, required=False,)
+        _field = graphene.List(
+            InputType,
+            required=False,
+        )
     else:
         _field = convert_many_to_many_field(field, registry, False, data, None)
 
