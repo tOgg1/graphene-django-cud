@@ -189,9 +189,11 @@ def get_input_fields_for_model(
 
         foreign_key_converted_fields = get_input_fields_for_model(
             field.related_model,
-            data.get("fields", data.get("only_fields", ())),
-            data.get(
-                "exclude", data.get("exclude_fields", (reverse_field_name,))
+            # TODO: Remove only_fields and exclude_fields when the deprecated fields are removed.
+            tuple(data.get("fields", data.get("only_fields", ()))),
+            tuple(data.get("exclude", data.get("exclude_fields", ())))
+            + (
+                reverse_field_name,
             ),  # Exclude the field referring back to the foreign key
             data.get("optional_fields", ()),
             data.get("required_fields", ()),
@@ -230,9 +232,11 @@ def get_input_fields_for_model(
 
         one_to_one_converted_fields = get_input_fields_for_model(
             field.related_model,
-            data.get("only_fields", ()),
-            data.get(
-                "exclude_fields", (reverse_field_name,)
+            # TODO: Remove only_fields and exclude_fields when the deprecated fields are removed.
+            tuple(data.get("fields", data.get("only_fields", ()))),
+            tuple(data.get("exclude", data.get("exclude_fields", ())))
+            + (
+                reverse_field_name,
             ),  # Exclude the field referring back to the foreign key
             data.get("optional_fields", ()),
             data.get("required_fields", ()),
