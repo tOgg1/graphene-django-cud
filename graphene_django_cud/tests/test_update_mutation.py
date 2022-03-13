@@ -1108,7 +1108,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         class UpdateUserMutation(DjangoUpdateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"exact": {"type": "auto"}}}
 
         class Mutations(graphene.ObjectType):
@@ -1158,7 +1158,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         class UpdateUserMutation(DjangoUpdateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"exact": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
@@ -1211,7 +1211,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         class UpdateUserMutation(DjangoUpdateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"exact": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
@@ -1264,7 +1264,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         class UpdateUserMutation(DjangoUpdateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"add": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
@@ -1322,7 +1322,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         class UpdateUserMutation(DjangoUpdateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"add": {"type": "auto"}}}
 
         class Mutations(graphene.ObjectType):
@@ -1375,7 +1375,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         class UpdateUserMutation(DjangoUpdateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"remove": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
@@ -1429,7 +1429,7 @@ class TestUpdateMutationManyToOneExtras(TestCase):
         class UpdateUserMutation(DjangoUpdateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"mice": {"remove": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
@@ -1486,7 +1486,7 @@ class TestUpdateMutationForeignKeyExtras(TestCase):
             class Meta:
                 model = Dog
                 foreign_key_extras = {
-                    "owner": {"type": "auto", "exclude_fields": ["password"]}
+                    "owner": {"type": "auto", "exclude": ["password"]}
                 }
 
         class Mutations(graphene.ObjectType):
