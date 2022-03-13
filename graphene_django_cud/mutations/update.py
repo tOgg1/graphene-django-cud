@@ -41,6 +41,7 @@ class DjangoUpdateMutation(DjangoCudBase):
         type_name=None,
         field_types=None,
         custom_fields=None,
+        use_select_for_update=True,
         **kwargs,
     ):
         registry = get_global_registry()
@@ -136,6 +137,7 @@ class DjangoUpdateMutation(DjangoCudBase):
         _meta.login_required = login_required or (
             _meta.permissions and len(_meta.permissions) > 0
         )
+        _meta.use_select_for_update = use_select_for_update
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
@@ -182,7 +184,11 @@ class DjangoUpdateMutation(DjangoCudBase):
             id = cls.resolve_id(id)
             Model = cls._meta.model
             queryset = cls.get_queryset(root, info, input, id)
-            obj = queryset.select_for_update().get(pk=id)
+
+            if cls._meta.use_select_for_update:
+                queryset = queryset.select_for_update()
+
+            obj = queryset.get(pk=id)
             auto_context_fields = cls._meta.auto_context_fields or {}
 
             cls.check_permissions(root, info, input, id, obj)
