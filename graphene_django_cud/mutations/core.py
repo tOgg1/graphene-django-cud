@@ -839,10 +839,15 @@ class DjangoCudBase(Mutation):
 class DjangoCudBaseOptions(MutationOptions):
     model = None
 
-    only_fields = None
-    exclude_fields = None
+    only_fields = None  # Deprecated in favor of `fields`
+    exclude_fields = None  # Deprecated in favor of `exclude`
+
+    fields = None
+    exclude = None
+
     optional_fields = None
     required_fields = None
+
     auto_context_fields = None
 
     permissions = None

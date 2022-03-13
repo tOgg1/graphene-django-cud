@@ -1,3 +1,4 @@
+import warnings
 from collections import OrderedDict
 from typing import Iterable
 
@@ -28,9 +29,11 @@ class DjangoUpdateMutation(DjangoCudBase):
         model=None,
         permissions=None,
         login_required=None,
-        only_fields=(),
-        exclude_fields=(),
-        optional_fields=(),
+        fields=(),
+            only_fields=(),  # Deprecated in favor of `fields`
+            exclude=(),
+            exclude_fields=(),  # Deprecated in favor of `exclude`
+            optional_fields=(),
         required_fields=(),
         auto_context_fields=None,
         return_field_name=None,
@@ -71,12 +74,33 @@ class DjangoUpdateMutation(DjangoCudBase):
         if not return_field_name:
             return_field_name = to_snake_case(model.__name__)
 
+        if fields and only_fields:
+            raise Exception("Cannot set both `fields` and `only_fields` on a mutation")
+
+        if exclude and exclude_fields:
+            raise Exception(
+                "Cannot set both `exclude` and `exclude_fields` on a mutation"
+            )
+
+        if only_fields:
+            fields = only_fields
+            warnings.warn(
+                "`only_fields` is deprecated in favor of `fields`", DeprecationWarning
+            )
+
+        if exclude_fields:
+            exclude = exclude_fields
+            warnings.warn(
+                "`exclude_fields` is deprecated in favor of `exclude`",
+                DeprecationWarning,
+            )
+
         input_type_name = type_name or f"Update{model.__name__}Input"
 
         model_fields = get_input_fields_for_model(
             model,
-            only_fields,
-            exclude_fields,
+            fields,
+            exclude,
             optional_fields=tuple(auto_context_fields.keys()) + optional_fields,
             required_fields=required_fields,
             many_to_many_extras=many_to_many_extras,

@@ -29,8 +29,6 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
         model=None,
         permissions=None,
         login_required=None,
-        only_fields=(),
-        exclude_fields=(),
         return_field_name=None,
         **kwargs,
     ):

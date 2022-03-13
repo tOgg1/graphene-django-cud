@@ -1,3 +1,4 @@
+import warnings
 from collections import OrderedDict
 from typing import Iterable
 
@@ -40,8 +41,10 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
         filter_fields=(),
         filter_class=None,
         type_name=None,
-        only_fields=(),
-        exclude_fields=(),
+        fields=(),
+        only_fields=(),  # Deprecated in favor of `fields`
+        exclude=(),
+        exclude_fields=(),  # Deprecated in favor of `exclude`
         optional_fields=None,
         required_fields=(),
         field_types=None,
@@ -59,6 +62,27 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
             len(filter_fields) > 0
         ), f"You must specify at least one field to filter on for deletion."
 
+        if fields and only_fields:
+            raise Exception("Cannot set both `fields` and `only_fields` on a mutation")
+
+        if exclude and exclude_fields:
+            raise Exception(
+                "Cannot set both `exclude` and `exclude_fields` on a mutation"
+            )
+
+        if only_fields:
+            fields = only_fields
+            warnings.warn(
+                "`only_fields` is deprecated in favor of `fields`", DeprecationWarning
+            )
+
+        if exclude_fields:
+            exclude = exclude_fields
+            warnings.warn(
+                "`exclude_fields` is deprecated in favor of `exclude`",
+                DeprecationWarning,
+            )
+
         input_arguments = get_filter_fields_input_args(filter_fields, model)
 
         FilterInputType = type(
@@ -71,8 +95,8 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
 
         model_fields = get_input_fields_for_model(
             model,
-            only_fields,
-            exclude_fields,
+            fields,
+            exclude,
             tuple(auto_context_fields.keys()) + optional_fields,
             required_fields,
             None,

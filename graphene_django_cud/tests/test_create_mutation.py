@@ -41,7 +41,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         class CreateUserMutation(DjangoCreateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"exact": {"type": "auto"}}}
 
         class Mutations(graphene.ObjectType):
@@ -88,7 +88,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         class CreateUserMutation(DjangoCreateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"exact": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
@@ -137,7 +137,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         class CreateUserMutation(DjangoCreateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"add": {"type": "ID"}}}
 
         class Mutations(graphene.ObjectType):
@@ -190,7 +190,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         class CreateUserMutation(DjangoCreateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
                 many_to_one_extras = {"cats": {"add": {"type": "auto"}}}
 
         class Mutations(graphene.ObjectType):
@@ -499,7 +499,7 @@ class TestCreateWithPlainManyToOneRelation(TestCase):
         class CreateUserMutation(DjangoCreateMutation):
             class Meta:
                 model = User
-                exclude_fields = ("password",)
+                exclude = ("password",)
 
         class Mutations(graphene.ObjectType):
             create_user = CreateUserMutation.Field()
