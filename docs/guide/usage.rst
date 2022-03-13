@@ -24,12 +24,16 @@ Then we can create a create mutation with the following schema
         class Meta:
             model = User
 
-
     class Mutation(graphene.ObjectType):
         create_user = CreateUserMutation.Field()
 
+    class Query(graphene.ObjectType):
+        user = graphene.Field(UserNode, id=graphene.String())
 
-    schema = Schema(mutation=Mutation)
+        def resolve_user(self, info, id):
+            return User.objects.get(pk=id)
+
+    schema = Schema(query=Query, mutation=Mutation)
 
 Note that the ``UserNode`` has to be registered as a field before the
 mutation is instantiated. This will be configurable in the future.
