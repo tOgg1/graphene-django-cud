@@ -18,6 +18,21 @@ factory_boy = "^2.12"
 addict = "^2.2"
 pytest-cov = "^2.8"
 
+[tool.black]
+line-length = 88
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | .github
+  | .pytest_cache
+  | .idea
+  | build
+  | __pycache__
+  | manage.py
+)/
+'''
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
