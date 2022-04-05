@@ -399,7 +399,6 @@ class DjangoCudBase(Mutation):
 
             model_field_values[name + "_id"] = obj_id
 
-        print(model_field_values)
         # Foreign keys are added, we are ready to create our object
         obj = Model.objects.create(**model_field_values)
 
@@ -668,7 +667,6 @@ class DjangoCudBase(Mutation):
                     field.related_model, new_value
                 )
             else:
-                print(obj, name, new_value)
                 setattr(obj, name, new_value)
 
         # Handle extras fields

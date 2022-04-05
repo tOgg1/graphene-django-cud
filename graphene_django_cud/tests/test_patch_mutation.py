@@ -61,7 +61,7 @@ class TestPatchMutation(TestCase):
         mutation = """
             mutation PatchCat(
                 $id: ID!,
-                $input: PatchCatInput! 
+                $input: PatchCatInput!
             ){
                 patchCat(id: $id, input: $input){
                     cat{
@@ -141,7 +141,7 @@ class TestPatchMutation(TestCase):
         mutation = """
             mutation PatchCat(
                 $id: ID!,
-                $input: PatchCatInput! 
+                $input: PatchCatInput!
             ){
                 patchCat(id: $id, input: $input){
                     cat{
@@ -184,7 +184,7 @@ class TestPatchMutation(TestCase):
         mutation = """
             mutation PatchCat(
                 $id: ID!,
-                $input: PatchCatInput! 
+                $input: PatchCatInput!
             ){
                 patchCat(id: $id, input: $input){
                     cat{
@@ -230,7 +230,7 @@ class TestPatchMutation(TestCase):
         mutation = """
             mutation PatchCat(
                 $id: ID!,
-                $input: PatchCatInput! 
+                $input: PatchCatInput!
             ){
                 patchCat(id: $id, input: $input){
                     cat{
@@ -286,7 +286,7 @@ class TestPatchMutation(TestCase):
         mutation = """
             mutation PatchCat(
                 $id: ID!,
-                $input: PatchCatInput! 
+                $input: PatchCatInput!
             ){
                 patchCat(id: $id, input: $input){
                     cat{
@@ -350,7 +350,7 @@ class TestPatchMutation(TestCase):
         mutation = """
             mutation PatchCat(
                 $id: ID!,
-                $input: PatchCatInput! 
+                $input: PatchCatInput!
             ){
                 patchCat(id: $id, input: $input){
                     cat{
@@ -400,7 +400,7 @@ class TestPatchMutation(TestCase):
         mutation = """
             mutation PatchCat(
                 $id: ID!,
-                $input: PatchCatInput! 
+                $input: PatchCatInput!
             ){
                 patchCat(id: $id, input: $input){
                     cat{
@@ -443,7 +443,7 @@ class TestPatchMutation(TestCase):
         mutation = """
             mutation PatchCat(
                 $id: ID!,
-                $input: PatchCatInput! 
+                $input: PatchCatInput!
             ){
                 patchCat(id: $id, input: $input){
                     cat{
@@ -498,7 +498,7 @@ class TestPatchMutation(TestCase):
         mutation = """
             mutation PatchDog(
                 $id: ID!,
-                $input: PatchDogInput! 
+                $input: PatchDogInput!
             ){
                 patchDog(id: $id, input: $input){
                     dog{
@@ -560,7 +560,7 @@ class TestPatchMutationManyToManyOnReverseField(TestCase):
         mutation = """
             mutation PatchCat(
                 $id: ID!,
-                $input: PatchCatInput! 
+                $input: PatchCatInput!
             ){
                 patchCat(id: $id, input: $input){
                     cat{
@@ -611,7 +611,7 @@ class TestPatchMutationManyToManyOnReverseField(TestCase):
         mutation = """
             mutation PatchCat(
                 $id: ID!,
-                $input: PatchCatInput! 
+                $input: PatchCatInput!
             ){
                 patchCat(id: $id, input: $input){
                     cat{
@@ -663,7 +663,7 @@ class TestPatchMutationManyToManyOnReverseField(TestCase):
         mutation = """
             mutation PatchCat(
                 $id: ID!,
-                $input: PatchCatInput! 
+                $input: PatchCatInput!
             ){
                 patchCat(id: $id, input: $input){
                     cat{
@@ -714,7 +714,7 @@ class TestPatchMutationManyToManyOnReverseField(TestCase):
         mutation = """
             mutation PatchCat(
                 $id: ID!,
-                $input: PatchCatInput! 
+                $input: PatchCatInput!
             ){
                 patchCat(id: $id, input: $input){
                     cat{
@@ -770,7 +770,7 @@ class TestPatchMutationManyToManyOnReverseField(TestCase):
         mutation = """
             mutation PatchCat(
                 $id: ID!,
-                $input: PatchCatInput! 
+                $input: PatchCatInput!
             ){
                 patchCat(id: $id, input: $input){
                     cat{
@@ -800,7 +800,6 @@ class TestPatchMutationManyToManyOnReverseField(TestCase):
             },
             context=Dict(user=user),
         )
-        print([dog.tag for dog in dogs])
         self.assertIsNone(result.errors)
 
         cat.refresh_from_db()
@@ -831,7 +830,7 @@ class TestPatchMutationManyToManyOnReverseField(TestCase):
         mutation = """
             mutation PatchCat(
                 $id: ID!,
-                $input: PatchCatInput! 
+                $input: PatchCatInput!
             ){
                 patchCat(id: $id, input: $input){
                     cat{
@@ -885,7 +884,7 @@ class TestPatchMutationManyToManyExtras(TestCase):
         mutation = """
             mutation PatchDog(
                 $id: ID!,
-                $input: PatchDogInput! 
+                $input: PatchDogInput!
             ){
                 patchDog(id: $id, input: $input){
                     dog{
@@ -938,7 +937,7 @@ class TestPatchMutationManyToManyExtras(TestCase):
         mutation = """
             mutation PatchDog(
                 $id: ID!,
-                $input: PatchDogInput! 
+                $input: PatchDogInput!
             ){
                 patchDog(id: $id, input: $input){
                     dog{
@@ -996,7 +995,7 @@ class TestPatchMutationManyToManyExtras(TestCase):
         mutation = """
             mutation PatchDog(
                 $id: ID!,
-                $input: PatchDogInput! 
+                $input: PatchDogInput!
             ){
                 patchDog(id: $id, input: $input){
                     dog{
@@ -1052,7 +1051,7 @@ class TestPatchMutationManyToManyExtras(TestCase):
         mutation = """
             mutation PatchDog(
                 $id: ID!,
-                $input: PatchDogInput! 
+                $input: PatchDogInput!
             ){
                 patchDog(id: $id, input: $input){
                     dog{
@@ -1107,7 +1106,7 @@ class TestPatchMutationManyToOneExtras(TestCase):
         mutation = """
             mutation PatchUser(
                 $id: ID!,
-                $input: PatchUserInput! 
+                $input: PatchUserInput!
             ){
                 patchUser(id: $id, input: $input){
                     user{
@@ -1159,7 +1158,7 @@ class TestPatchMutationManyToOneExtras(TestCase):
         mutation = """
             mutation PatchUser(
                 $id: ID!,
-                $input: PatchUserInput! 
+                $input: PatchUserInput!
             ){
                 patchUser(id: $id, input: $input){
                     user{
@@ -1212,7 +1211,7 @@ class TestPatchMutationManyToOneExtras(TestCase):
         mutation = """
             mutation PatchUser(
                 $id: ID!,
-                $input: PatchUserInput! 
+                $input: PatchUserInput!
             ){
                 patchUser(id: $id, input: $input){
                     user{
@@ -1266,7 +1265,7 @@ class TestPatchMutationManyToOneExtras(TestCase):
         mutation = """
             mutation PatchUser(
                 $id: ID!,
-                $input: PatchUserInput! 
+                $input: PatchUserInput!
             ){
                 patchUser(id: $id, input: $input){
                     user{
@@ -1323,7 +1322,7 @@ class TestPatchMutationManyToOneExtras(TestCase):
         mutation = """
             mutation PatchUser(
                 $id: ID!,
-                $input: PatchUserInput! 
+                $input: PatchUserInput!
             ){
                 patchUser(id: $id, input: $input){
                     user{
@@ -1377,7 +1376,7 @@ class TestPatchMutationManyToOneExtras(TestCase):
         mutation = """
             mutation PatchUser(
                 $id: ID!,
-                $input: PatchUserInput! 
+                $input: PatchUserInput!
             ){
                 patchUser(id: $id, input: $input){
                     user{
@@ -1431,7 +1430,7 @@ class TestPatchMutationManyToOneExtras(TestCase):
         mutation = """
             mutation PatchUser(
                 $id: ID!,
-                $input: PatchUserInput! 
+                $input: PatchUserInput!
             ){
                 patchUser(id: $id, input: $input){
                     user{
@@ -1484,7 +1483,7 @@ class TestPatchMutationForeignKeyExtras(TestCase):
         mutation = """
             mutation PatchDog(
                 $id: ID!,
-                $input: PatchDogInput! 
+                $input: PatchDogInput!
             ){
                 patchDog(id: $id, input: $input){
                     dog{
@@ -1547,7 +1546,7 @@ class TestPatchMutationCustomFields(TestCase):
         mutation = """
             mutation PatchDog(
                 $id: ID!,
-                $input: PatchDogInput! 
+                $input: PatchDogInput!
             ){
                 patchDog(id: $id, input: $input){
                     dog{
@@ -1622,7 +1621,7 @@ class TestPatchMutationRequiredFields(TestCase):
         self.mutation = """
             mutation PatchDog(
                 $id: ID!,
-                $input: PatchDogInput! 
+                $input: PatchDogInput!
             ){
                 patchDog(id: $id, input: $input){
                     dog {
