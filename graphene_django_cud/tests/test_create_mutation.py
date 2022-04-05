@@ -53,7 +53,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
-                $input: CreateUserInput! 
+                $input: CreateUserInput!
             ){
                 createUser(input: $input){
                     user{
@@ -101,7 +101,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
-                $input: CreateUserInput! 
+                $input: CreateUserInput!
             ){
                 createUser(input: $input){
                     user{
@@ -150,7 +150,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
-                $input: CreateUserInput! 
+                $input: CreateUserInput!
             ){
                 createUser(input: $input){
                     user{
@@ -203,7 +203,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
-                $input: CreateUserInput! 
+                $input: CreateUserInput!
             ){
                 createUser(input: $input){
                     user{
@@ -263,7 +263,7 @@ class TestUpdateWithOneToOneField(TestCase):
                         id
                         registration{
                             id
-                            registrationNumber 
+                            registrationNumber
                         }
                     }
                 }
@@ -284,7 +284,6 @@ class TestUpdateWithOneToOneField(TestCase):
             },
             context=Dict(user=user),
         )
-        print(result)
         self.assertIsNone(result.errors)
         data = Dict(result.data)
         self.assertIsNone(result.errors)
@@ -354,11 +353,9 @@ class TestUpdateWithOneToOneField(TestCase):
             "LABRADOR", data.updateDogRegistration.dogRegistration.dog.breed
         )
 
-        print(dog.breed, type(dog.breed))
         # Load from database
         dog_registration.refresh_from_db()
         dog.refresh_from_db()
-        print(dog.breed, type(dog.breed))
 
         self.assertEqual(dog.breed, "LABRADOR")
 
@@ -389,7 +386,7 @@ class TestCreateWithOneToOneField(TestCase):
                         id
                         registration{
                             id
-                            registrationNumber 
+                            registrationNumber
                         }
                     }
                 }
@@ -523,7 +520,7 @@ class TestCreateWithPlainManyToOneRelation(TestCase):
                                 }
                             }
                         }
-                    } 
+                    }
                 }
             }
         """
@@ -647,7 +644,7 @@ class TestCreateMutationCustomFields(TestCase):
         schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateDog(
-                $input: CreateDogInput! 
+                $input: CreateDogInput!
             ){
                 createDog(input: $input){
                     dog{
@@ -719,7 +716,7 @@ class TestCreateWithManyToManyThroughModel(TestCase):
         schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateCat(
-                $input: CreateCatInput! 
+                $input: CreateCatInput!
             ){
                 createCat(input: $input){
                     cat{

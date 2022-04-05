@@ -85,7 +85,6 @@ class TestBatchDeleteMutation(TestCase):
         result = schema.execute(
             mutation, variables={"ids": ids_to_delete},
         )
-        print(result)
         data = Dict(result.data)
         self.assertEqual(5, data.batchDeleteUser.deletionCount)
         self.assertListEqual(
