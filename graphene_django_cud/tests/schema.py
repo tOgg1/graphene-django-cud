@@ -80,9 +80,7 @@ class CreateUserMutation(DjangoCreateMutation):
             "dogs": {
                 "add": {
                     "field_types": {"tag": graphene.Int()},
-                    "many_to_many_extras": {
-                        "friends": {"add": {"type": "CreateMouseInput"}}
-                    },
+                    "many_to_many_extras": {"friends": {"add": {"type": "CreateMouseInput"}}},
                 }
             },
         }
@@ -100,13 +98,7 @@ class PatchUserMutation(DjangoPatchMutation):
         model = User
         many_to_one_extras = {
             "cats": {"add": {"type": "auto"}, "update": {"type": "auto"}},
-            "dogs": {
-                "add": {
-                    "many_to_many_extras": {
-                        "friends": {"add": {"type": "CreateMouseInput"}}
-                    }
-                }
-            },
+            "dogs": {"add": {"many_to_many_extras": {"friends": {"add": {"type": "CreateMouseInput"}}}}},
         }
 
     @classmethod
@@ -149,9 +141,7 @@ class UpdateCatMutation(DjangoUpdateMutation):
             "enemies": {
                 "add": {
                     "type": "CreateDogInput",
-                    "many_to_many_extras": {
-                        "friends": {"add": {"type": "CreateMouseInput"}}
-                    },
+                    "many_to_many_extras": {"friends": {"add": {"type": "CreateMouseInput"}}},
                 },
                 "remove": True,
                 "exact": {"type": "ID"},

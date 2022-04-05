@@ -1,5 +1,6 @@
 import re
 
+
 # http://stackoverflow.com/a/1176023/1072990
 def to_snake_case(name):
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)

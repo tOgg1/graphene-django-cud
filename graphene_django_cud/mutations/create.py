@@ -79,15 +79,11 @@ class DjangoCreateMutation(DjangoCudBase):
             raise Exception("Cannot set both `fields` and `only_fields` on a mutation")
 
         if exclude and exclude_fields:
-            raise Exception(
-                "Cannot set both `exclude` and `exclude_fields` on a mutation"
-            )
+            raise Exception("Cannot set both `exclude` and `exclude_fields` on a mutation")
 
         if only_fields:
             fields = only_fields
-            warnings.warn(
-                "`only_fields` is deprecated in favor of `fields`", DeprecationWarning
-            )
+            warnings.warn("`only_fields` is deprecated in favor of `fields`", DeprecationWarning)
 
         if exclude_fields:
             exclude = exclude_fields
@@ -158,9 +154,7 @@ class DjangoCreateMutation(DjangoCudBase):
         _meta.field_types = field_types or {}
         _meta.InputType = InputType
         _meta.input_type_name = input_type_name
-        _meta.login_required = login_required or (
-            _meta.permissions and len(_meta.permissions) > 0
-        )
+        _meta.login_required = login_required or (_meta.permissions and len(_meta.permissions) > 0)
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
@@ -201,7 +195,6 @@ class DjangoCreateMutation(DjangoCudBase):
         cls.validate(root, info, input)
 
         Model = cls._meta.model
-        model_field_values = {}
         auto_context_fields = cls._meta.auto_context_fields or {}
 
         with transaction.atomic():

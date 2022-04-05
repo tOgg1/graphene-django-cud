@@ -48,4 +48,3 @@ If there are multiple filters, these will be combined with
             deletionCount
         }
     }
-
