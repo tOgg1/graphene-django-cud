@@ -166,10 +166,6 @@ class DjangoCudBase(Mutation):
                     # In this case, a new type has been created for us. Let's first find its name,
                     # then get its meta, and then create it. We also need to attach the obj as the
                     # foreign key.
-                    # _type_name = data.get(
-                    #     "type_name",
-                    #     f"{operation.capitalize()}{Model.__name__}{field.name.capitalize()}",
-                    # )
 
                     # Ensure the parent relation exists and has the correct id.
                     value[field.field.name] = obj.id
