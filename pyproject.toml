@@ -19,17 +19,19 @@ addict = "^2.2"
 pytest-cov = "^2.8"
 
 [tool.black]
-line-length = 88
+line-length = 120
+target-version = ['py38']
 include = '\.pyi?$'
-exclude = '''
+extend-exclude = '''
 /(
-    \.git
-  | .github
-  | .pytest_cache
-  | .idea
-  | build
-  | __pycache__
-  | manage.py
+\.git
+|\.github
+|\.pytest_cache
+|\.idea
+|build
+|__pycache__
+|manage\.py
+|migrations
 )/
 '''
 

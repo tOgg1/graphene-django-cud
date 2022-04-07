@@ -60,9 +60,7 @@ class DjangoDeleteMutation(DjangoCudBase):
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.return_field_name = return_field_name
         _meta.permissions = permissions
-        _meta.login_required = login_required or (
-            _meta.permissions and len(_meta.permissions) > 0
-        )
+        _meta.login_required = login_required or (_meta.permissions and len(_meta.permissions) > 0)
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
@@ -115,7 +113,6 @@ class DjangoDeleteMutation(DjangoCudBase):
 
         cls.validate(root, info, id)
 
-        Model = cls._meta.model
         resolved_id = cls.resolve_id(id)
 
         try:

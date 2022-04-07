@@ -42,15 +42,11 @@ class DjangoFilterDeleteMutation(DjangoCudBase):
         model_type = registry.get_type_for_model(model)
 
         assert model_type, f"Model type must be registered for model {model}"
-        assert (
-            len(filter_fields) > 0
-        ), f"You must specify at least one field to filter on for deletion."
+        assert len(filter_fields) > 0, "You must specify at least one field to filter on for deletion."
 
         input_arguments = get_filter_fields_input_args(filter_fields, model)
 
-        InputType = type(
-            f"BatchDelete{model.__name__}Input", (InputObjectType,), input_arguments
-        )
+        InputType = type(f"BatchDelete{model.__name__}Input", (InputObjectType,), input_arguments)
 
         arguments = OrderedDict(input=InputType(required=True))
 
@@ -65,9 +61,7 @@ class DjangoFilterDeleteMutation(DjangoCudBase):
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.filter_fields = filter_fields
         _meta.permissions = permissions
-        _meta.login_required = login_required or (
-            _meta.permissions and len(_meta.permissions) > 0
-        )
+        _meta.login_required = login_required or (_meta.permissions and len(_meta.permissions) > 0)
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
@@ -138,9 +132,7 @@ class DjangoFilterDeleteMutation(DjangoCudBase):
             value_handle_name = "handle_" + name
             if hasattr(cls, value_handle_name):
                 handle_func = getattr(cls, value_handle_name)
-                assert callable(
-                    handle_func
-                ), f"Property {value_handle_name} on {cls.__name__} is not a function."
+                assert callable(handle_func), f"Property {value_handle_name} on {cls.__name__} is not a function."
                 new_value = handle_func(value, name, info)
 
             # On some fields we perform some default conversion, if the value was not transformed above.

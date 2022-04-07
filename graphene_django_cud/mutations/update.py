@@ -30,10 +30,10 @@ class DjangoUpdateMutation(DjangoCudBase):
         permissions=None,
         login_required=None,
         fields=(),
-            only_fields=(),  # Deprecated in favor of `fields`
-            exclude=(),
-            exclude_fields=(),  # Deprecated in favor of `exclude`
-            optional_fields=(),
+        only_fields=(),  # Deprecated in favor of `fields`
+        exclude=(),
+        exclude_fields=(),  # Deprecated in favor of `exclude`
+        optional_fields=(),
         required_fields=(),
         auto_context_fields=None,
         return_field_name=None,
@@ -78,15 +78,11 @@ class DjangoUpdateMutation(DjangoCudBase):
             raise Exception("Cannot set both `fields` and `only_fields` on a mutation")
 
         if exclude and exclude_fields:
-            raise Exception(
-                "Cannot set both `exclude` and `exclude_fields` on a mutation"
-            )
+            raise Exception("Cannot set both `exclude` and `exclude_fields` on a mutation")
 
         if only_fields:
             fields = only_fields
-            warnings.warn(
-                "`only_fields` is deprecated in favor of `fields`", DeprecationWarning
-            )
+            warnings.warn("`only_fields` is deprecated in favor of `fields`", DeprecationWarning)
 
         if exclude_fields:
             exclude = exclude_fields
@@ -133,9 +129,7 @@ class DjangoUpdateMutation(DjangoCudBase):
 
         registry.register_converted_field(input_type_name, InputType)
 
-        arguments = OrderedDict(
-            id=graphene.ID(required=True), input=InputType(required=True)
-        )
+        arguments = OrderedDict(id=graphene.ID(required=True), input=InputType(required=True))
 
         output_fields = OrderedDict()
         output_fields[return_field_name] = graphene.Field(model_type)
@@ -158,9 +152,7 @@ class DjangoUpdateMutation(DjangoCudBase):
         _meta.field_types = field_types or {}
         _meta.InputType = InputType
         _meta.input_type_name = input_type_name
-        _meta.login_required = login_required or (
-            _meta.permissions and len(_meta.permissions) > 0
-        )
+        _meta.login_required = login_required or (_meta.permissions and len(_meta.permissions) > 0)
         _meta.use_select_for_update = use_select_for_update
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)

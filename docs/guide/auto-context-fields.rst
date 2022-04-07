@@ -34,4 +34,3 @@ that auto context fields are automatically set as ``required=False``, to
 please Graphene. Finally note that if we add an explicit value to the
 ``createdBy`` field when calling the mutation, this value will override
 the auto context field.
-

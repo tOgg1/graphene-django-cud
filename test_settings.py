@@ -12,7 +12,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "graphene_django_cud",
     "graphene_django_cud.tests",
     "graphene_django",
@@ -28,9 +27,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-DATABASES = {
-    "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": "django_test.sqlite"}
-}
+DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": "django_test.sqlite"}}
 
 TEMPLATES = [
     {

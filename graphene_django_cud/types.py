@@ -53,6 +53,4 @@ class TimeDelta(graphene.Scalar):
         if seconds:
             seconds = int(seconds)
 
-        return timezone.timedelta(
-            days=days, hours=hours, minutes=minutes, seconds=seconds
-        )
+        return timezone.timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)

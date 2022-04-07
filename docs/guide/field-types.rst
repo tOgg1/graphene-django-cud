@@ -33,5 +33,3 @@ Django model field; then you must implement a :ref:`custom handler<custom_field_
         @classmethod
         def handle_tag(cls, value, *args, **kwargs):
             return "Dog-" + str(value)
-
-

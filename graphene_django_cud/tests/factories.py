@@ -34,9 +34,7 @@ def _get_permission_from_string(string: str) -> Optional[Permission]:
         if "." in string:
             app_label, codename = string.split(".")
 
-            return Permission.objects.get(
-                content_type__app_label=app_label, codename=codename
-            )
+            return Permission.objects.get(content_type__app_label=app_label, codename=codename)
         else:
             return Permission.objects.get(codename=string)
     except models.ObjectDoesNotExist:
@@ -70,9 +68,7 @@ class UserWithPermissionsFactory(factory.DjangoModelFactory):
                 if permission is not None:
                     self.user_permissions.add(permission)
         else:
-            raise ValueError(
-                "Invalid variable input for permissions, expected string or iterable"
-            )
+            raise ValueError("Invalid variable input for permissions, expected string or iterable")
 
 
 class CatFactory(factory.DjangoModelFactory):

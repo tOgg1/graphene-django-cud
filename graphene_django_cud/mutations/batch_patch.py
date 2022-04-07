@@ -1,5 +1,3 @@
-
-
 from graphene_django.utils import get_model_fields
 
 from .batch_update import DjangoBatchUpdateMutation
@@ -16,13 +14,13 @@ class DjangoBatchPatchMutation(DjangoBatchUpdateMutation):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            _meta=None,
-            model=None,
-            optional_fields=None,
-            required_fields=None,
-            type_name=None,
-            **kwargs
+        cls,
+        _meta=None,
+        model=None,
+        optional_fields=None,
+        required_fields=None,
+        type_name=None,
+        **kwargs,
     ):
         all_field_names = tuple(name for name, _ in get_model_fields(model))
 
@@ -40,5 +38,5 @@ class DjangoBatchPatchMutation(DjangoBatchUpdateMutation):
             optional_fields=optional_fields,
             required_fields=required_fields,
             type_name=input_type_name,
-            **kwargs
+            **kwargs,
         )

@@ -13,13 +13,10 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/tOgg1/graphene-django-cud",
     packages=setuptools.find_packages(),
-    install_requires=[
-        "graphene-django>=2.0",
-        "graphene-file-upload>=1.2"
-    ],
+    install_requires=["graphene-django>=2.0", "graphene-file-upload>=1.2"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent"
-    ]
+        "Operating System :: OS Independent",
+    ],
 )

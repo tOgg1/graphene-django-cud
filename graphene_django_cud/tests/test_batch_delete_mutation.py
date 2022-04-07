@@ -15,8 +15,7 @@ from graphene_django_cud.util import disambiguate_ids
 class TestBatchDeleteMutation(TestCase):
     def test__ids_exist__deletes_relevant_objects(self):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class BatchDeleteUserMutation(DjangoBatchDeleteMutation):
             class Meta:
@@ -40,7 +39,8 @@ class TestBatchDeleteMutation(TestCase):
         """
 
         result = schema.execute(
-            mutation, variables={"ids": [user.id for user in users]},
+            mutation,
+            variables={"ids": [user.id for user in users]},
         )
         data = Dict(result.data)
         self.assertEqual(10, data.batchDeleteUser.deletionCount)
@@ -52,8 +52,7 @@ class TestBatchDeleteMutation(TestCase):
 
     def test__ids_does_not_exist__only_deletes_relevant_objects(self):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class BatchDeleteUserMutation(DjangoBatchDeleteMutation):
             class Meta:
@@ -83,7 +82,8 @@ class TestBatchDeleteMutation(TestCase):
         """
 
         result = schema.execute(
-            mutation, variables={"ids": ids_to_delete},
+            mutation,
+            variables={"ids": ids_to_delete},
         )
         data = Dict(result.data)
         self.assertEqual(5, data.batchDeleteUser.deletionCount)

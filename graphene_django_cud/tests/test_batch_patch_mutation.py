@@ -13,8 +13,7 @@ from graphene_django_cud.tests.models import Dog
 class TestBatchPatchMutation(TestCase):
     def test_mutate__objects_exists__updates(self):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class BatchPatchDogMutation(DjangoBatchPatchMutation):
             class Meta:
@@ -30,7 +29,7 @@ class TestBatchPatchMutation(TestCase):
         schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation BatchPatchDog(
-                $input: [BatchPatchDogInput]! 
+                $input: [BatchPatchDogInput]!
             ){
                 batchPatchDog(input: $input){
                     dogs {
@@ -55,7 +54,7 @@ class TestBatchPatchMutation(TestCase):
                     },
                 ]
             },
-            context=Dict(user=user)
+            context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
 
@@ -74,8 +73,7 @@ class TestBatchPatchMutation(TestCase):
 class TestBatchPatchMutationRequiredFields(TestCase):
     def setUp(self):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class PatchDogMutation(DjangoBatchPatchMutation):
             class Meta:
@@ -122,8 +120,8 @@ class TestBatchPatchMutationRequiredFields(TestCase):
                     {
                         "id": self.dog2_id,
                         "name": "Richard",
-                    }
-                ]
+                    },
+                ],
             },
             context=self.context,
         )
@@ -143,7 +141,7 @@ class TestBatchPatchMutationRequiredFields(TestCase):
                         "id": self.dog2_id,
                         "name": "Richard",
                         "owner": self.user1_id,
-                    }
+                    },
                 ]
             },
             context=self.context,
