@@ -96,7 +96,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
 
         cls.validate(root, info, ids)
 
-        qs_to_delete = cls.get_queryset(root, info, ids).filter(id__in=ids)
+        qs_to_delete = cls.get_queryset(root, info, ids).filter(pk__in=ids)
 
         updated_qs = cls.before_save(root, info, ids, qs_to_delete)
 
