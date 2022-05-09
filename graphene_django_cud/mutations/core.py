@@ -44,7 +44,7 @@ class DjangoCudBase(Mutation):
                 input_type_meta.get("one_to_one_extras", {}),
                 field.related_model,
             )
-            return related_obj.id
+            return related_obj.pk
 
     @classmethod
     def create_or_update_one_to_one_relation(cls, obj, field, value, data, info):
@@ -168,7 +168,7 @@ class DjangoCudBase(Mutation):
                     # foreign key.
 
                     # Ensure the parent relation exists and has the correct id.
-                    value[field.field.name] = obj.id
+                    value[field.field.name] = obj.pk
 
                     # We use upsert here, as the operation might be "update", where we
                     # want to update the object.
@@ -403,7 +403,7 @@ class DjangoCudBase(Mutation):
                         extra_data = one_to_one_extras.get(name, {})
 
                         # This is a nested field we need to take care of.
-                        value[field.field.name] = obj.id
+                        value[field.field.name] = obj.pk
                         new_value = cls.create_or_update_one_to_one_relation(obj, field, value, extra_data, info)
 
                 setattr(obj, name, new_value)
@@ -480,7 +480,7 @@ class DjangoCudBase(Mutation):
                     field.add(*objs)
                 else:
                     # Remove the related objects by deletion, and set the new ones.
-                    field.exclude(id__in=[obj.id for obj in objs]).delete()
+                    field.exclude(pk__in=[obj.pk for obj in objs]).delete()
                     getattr(obj, name).add(*objs)
 
         for name, objs in many_to_one_to_add.items():
@@ -491,11 +491,11 @@ class DjangoCudBase(Mutation):
             if hasattr(field, "remove"):
                 # The field is nullable, and we simply remove the relation
                 related_name = Model._meta.get_field(name).remote_field.name
-                getattr(obj, name).filter(id__in=objs).update(**{related_name: None})
+                getattr(obj, name).filter(pk__in=objs).update(**{related_name: None})
             else:
                 # Only nullable foreign key reverse rels have the remove method.
                 # For other's we have to delete the relations
-                getattr(obj, name).filter(id__in=objs).delete()
+                getattr(obj, name).filter(pk__in=objs).delete()
 
         for name, objs in many_to_many_to_set.items():
             if objs is not None:
@@ -583,7 +583,7 @@ class DjangoCudBase(Mutation):
                     else:
                         extra_data = one_to_one_extras.get(name, {})
                         # This is a nested field we need to take care of.
-                        value[field.remote_field.name] = obj.id
+                        value[field.remote_field.name] = obj.pk
                         new_value = cls.create_or_update_one_to_one_relation(obj, field, value, extra_data, info)
                 elif isinstance(field, models.OneToOneRel):
                     # If the value is an integer or a string, we assume it is an ID
@@ -593,7 +593,7 @@ class DjangoCudBase(Mutation):
                     else:
                         extra_data = one_to_one_extras.get(name, {})
                         # This is a nested field we need to take care of.
-                        value[field.field.name] = obj.id
+                        value[field.field.name] = obj.pk
                         new_value = cls.create_or_update_one_to_one_relation(obj, field, value, extra_data, info)
                 elif isinstance(field, models.ForeignKey):
                     # Delete auto context field here, if it exists. We have to do this explicitly
@@ -691,7 +691,7 @@ class DjangoCudBase(Mutation):
                     field.add(*objs)
                 else:
                     # Remove the related objects by deletion, and set the new ones.
-                    field.exclude(id__in=[obj.id for obj in objs]).delete()
+                    field.exclude(pk__in=[obj.pk for obj in objs]).delete()
                     getattr(obj, name).add(*objs)
 
         for name, objs in many_to_one_to_add.items():
@@ -702,11 +702,11 @@ class DjangoCudBase(Mutation):
             if hasattr(field, "remove"):
                 # The field is nullable, and we simply remove the relation
                 related_name = Model._meta.get_field(name).remote_field.name
-                getattr(obj, name).filter(id__in=objs).update(**{related_name: None})
+                getattr(obj, name).filter(pk__in=objs).update(**{related_name: None})
             else:
                 # Only nullable foreign key reverse rels have the remove method.
                 # For other's we have to delete the relations
-                getattr(obj, name).filter(id__in=objs).delete()
+                getattr(obj, name).filter(pk__in=objs).delete()
 
         for name, objs in many_to_many_to_set.items():
             if objs is not None:

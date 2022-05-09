@@ -100,9 +100,9 @@ class DjangoDeleteMutation(DjangoCudBase):
         id_field = model_type._meta.fields.get("id", None)
 
         if isinstance(id_field, GlobalID):
-            return to_global_id(cls._meta.model_type._meta.name, obj.id)
+            return to_global_id(cls._meta.model_type._meta.name, obj.pk)
         else:
-            return obj.id
+            return obj.pk
 
     @classmethod
     def mutate(cls, root, info, id):
@@ -124,7 +124,7 @@ class DjangoDeleteMutation(DjangoCudBase):
                 obj = updated_obj
 
             return_id = cls.get_return_id(obj)
-            raw_id = obj.id
+            raw_id = obj.pk
             obj.delete()
             cls.after_mutate(root, info, id, True)
             return cls(
