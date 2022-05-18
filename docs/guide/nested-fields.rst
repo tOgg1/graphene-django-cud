@@ -153,7 +153,7 @@ Cat objects to be added by id.
 Many to many extras
 ~~~~~~~~~~~~~~~~~~~
 
-The ``many_to_one_extras`` field is a dictionary containing information
+The ``many_to_many_extras`` field is a dictionary containing information
 regarding how to handle many to many relations. Suppose we have the
 ``Cat`` model as above, and a ``Dog`` model like:
 
