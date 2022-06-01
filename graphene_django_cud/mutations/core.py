@@ -5,6 +5,7 @@ from django.db import models
 from graphene import Mutation
 from graphene.types.mutation import MutationOptions
 from graphql import GraphQLError
+from operator import attrgetter
 
 from graphene_django_cud.registry import get_type_meta_registry
 from graphene_django_cud.util import (
@@ -279,8 +280,10 @@ class DjangoCudBase(Mutation):
         foreign_key_extras_field_names = get_fk_all_extras_field_names(foreign_key_extras)
 
         for field_name, context_name in auto_context_fields.items():
-            if hasattr(info.context, context_name):
-                model_field_values[field_name] = getattr(info.context, context_name)
+            try:
+                model_field_values[field_name] = attrgetter(context_name)(info.context)
+            except:
+                pass
 
         for name, value in super(type(input), input).items():
             # Handle these separately
