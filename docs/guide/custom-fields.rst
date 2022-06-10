@@ -48,4 +48,3 @@ Running the below mutation will increase the bark count by one:
             barkCount
         }
     }
-

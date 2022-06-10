@@ -1,3 +1,4 @@
+import warnings
 from collections import OrderedDict
 from typing import Iterable
 
@@ -5,13 +6,13 @@ import graphene
 from django.db import transaction
 from graphene import InputObjectType
 from graphene.types.utils import yank_fields_from_attrs
-from graphene.utils.str_converters import to_snake_case
 from graphene_django.registry import get_global_registry
 from graphql import GraphQLError
 
 from graphene_django_cud.mutations.core import DjangoCudBaseOptions, DjangoCudBase
 from graphene_django_cud.registry import get_type_meta_registry
-from graphene_django_cud.util import get_input_fields_for_model
+from graphene_django_cud.util import get_input_fields_for_model, to_snake_case
+
 
 class DjangoUpdateMutationOptions(DjangoCudBaseOptions):
     pass
@@ -28,8 +29,10 @@ class DjangoUpdateMutation(DjangoCudBase):
         model=None,
         permissions=None,
         login_required=None,
-        only_fields=(),
-        exclude_fields=(),
+        fields=(),
+        only_fields=(),  # Deprecated in favor of `fields`
+        exclude=(),
+        exclude_fields=(),  # Deprecated in favor of `exclude`
         optional_fields=(),
         required_fields=(),
         auto_context_fields=None,
@@ -41,6 +44,7 @@ class DjangoUpdateMutation(DjangoCudBase):
         type_name=None,
         field_types=None,
         custom_fields=None,
+        use_select_for_update=True,
         **kwargs,
     ):
         registry = get_global_registry()
@@ -70,12 +74,29 @@ class DjangoUpdateMutation(DjangoCudBase):
         if not return_field_name:
             return_field_name = to_snake_case(model.__name__)
 
+        if fields and only_fields:
+            raise Exception("Cannot set both `fields` and `only_fields` on a mutation")
+
+        if exclude and exclude_fields:
+            raise Exception("Cannot set both `exclude` and `exclude_fields` on a mutation")
+
+        if only_fields:
+            fields = only_fields
+            warnings.warn("`only_fields` is deprecated in favor of `fields`", DeprecationWarning)
+
+        if exclude_fields:
+            exclude = exclude_fields
+            warnings.warn(
+                "`exclude_fields` is deprecated in favor of `exclude`",
+                DeprecationWarning,
+            )
+
         input_type_name = type_name or f"Update{model.__name__}Input"
 
         model_fields = get_input_fields_for_model(
             model,
-            only_fields,
-            exclude_fields,
+            fields,
+            exclude,
             optional_fields=tuple(auto_context_fields.keys()) + optional_fields,
             required_fields=required_fields,
             many_to_many_extras=many_to_many_extras,
@@ -108,9 +129,7 @@ class DjangoUpdateMutation(DjangoCudBase):
 
         registry.register_converted_field(input_type_name, InputType)
 
-        arguments = OrderedDict(
-            id=graphene.ID(required=True), input=InputType(required=True)
-        )
+        arguments = OrderedDict(id=graphene.ID(required=True), input=InputType(required=True))
 
         output_fields = OrderedDict()
         output_fields[return_field_name] = graphene.Field(model_type)
@@ -133,9 +152,8 @@ class DjangoUpdateMutation(DjangoCudBase):
         _meta.field_types = field_types or {}
         _meta.InputType = InputType
         _meta.input_type_name = input_type_name
-        _meta.login_required = login_required or (
-            _meta.permissions and len(_meta.permissions) > 0
-        )
+        _meta.login_required = login_required or (_meta.permissions and len(_meta.permissions) > 0)
+        _meta.use_select_for_update = use_select_for_update
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
@@ -182,7 +200,11 @@ class DjangoUpdateMutation(DjangoCudBase):
             id = cls.resolve_id(id)
             Model = cls._meta.model
             queryset = cls.get_queryset(root, info, input, id)
-            obj = queryset.select_for_update().get(pk=id)
+
+            if cls._meta.use_select_for_update:
+                queryset = queryset.select_for_update()
+
+            obj = queryset.get(pk=id)
             auto_context_fields = cls._meta.auto_context_fields or {}
 
             cls.check_permissions(root, info, input, id, obj)

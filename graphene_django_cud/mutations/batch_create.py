@@ -1,3 +1,4 @@
+import warnings
 from collections import OrderedDict
 from typing import Iterable
 
@@ -29,8 +30,10 @@ class DjangoBatchCreateMutation(DjangoCudBase):
         model=None,
         permissions=None,
         login_required=None,
-        only_fields=(),
-        exclude_fields=(),
+        fields=(),
+        only_fields=(),  # Deprecated in favor of `fields`
+        exclude=(),
+        exclude_fields=(),  # Deprecated in favor of `exclude`
         optional_fields=(),
         required_fields=(),
         auto_context_fields={},
@@ -73,20 +76,35 @@ class DjangoBatchCreateMutation(DjangoCudBase):
             # Pluralize
             return_field_name = to_snake_case(model.__name__) + "s"
 
+        if fields and only_fields:
+            raise Exception("Cannot set both `fields` and `only_fields` on a mutation")
+
+        if exclude and exclude_fields:
+            raise Exception("Cannot set both `exclude` and `exclude_fields` on a mutation")
+
+        if only_fields:
+            fields = only_fields
+            warnings.warn("`only_fields` is deprecated in favor of `fields`", DeprecationWarning)
+
+        if exclude_fields:
+            exclude = exclude_fields
+            warnings.warn(
+                "`exclude_fields` is deprecated in favor of `exclude`",
+                DeprecationWarning,
+            )
+
         if use_type_name:
             input_type_name = use_type_name
             InputType = registry.get_converted_field(input_type_name)
             if not InputType:
-                raise GraphQLError(
-                    f"Could not find input type with name {input_type_name}"
-                )
+                raise GraphQLError(f"Could not find input type with name {input_type_name}")
         else:
             input_type_name = type_name or f"BatchCreate{model.__name__}Input"
 
             model_fields = get_input_fields_for_model(
                 model,
-                only_fields,
-                exclude_fields,
+                fields,
+                exclude,
                 tuple(auto_context_fields.keys()) + optional_fields,
                 required_fields,
                 many_to_many_extras,
@@ -142,9 +160,7 @@ class DjangoBatchCreateMutation(DjangoCudBase):
         _meta.field_types = field_types or {}
         _meta.InputType = InputType
         _meta.input_type_name = input_type_name
-        _meta.login_required = login_required or (
-            _meta.permissions and len(_meta.permissions) > 0
-        )
+        _meta.login_required = login_required or (_meta.permissions and len(_meta.permissions) > 0)
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
@@ -188,7 +204,6 @@ class DjangoBatchCreateMutation(DjangoCudBase):
         cls.check_permissions(root, info, input)
 
         Model = cls._meta.model
-        model_field_values = {}
         auto_context_fields = cls._meta.auto_context_fields or {}
 
         created_objs = []

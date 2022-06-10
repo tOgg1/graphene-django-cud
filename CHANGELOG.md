@@ -1,10 +1,21 @@
 # Changelog
 
+## Version 0.10.0
+* Put `select_for_update` behind a new option `use_select_for_update`, which is enabled by default.
+* Rename `only_fields` -> `fields` and `exclude_fields` -> `exclude`. Alias the old names but add deprecation warnings.
+* Make the library graphene(-django) 3.x compatible.
+* Respect required_fields in Patch and BatchPatch mutations (thanks @mbuvarp).
+
+## Version 0.9.1
+* Improve atomicity of patch/update-calls (thanks @keithhackbarth)
+* Improve documentation
+* Security-critical package updates
+
 ## Version 0.9.0
 * (BREAKING) Ensure inputs are sent to all after_mutate hooks.
 
 ## Version 0.8.1
-* (BREAKING) DjangoDeleteMutation now returns three id fields: deletedId, deletedRawId and deletedInputId. The default behaviour of deletedId is now to return a global id if the associated model type has a GlobalIDField for the "id" field. 
+* (BREAKING) DjangoDeleteMutation now returns three id fields: deletedId, deletedRawId and deletedInputId. The default behaviour of deletedId is now to return a global id if the associated model type has a GlobalIDField for the "id" field.
 
 ## Version 0.8.0
 * Add customisation of resolving IDs via the resolve_id(s) methods (@bjmc)
@@ -174,4 +185,3 @@ Initial release, add core and classes:
  * DjangoUpdateMutation
  * DjangoDeleteMutation
  * DjangoBatchDeleteMutation
- 

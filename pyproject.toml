@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "graphene-django-cud"
-version = "0.9.0"
+version = "0.10.0"
 description = ""
 authors = ["Tormod Haugland <tormod.haugland@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.6"
-graphene-django = "^2.15"
+graphene-django = "^3.0.0b7"
 graphene-file-upload = "^1.2"
 
 [tool.poetry.dev-dependencies]
@@ -17,6 +17,23 @@ pytest-django = "^3.7"
 factory_boy = "^2.12"
 addict = "^2.2"
 pytest-cov = "^2.8"
+
+[tool.black]
+line-length = 120
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+\.git
+|\.github
+|\.pytest_cache
+|\.idea
+|build
+|__pycache__
+|manage\.py
+|migrations
+)/
+'''
 
 [build-system]
 requires = ["poetry>=0.12"]

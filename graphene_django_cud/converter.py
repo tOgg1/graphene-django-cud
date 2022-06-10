@@ -30,12 +30,12 @@ from graphene import (
     Decimal,
 )
 from graphene.types.json import JSONString
-from graphene.utils.str_converters import to_camel_case, to_const
 from graphene_django.compat import ArrayField, HStoreField, JSONField, RangeField
 from graphene_file_upload.scalars import Upload
 from graphql import assert_valid_name, GraphQLError
 
 from graphene_django_cud.types import TimeDelta
+from graphene_django_cud.util.string import to_camel_case, to_const
 
 
 def is_required(field, required=None, is_many_to_many=False):
@@ -105,25 +105,20 @@ def convert_django_field_with_choices(
 ):
     choices = getattr(field, "choices", None)
     if choices:
-        registry_name = to_camel_case(
-            "{}_{}".format(field.model._meta.object_name, field.name)
-        )
+        registry_name = to_camel_case("{}_{}".format(field.model._meta.object_name, field.name))
         # Fetch this from registry, if exists. We don't want to duplicate enum fields.
-        enum = None
         if registry:
             from_registry = registry.get_converted_field(field)
             if from_registry:
-                from_registry.kwargs['description'] = field.help_text
-                from_registry.kwargs['required'] = is_required(field, required)
+                from_registry.kwargs["description"] = field.help_text
+                from_registry.kwargs["required"] = is_required(field, required)
                 return from_registry
 
         converted = convert_choices_field(field, choices, required)
         # Register enum fields
         if registry:
             registry.register_converted_field(registry_name, converted)
-        return converted(
-            description=field.help_text, required=is_required(field, required)
-        )
+        return converted(description=field.help_text, required=is_required(field, required))
     else:
         converted = convert_django_field_to_input(
             field,
@@ -145,9 +140,7 @@ def convert_django_field_to_input(
     field_foreign_key_extras=None,
     field_one_to_one_extras=None,
 ):
-    raise Exception(
-        "Don't know how to convert the Django field %s (%s)" % (field, field.__class__)
-    )
+    raise Exception("Don't know how to convert the Django field %s (%s)" % (field, field.__class__))
 
 
 @convert_django_field_to_input.register(models.CharField)
@@ -178,9 +171,7 @@ def convert_one_to_one_field(
     field_foreign_key_extras=None,
     field_one_to_one_extras=None,
 ):
-    type_name = (
-        field_one_to_one_extras.get("type", "ID") if field_one_to_one_extras else "ID"
-    )
+    type_name = field_one_to_one_extras.get("type", "ID") if field_one_to_one_extras else "ID"
     if type_name == "ID":
         return ID(
             description=getattr(field, "help_text", ""),
@@ -230,9 +221,7 @@ def convert_field_to_id(
         if not _type:
             raise GraphQLError(f"The type {_type_name} does not exist.")
 
-        return InputField(
-            _type, description=field.help_text, required=is_required(field, required)
-        )
+        return InputField(_type, description=field.help_text, required=is_required(field, required))
 
     return Dynamic(dynamic_type)
 
@@ -339,9 +328,7 @@ def convert_datetime_to_string(
     field_one_to_one_extras=None,
 ):
     # We only render DateTimeFields with auto_now[_add] if they are explicitly required or not
-    if required is None and (
-        getattr(field, "auto_now", None) or getattr(field, "auto_now_add", None)
-    ):
+    if required is None and (getattr(field, "auto_now", None) or getattr(field, "auto_now_add", None)):
         return
 
     return DateTime(description=field.help_text, required=is_required(field, required))
@@ -357,9 +344,7 @@ def convert_date_to_string(
     field_one_to_one_extras=None,
 ):
     # We only render DateFields with auto_now[_add] if they are explicitly required or not
-    if required is None and (
-        getattr(field, "auto_now", None) or getattr(field, "auto_now_add", None)
-    ):
+    if required is None and (getattr(field, "auto_now", None) or getattr(field, "auto_now_add", None)):
         return
 
     return Date(description=field.help_text, required=is_required(field, required))
@@ -427,9 +412,7 @@ def convert_postgres_array_to_list(
     base_type = convert_django_field_to_input(field.base_field)
     if not isinstance(base_type, (List, NonNull)):
         base_type = type(base_type)
-    return List(
-        base_type, description=field.help_text, required=is_required(field, required)
-    )
+    return List(base_type, description=field.help_text, required=is_required(field, required))
 
 
 @convert_django_field_to_input.register(HStoreField)
@@ -442,9 +425,7 @@ def convert_posgres_field_to_string(
     field_foreign_key_extras=None,
     field_one_to_one_extras=None,
 ):
-    return JSONString(
-        description=field.help_text, required=is_required(field, required)
-    )
+    return JSONString(description=field.help_text, required=is_required(field, required))
 
 
 @convert_django_field_to_input.register(RangeField)
@@ -459,9 +440,7 @@ def convert_postgres_range_to_string(
     inner_type = convert_django_field_to_input(field.base_field)
     if not isinstance(inner_type, (List, NonNull)):
         inner_type = type(inner_type)
-    return List(
-        inner_type, description=field.help_text, required=is_required(field, required)
-    )
+    return List(inner_type, description=field.help_text, required=is_required(field, required))
 
 
 @convert_django_field_to_input.register(FileField)

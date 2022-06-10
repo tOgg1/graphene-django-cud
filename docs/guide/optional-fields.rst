@@ -32,4 +32,3 @@ A field can explicitly be marked as optional or required with the meta-attribute
             model = User
             required_fields = ("first_name",)
             optional_fields = ("last_name",)
-

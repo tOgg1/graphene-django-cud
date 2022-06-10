@@ -60,9 +60,7 @@ class DjangoDeleteMutation(DjangoCudBase):
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.return_field_name = return_field_name
         _meta.permissions = permissions
-        _meta.login_required = login_required or (
-            _meta.permissions and len(_meta.permissions) > 0
-        )
+        _meta.login_required = login_required or (_meta.permissions and len(_meta.permissions) > 0)
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
@@ -102,9 +100,9 @@ class DjangoDeleteMutation(DjangoCudBase):
         id_field = model_type._meta.fields.get("id", None)
 
         if isinstance(id_field, GlobalID):
-            return to_global_id(cls._meta.model_type._meta.name, obj.id)
+            return to_global_id(cls._meta.model_type._meta.name, obj.pk)
         else:
-            return obj.id
+            return obj.pk
 
     @classmethod
     def mutate(cls, root, info, id):
@@ -115,7 +113,6 @@ class DjangoDeleteMutation(DjangoCudBase):
 
         cls.validate(root, info, id)
 
-        Model = cls._meta.model
         resolved_id = cls.resolve_id(id)
 
         try:
@@ -127,7 +124,7 @@ class DjangoDeleteMutation(DjangoCudBase):
                 obj = updated_obj
 
             return_id = cls.get_return_id(obj)
-            raw_id = obj.id
+            raw_id = obj.pk
             obj.delete()
             cls.after_mutate(root, info, id, True)
             return cls(

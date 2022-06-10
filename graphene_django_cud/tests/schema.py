@@ -11,7 +11,14 @@ from graphene_django_cud.mutations import (
     DjangoBatchCreateMutation,
 )
 from graphene_django_cud.mutations.filter_update import DjangoFilterUpdateMutation
-from graphene_django_cud.tests.models import User, Cat, Dog, Mouse, DogRegistration
+from graphene_django_cud.tests.models import (
+    User,
+    Cat,
+    Dog,
+    Mouse,
+    DogRegistration,
+    CatUserRelation,
+)
 
 
 class UserNode(DjangoObjectType):
@@ -44,30 +51,36 @@ class MouseNode(DjangoObjectType):
         interfaces = (Node,)
 
 
+class CatUserRelationNode(DjangoObjectType):
+    class Meta:
+        model = CatUserRelation
+        interfaces = (Node,)
+
+
 class Query(graphene.ObjectType):
     user = Node.Field(UserNode)
     cat = Node.Field(CatNode)
     dog = Node.Field(DogNode)
     mice = Node.Field(MouseNode)
+    cat_user_relation = Node.Field(CatUserRelationNode)
 
     all_users = DjangoConnectionField(UserNode)
     all_cats = DjangoConnectionField(CatNode)
     all_dogs = DjangoConnectionField(DogNode)
     all_mice = DjangoConnectionField(MouseNode)
+    all_cat_user_relations = DjangoConnectionField(CatUserRelationNode)
 
 
 class CreateUserMutation(DjangoCreateMutation):
     class Meta:
         model = User
-        exclude_fields = ("password",)
+        exclude = ("password",)
         many_to_one_extras = {
             "cats": {"exact": {"type": "auto"}},
             "dogs": {
                 "add": {
                     "field_types": {"tag": graphene.Int()},
-                    "many_to_many_extras": {
-                        "friends": {"add": {"type": "CreateMouseInput"}}
-                    },
+                    "many_to_many_extras": {"friends": {"add": {"type": "CreateMouseInput"}}},
                 }
             },
         }
@@ -85,13 +98,7 @@ class PatchUserMutation(DjangoPatchMutation):
         model = User
         many_to_one_extras = {
             "cats": {"add": {"type": "auto"}, "update": {"type": "auto"}},
-            "dogs": {
-                "add": {
-                    "many_to_many_extras": {
-                        "friends": {"add": {"type": "CreateMouseInput"}}
-                    }
-                }
-            },
+            "dogs": {"add": {"many_to_many_extras": {"friends": {"add": {"type": "CreateMouseInput"}}}}},
         }
 
     @classmethod
@@ -116,7 +123,10 @@ class CreateCatMutation(DjangoCreateMutation):
             "enemies": {"exact": {"type": "CreateDogInput"}},
             "targets": {"exact": {"type": "CreateMouseInput"}},
         }
-        foreign_key_extras = {"owner": {"type": "CreateUserInput"}}
+        many_to_one_extras = {
+            "cat_user_relations": {"add": {"type": "auto"}},
+        }
+        # foreign_key_extras = {"owner": {"type": "CreateUserInput"}}
 
 
 class BatchCreateCatMutation(DjangoBatchCreateMutation):
@@ -131,11 +141,7 @@ class UpdateCatMutation(DjangoUpdateMutation):
             "enemies": {
                 "add": {
                     "type": "CreateDogInput",
-                    "many_to_many_extras": {
-                        "friends": {
-                            "add": {"type": "CreateMouseInput"}
-                        }
-                    },
+                    "many_to_many_extras": {"friends": {"add": {"type": "CreateMouseInput"}}},
                 },
                 "remove": True,
                 "exact": {"type": "ID"},
@@ -230,10 +236,7 @@ class DeleteMouseMutation(DjangoDeleteMutation):
 class FilterDeleteDogMutation(DjangoFilterDeleteMutation):
     class Meta:
         model = Dog
-        filter_fields = (
-            "name",
-            "tag"
-        )
+        filter_fields = ("name", "tag")
 
 
 class FilterDeleteMouseMutation(DjangoFilterDeleteMutation):
@@ -245,10 +248,8 @@ class FilterDeleteMouseMutation(DjangoFilterDeleteMutation):
 class FilterUpdateDogMutation(DjangoFilterUpdateMutation):
     class Meta:
         model = Dog
-        filter_fields = (
-            "name",
-            "name__startswith"
-        )
+        filter_fields = ("name", "name__startswith")
+
 
 class Mutations(graphene.ObjectType):
 

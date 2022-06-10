@@ -30,8 +30,6 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
         model=None,
         permissions=None,
         login_required=None,
-        only_fields=(),
-        exclude_fields=(),
         return_field_name=None,
         **kwargs,
     ):
@@ -58,9 +56,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.return_field_name = return_field_name
         _meta.permissions = permissions
-        _meta.login_required = login_required or (
-            _meta.permissions and len(_meta.permissions) > 0
-        )
+        _meta.login_required = login_required or (_meta.permissions and len(_meta.permissions) > 0)
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
@@ -118,7 +114,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
 
         cls.validate(root, info, ids)
 
-        qs_to_delete = cls.get_queryset(root, info, ids).filter(id__in=ids)
+        qs_to_delete = cls.get_queryset(root, info, ids).filter(pk__in=ids)
 
         updated_qs = cls.before_save(root, info, ids, qs_to_delete)
 
@@ -129,6 +125,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
         deleted_ids = [cls.get_return_id(id) for id in qs_to_delete.values_list("id", flat=True)]
 
         all_global_ids = [cls.get_return_id(id) for id in ids]
+
 
         missed_ids = list(set(all_global_ids).difference(deleted_ids))
 
