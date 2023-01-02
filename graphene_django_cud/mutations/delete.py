@@ -105,6 +105,10 @@ class DjangoDeleteMutation(DjangoCudBase):
             return obj.pk
 
     @classmethod
+    def perform_delete(cls, obj):
+        obj.delete()
+
+    @classmethod
     def mutate(cls, root, info, id):
         cls.before_mutate(root, info, id)
 
@@ -125,7 +129,7 @@ class DjangoDeleteMutation(DjangoCudBase):
 
             return_id = cls.get_return_id(obj)
             raw_id = obj.pk
-            obj.delete()
+            cls.perform_delete(obj)
             cls.after_mutate(root, info, id, True)
             return cls(
                 found=True,
