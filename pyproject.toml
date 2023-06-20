@@ -11,7 +11,7 @@ graphene-django = "^3.0.0b7"
 graphene-file-upload = "^1.2"
 
 [tool.poetry.dev-dependencies]
-django = "^2.2"
+django = "^3.2"
 pytest = "^5.2"
 pytest-django = "^3.7"
 factory_boy = "^2.12"
