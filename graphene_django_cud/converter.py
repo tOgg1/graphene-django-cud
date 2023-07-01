@@ -30,7 +30,7 @@ from graphene import (
     Decimal,
 )
 from graphene.types.json import JSONString
-from graphene_django.compat import ArrayField, HStoreField, JSONField, RangeField
+from graphene_django.compat import ArrayField, HStoreField, RangeField
 from graphene_file_upload.scalars import Upload
 from graphql import assert_valid_name, GraphQLError
 
@@ -416,7 +416,7 @@ def convert_postgres_array_to_list(
 
 
 @convert_django_field_to_input.register(HStoreField)
-@convert_django_field_to_input.register(JSONField)
+@convert_django_field_to_input.register(models.JSONField)
 def convert_posgres_field_to_string(
     field,
     registry=None,
