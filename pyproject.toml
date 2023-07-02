@@ -6,17 +6,17 @@ authors = ["Tormod Haugland <tormod.haugland@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7"
 graphene-django = "^3.0"
 graphene-file-upload = "^1.2"
 
 [tool.poetry.dev-dependencies]
 django = "^3.2"
-pytest = "^7.0"
+pytest = "^7.4"
 pytest-django = "^4.0"
-factory_boy = "^2.12"
+factory_boy = "^3.2"
 addict = "^2.2"
-pytest-cov = "^4.0"
+pytest-cov = "^4.1"
 
 [tool.black]
 line-length = 120
