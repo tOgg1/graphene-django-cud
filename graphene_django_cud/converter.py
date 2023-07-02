@@ -110,8 +110,12 @@ def convert_django_field_with_choices(
         if registry:
             from_registry = registry.get_converted_field(field)
             if from_registry:
-                from_registry.kwargs["description"] = field.help_text
-                from_registry.kwargs["required"] = is_required(field, required)
+                if hasattr(from_registry, "kwargs"):
+                    from_registry.kwargs["description"] = field.help_text
+                    from_registry.kwargs["required"] = is_required(field, required)
+                else:
+                    from_registry.description = field.help_text
+                    from_registry.required = is_required(field, required)
                 return from_registry
 
         converted = convert_choices_field(field, choices, required)
