@@ -10,6 +10,7 @@
 from functools import singledispatch
 from typing import Union
 
+import graphql
 from django.db import models
 from django.db.models import FileField, ImageField
 from django.utils.encoding import force_str
@@ -33,9 +34,12 @@ from graphene import (
 from graphene.types import enum
 from graphene.types.json import JSONString
 from graphene_django.compat import ArrayField, HStoreField, RangeField
-from graphene_django.converter import BlankValueField
 from graphene_file_upload.scalars import Upload
-from graphql import GraphQLError, assert_name
+
+if graphql.__version__.startswith("3"):
+    from graphql import GraphQLError, assert_name
+else:
+    from graphql import GraphQLError, assert_valid_name as assert_name
 
 from graphene_django_cud.types import TimeDelta
 from graphene_django_cud.util.string import to_camel_case, to_const
@@ -142,7 +146,7 @@ def convert_django_field_with_choices(
         # As of graphene-django 3.0, this is a Choices class mounted in a BlankValueField. We need to
         # get the actual field from it and use that.
         # In graphene-django 2.0, it is a regular `enum` type.
-        existing_conversion_in_registry: Union[BlankValueField, enum] = registry.get_converted_field(field)
+        existing_conversion_in_registry = registry.get_converted_field(field)
 
         if existing_conversion_in_registry:
 
