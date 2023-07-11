@@ -36,7 +36,7 @@ from graphene.types.json import JSONString
 from graphene_django.compat import ArrayField, HStoreField, RangeField
 from graphene_file_upload.scalars import Upload
 
-if graphql.__version__.startswith("3"):
+if graphql.__version__.startswith("3.2"):
     from graphql import GraphQLError, assert_name
 else:
     from graphql import GraphQLError, assert_valid_name as assert_name
