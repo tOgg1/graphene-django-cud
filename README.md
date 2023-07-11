@@ -52,7 +52,7 @@ class CreateUserMutation(DjangoCreateMutation):
 class Mutation(graphene.ObjectType):
     create_user = CreateUserMutation.Field()
 
-    
+
 class Query(graphene.ObjectType):
     user = graphene.Field(UserNode, id=graphene.String())
 
@@ -75,7 +75,7 @@ mutation {
             id
             name
             address
-        } 
+        }
     }
 }
 ```

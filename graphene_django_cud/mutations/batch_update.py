@@ -80,15 +80,11 @@ class DjangoBatchUpdateMutation(DjangoCudBase):
             raise Exception("Cannot set both `fields` and `only_fields` on a mutation")
 
         if exclude and exclude_fields:
-            raise Exception(
-                "Cannot set both `exclude` and `exclude_fields` on a mutation"
-            )
+            raise Exception("Cannot set both `exclude` and `exclude_fields` on a mutation")
 
         if only_fields:
             fields = only_fields
-            warnings.warn(
-                "`only_fields` is deprecated in favor of `fields`", DeprecationWarning
-            )
+            warnings.warn("`only_fields` is deprecated in favor of `fields`", DeprecationWarning)
 
         if exclude_fields:
             exclude = exclude_fields
@@ -101,9 +97,7 @@ class DjangoBatchUpdateMutation(DjangoCudBase):
             input_type_name = use_type_name
             InputType = registry.get_converted_field(input_type_name)
             if not InputType:
-                raise GraphQLError(
-                    f"Could not find input type with name {input_type_name}"
-                )
+                raise GraphQLError(f"Could not find input type with name {input_type_name}")
         else:
             input_type_name = type_name or f"BatchUpdate{model.__name__}Input"
 
@@ -167,9 +161,7 @@ class DjangoBatchUpdateMutation(DjangoCudBase):
         _meta.field_types = field_types or {}
         _meta.InputType = InputType
         _meta.input_type_name = input_type_name
-        _meta.login_required = login_required or (
-            _meta.permissions and len(_meta.permissions) > 0
-        )
+        _meta.login_required = login_required or (_meta.permissions and len(_meta.permissions) > 0)
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
@@ -208,9 +200,7 @@ class DjangoBatchUpdateMutation(DjangoCudBase):
 
     @classmethod
     def get_object(cls, root, info, input, full_input):
-        return cls.get_queryset(root, info, full_input).get(
-            pk=cls.resolve_id(input["id"])
-        )
+        return cls.get_queryset(root, info, full_input).get(pk=cls.resolve_id(input["id"]))
 
     @classmethod
     def mutate(cls, root, info, input):
@@ -224,7 +214,6 @@ class DjangoBatchUpdateMutation(DjangoCudBase):
         cls.check_permissions(root, info, input)
 
         Model = cls._meta.model
-        model_field_values = {}
         auto_context_fields = cls._meta.auto_context_fields or {}
 
         updated_objs = []

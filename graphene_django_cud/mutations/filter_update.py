@@ -58,23 +58,17 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
             optional_fields = tuple(name for name, _ in get_model_fields(model))
 
         assert model_type, f"Model type must be registered for model {model}"
-        assert (
-            len(filter_fields) > 0
-        ), f"You must specify at least one field to filter on for deletion."
+        assert len(filter_fields) > 0, "You must specify at least one field to filter on for deletion."
 
         if fields and only_fields:
             raise Exception("Cannot set both `fields` and `only_fields` on a mutation")
 
         if exclude and exclude_fields:
-            raise Exception(
-                "Cannot set both `exclude` and `exclude_fields` on a mutation"
-            )
+            raise Exception("Cannot set both `exclude` and `exclude_fields` on a mutation")
 
         if only_fields:
             fields = only_fields
-            warnings.warn(
-                "`only_fields` is deprecated in favor of `fields`", DeprecationWarning
-            )
+            warnings.warn("`only_fields` is deprecated in favor of `fields`", DeprecationWarning)
 
         if exclude_fields:
             exclude = exclude_fields
@@ -127,9 +121,7 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
 
         registry.register_converted_field(input_type_name, DataInputType)
 
-        arguments = OrderedDict(
-            filter=FilterInputType(required=True), data=DataInputType(required=True)
-        )
+        arguments = OrderedDict(filter=FilterInputType(required=True), data=DataInputType(required=True))
 
         output_fields = OrderedDict()
         output_fields["updated_count"] = graphene.Int()
@@ -142,9 +134,7 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.filter_fields = filter_fields
         _meta.permissions = permissions
-        _meta.login_required = login_required or (
-            _meta.permissions and len(_meta.permissions) > 0
-        )
+        _meta.login_required = login_required or (_meta.permissions and len(_meta.permissions) > 0)
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
 
@@ -216,9 +206,7 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
             value_handle_name = "handle_" + name
             if hasattr(cls, value_handle_name):
                 handle_func = getattr(cls, value_handle_name)
-                assert callable(
-                    handle_func
-                ), f"Property {value_handle_name} on {cls.__name__} is not a function."
+                assert callable(handle_func), f"Property {value_handle_name} on {cls.__name__} is not a function."
                 new_value = handle_func(value, name, info)
 
             # On some fields we perform some default conversion, if the value was not transformed above.
@@ -239,9 +227,7 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
 
             model_field_values[name] = new_value
 
-        filter_qs = cls.get_queryset(root, info, filter, data).filter(
-            **model_field_values
-        )
+        filter_qs = cls.get_queryset(root, info, filter, data).filter(**model_field_values)
         updated_qs = cls.before_save(root, info, filter_qs, filter, data)
 
         if updated_qs:

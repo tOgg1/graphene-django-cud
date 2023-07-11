@@ -1,5 +1,3 @@
-
-
 # Dummy Query object for testing so that GraphQL 3.0 does not complain
 import graphene
 

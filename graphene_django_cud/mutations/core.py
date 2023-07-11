@@ -1,7 +1,6 @@
 import enum
 from typing import Iterable, Union
 
-import graphene
 from django.db import models
 from graphene import Mutation
 from graphene.types.mutation import MutationOptions
@@ -15,7 +14,6 @@ from graphene_django_cud.util import (
     get_m2m_all_extras_field_names,
     disambiguate_ids,
     is_field_many_to_many,
-    is_field_one_to_one,
     is_field_many_to_one,
     get_model_field_or_none,
 )
@@ -46,7 +44,7 @@ class DjangoCudBase(Mutation):
                 input_type_meta.get("one_to_one_extras", {}),
                 field.related_model,
             )
-            return related_obj.id
+            return related_obj.pk
 
     @classmethod
     def create_or_update_one_to_one_relation(cls, obj, field, value, data, info):
@@ -165,16 +163,12 @@ class DjangoCudBase(Mutation):
                 }
 
                 if field_type == "auto":
-                    # In this case, a new type has been created for us. Let's first find it's name,
-                    # then get it's meta, and then create it. We also need to attach the obj as the
+                    # In this case, a new type has been created for us. Let's first find its name,
+                    # then get its meta, and then create it. We also need to attach the obj as the
                     # foreign key.
-                    _type_name = data.get(
-                        "type_name",
-                        f"{operation.capitalize()}{Model.__name__}{field.name.capitalize()}",
-                    )
 
                     # Ensure the parent relation exists and has the correct id.
-                    value[field.field.name] = obj.id
+                    value[field.field.name] = obj.pk
 
                     # We use upsert here, as the operation might be "update", where we
                     # want to update the object.
@@ -270,8 +264,6 @@ class DjangoCudBase(Mutation):
         one_to_one_extras,
         Model,
     ):
-        meta_registry = get_type_meta_registry()
-
         many_to_many_to_add = {}
         many_to_many_to_remove = {}
         many_to_many_to_set = {}
@@ -281,16 +273,10 @@ class DjangoCudBase(Mutation):
         model_field_values = {}
         one_to_one_rels = {}
 
-        many_to_many_extras_field_names = get_m2m_all_extras_field_names(
-            many_to_many_extras
-        )
+        many_to_many_extras_field_names = get_m2m_all_extras_field_names(many_to_many_extras)
         # The layout is the same as for m2m
-        many_to_one_extras_field_names = get_m2m_all_extras_field_names(
-            many_to_one_extras
-        )
-        foreign_key_extras_field_names = get_fk_all_extras_field_names(
-            foreign_key_extras
-        )
+        many_to_one_extras_field_names = get_m2m_all_extras_field_names(many_to_one_extras)
+        foreign_key_extras_field_names = get_fk_all_extras_field_names(foreign_key_extras)
 
         for field_name, context_name in auto_context_fields.items():
             if hasattr(info.context, context_name):
@@ -333,9 +319,7 @@ class DjangoCudBase(Mutation):
             value_handle_name = "handle_" + name
             if hasattr(cls, value_handle_name):
                 handle_func = getattr(cls, value_handle_name)
-                assert callable(
-                    handle_func
-                ), f"Property {value_handle_name} on {cls.__name__} is not a function."
+                assert callable(handle_func), f"Property {value_handle_name} on {cls.__name__} is not a function."
                 new_value = handle_func(value, name, info)
 
             # On some fields we perform some default conversion, if the value was not transformed above.
@@ -363,9 +347,7 @@ class DjangoCudBase(Mutation):
                             extra_data.get("one_to_one_extras", {}),
                             field.related_model,
                         )
-                elif isinstance(field, models.OneToOneRel) or isinstance(
-                    field, models.ForeignKey
-                ):
+                elif isinstance(field, models.OneToOneRel) or isinstance(field, models.ForeignKey):
                     # Delete auto context field here, if it exists. We have to do this explicitly
                     # as we change the name below
                     if name in auto_context_fields:
@@ -379,13 +361,9 @@ class DjangoCudBase(Mutation):
                     new_value = new_value.value
 
             if field_is_many_to_many:
-                many_to_many_to_set[name] = cls.get_all_objs(
-                    field.related_model, new_value
-                )
+                many_to_many_to_set[name] = cls.get_all_objs(field.related_model, new_value)
             elif field_is_many_to_one:
-                many_to_one_to_set[name] = cls.get_all_objs(
-                    field.related_model, new_value
-                )
+                many_to_one_to_set[name] = cls.get_all_objs(field.related_model, new_value)
             else:
                 model_field_values[name] = new_value
 
@@ -399,7 +377,6 @@ class DjangoCudBase(Mutation):
 
             model_field_values[name + "_id"] = obj_id
 
-        print(model_field_values)
         # Foreign keys are added, we are ready to create our object
         obj = Model.objects.create(**model_field_values)
 
@@ -413,9 +390,7 @@ class DjangoCudBase(Mutation):
                 value_handle_name = "handle_" + name
                 if hasattr(cls, value_handle_name):
                     handle_func = getattr(cls, value_handle_name)
-                    assert callable(
-                        handle_func
-                    ), f"Property {value_handle_name} on {cls.__name__} is not a function."
+                    assert callable(handle_func), f"Property {value_handle_name} on {cls.__name__} is not a function."
                     new_value = handle_func(value, name, info)
 
                 # Value was not transformed
@@ -428,10 +403,8 @@ class DjangoCudBase(Mutation):
                         extra_data = one_to_one_extras.get(name, {})
 
                         # This is a nested field we need to take care of.
-                        value[field.field.name] = obj.id
-                        new_value = cls.create_or_update_one_to_one_relation(
-                            obj, field, value, extra_data, info
-                        )
+                        value[field.field.name] = obj.pk
+                        new_value = cls.create_or_update_one_to_one_relation(obj, field, value, extra_data, info)
 
                 setattr(obj, name, new_value)
 
@@ -440,12 +413,10 @@ class DjangoCudBase(Mutation):
         # Handle extras fields
         for name, extras in many_to_many_extras.items():
             field = Model._meta.get_field(name)
-            if not name in many_to_many_to_add:
+            if name not in many_to_many_to_add:
                 many_to_many_to_add[name] = []
                 many_to_many_to_remove[name] = []
-                many_to_many_to_set[
-                    name
-                ] = None  # None means that we should not (re)set the relation.
+                many_to_many_to_set[name] = None  # None means that we should not (re)set the relation.
 
             for extra_name, data in extras.items():
                 field_name = name
@@ -457,9 +428,7 @@ class DjangoCudBase(Mutation):
                 if isinstance(data, bool):
                     data = {}
 
-                operation = data.get("operation") or get_likely_operation_from_name(
-                    extra_name
-                )
+                operation = data.get("operation") or get_likely_operation_from_name(extra_name)
                 objs = cls.get_or_create_m2m_objs(field, values, data, operation, info)
 
                 if operation == "exact":
@@ -473,12 +442,10 @@ class DjangoCudBase(Mutation):
         for name, extras in many_to_one_extras.items():
             field = Model._meta.get_field(name)
 
-            if not name in many_to_one_to_add:
+            if name not in many_to_one_to_add:
                 many_to_one_to_add[name] = []
                 many_to_one_to_remove[name] = []
-                many_to_one_to_set[
-                    name
-                ] = None  # None means that we should not (re)set the relation.
+                many_to_one_to_set[name] = None  # None means that we should not (re)set the relation.
 
             for extra_name, data in extras.items():
                 field_name = name
@@ -493,19 +460,13 @@ class DjangoCudBase(Mutation):
                 if isinstance(data, bool):
                     data = {}
 
-                operation = data.get("operation") or get_likely_operation_from_name(
-                    extra_name
-                )
+                operation = data.get("operation") or get_likely_operation_from_name(extra_name)
 
                 if operation == "exact":
-                    objs = cls.get_or_upsert_m2o_objs(
-                        obj, field, values, data, operation, info, Model
-                    )
+                    objs = cls.get_or_upsert_m2o_objs(obj, field, values, data, operation, info, Model)
                     many_to_one_to_set[name] = objs
                 elif operation == "add" or operation == "update":
-                    objs = cls.get_or_upsert_m2o_objs(
-                        obj, field, values, data, operation, info, Model
-                    )
+                    objs = cls.get_or_upsert_m2o_objs(obj, field, values, data, operation, info, Model)
                     many_to_one_to_add[name] += objs
                 else:
                     many_to_one_to_remove[name] += cls.resolve_ids(values)
@@ -519,7 +480,7 @@ class DjangoCudBase(Mutation):
                     field.add(*objs)
                 else:
                     # Remove the related objects by deletion, and set the new ones.
-                    field.exclude(id__in=[obj.id for obj in objs]).delete()
+                    field.exclude(pk__in=[obj.pk for obj in objs]).delete()
                     getattr(obj, name).add(*objs)
 
         for name, objs in many_to_one_to_add.items():
@@ -530,11 +491,11 @@ class DjangoCudBase(Mutation):
             if hasattr(field, "remove"):
                 # The field is nullable, and we simply remove the relation
                 related_name = Model._meta.get_field(name).remote_field.name
-                getattr(obj, name).filter(id__in=objs).update(**{related_name: None})
+                getattr(obj, name).filter(pk__in=objs).update(**{related_name: None})
             else:
                 # Only nullable foreign key reverse rels have the remove method.
                 # For other's we have to delete the relations
-                getattr(obj, name).filter(id__in=objs).delete()
+                getattr(obj, name).filter(pk__in=objs).delete()
 
         for name, objs in many_to_many_to_set.items():
             if objs is not None:
@@ -569,15 +530,11 @@ class DjangoCudBase(Mutation):
         many_to_one_to_remove = {}
         many_to_one_to_set = {}
 
-        many_to_many_extras_field_names = get_m2m_all_extras_field_names(
-            many_to_many_extras
-        )
+        many_to_many_extras_field_names = get_m2m_all_extras_field_names(many_to_many_extras)
         many_to_one_extras_field_names = get_m2m_all_extras_field_names(
             many_to_one_extras
         )  # The layout is the same as for m2m
-        foreign_key_extras_field_names = get_fk_all_extras_field_names(
-            foreign_key_extras
-        )
+        foreign_key_extras_field_names = get_fk_all_extras_field_names(foreign_key_extras)
 
         for field_name, context_name in auto_context_fields.items():
             if hasattr(info.context, context_name):
@@ -608,14 +565,10 @@ class DjangoCudBase(Mutation):
             # .set()-method, instead of direct assignment
             field_is_many_to_one = is_field_many_to_one(field)
 
-            field_is_one_to_one = is_field_one_to_one(field)
-
             value_handle_name = "handle_" + name
             if hasattr(cls, value_handle_name):
                 handle_func = getattr(cls, value_handle_name)
-                assert callable(
-                    handle_func
-                ), f"Property {value_handle_name} on {cls.__name__} is not a function."
+                assert callable(handle_func), f"Property {value_handle_name} on {cls.__name__} is not a function."
                 new_value = handle_func(value, name, info)
 
             # On some fields we perform some default conversion, if the value was not transformed above.
@@ -630,10 +583,8 @@ class DjangoCudBase(Mutation):
                     else:
                         extra_data = one_to_one_extras.get(name, {})
                         # This is a nested field we need to take care of.
-                        value[field.remote_field.name] = obj.id
-                        new_value = cls.create_or_update_one_to_one_relation(
-                            obj, field, value, extra_data, info
-                        )
+                        value[field.remote_field.name] = obj.pk
+                        new_value = cls.create_or_update_one_to_one_relation(obj, field, value, extra_data, info)
                 elif isinstance(field, models.OneToOneRel):
                     # If the value is an integer or a string, we assume it is an ID
                     if isinstance(value, str) or isinstance(value, int):
@@ -642,10 +593,8 @@ class DjangoCudBase(Mutation):
                     else:
                         extra_data = one_to_one_extras.get(name, {})
                         # This is a nested field we need to take care of.
-                        value[field.field.name] = obj.id
-                        new_value = cls.create_or_update_one_to_one_relation(
-                            obj, field, value, extra_data, info
-                        )
+                        value[field.field.name] = obj.pk
+                        new_value = cls.create_or_update_one_to_one_relation(obj, field, value, extra_data, info)
                 elif isinstance(field, models.ForeignKey):
                     # Delete auto context field here, if it exists. We have to do this explicitly
                     # as we change the name below
@@ -660,15 +609,10 @@ class DjangoCudBase(Mutation):
                     new_value = new_value.value
 
             if field_is_many_to_many:
-                many_to_many_to_set[name] = cls.get_all_objs(
-                    field.related_model, new_value
-                )
+                many_to_many_to_set[name] = cls.get_all_objs(field.related_model, new_value)
             elif field_is_many_to_one:
-                many_to_one_to_set[name] = cls.get_all_objs(
-                    field.related_model, new_value
-                )
+                many_to_one_to_set[name] = cls.get_all_objs(field.related_model, new_value)
             else:
-                print(obj, name, new_value)
                 setattr(obj, name, new_value)
 
         # Handle extras fields
@@ -681,12 +625,10 @@ class DjangoCudBase(Mutation):
 
         for name, extras in many_to_many_extras.items():
             field = Model._meta.get_field(name)
-            if not name in many_to_many_to_add:
+            if name not in many_to_many_to_add:
                 many_to_many_to_add[name] = []
                 many_to_many_to_remove[name] = []
-                many_to_many_to_set[
-                    name
-                ] = None  # None means that we should not (re)set the relation.
+                many_to_many_to_set[name] = None  # None means that we should not (re)set the relation.
 
             for extra_name, data in extras.items():
                 field_name = name
@@ -698,9 +640,7 @@ class DjangoCudBase(Mutation):
                 if isinstance(data, bool):
                     data = {}
 
-                operation = data.get("operation") or get_likely_operation_from_name(
-                    extra_name
-                )
+                operation = data.get("operation") or get_likely_operation_from_name(extra_name)
                 objs = cls.get_or_create_m2m_objs(field, values, data, operation, info)
 
                 if operation == "exact":
@@ -713,12 +653,10 @@ class DjangoCudBase(Mutation):
         for name, extras in many_to_one_extras.items():
             field = Model._meta.get_field(name)
 
-            if not name in many_to_one_to_add:
+            if name not in many_to_one_to_add:
                 many_to_one_to_add[name] = []
                 many_to_one_to_remove[name] = []
-                many_to_one_to_set[
-                    name
-                ] = None  # None means that we should not (re)set the relation.
+                many_to_one_to_set[name] = None  # None means that we should not (re)set the relation.
 
             for extra_name, data in extras.items():
                 field_name = name
@@ -733,19 +671,13 @@ class DjangoCudBase(Mutation):
                 if isinstance(data, bool):
                     data = {}
 
-                operation = data.get("operation") or get_likely_operation_from_name(
-                    extra_name
-                )
+                operation = data.get("operation") or get_likely_operation_from_name(extra_name)
 
                 if operation == "exact":
-                    objs = cls.get_or_upsert_m2o_objs(
-                        obj, field, values, data, operation, info, Model
-                    )
+                    objs = cls.get_or_upsert_m2o_objs(obj, field, values, data, operation, info, Model)
                     many_to_one_to_set[name] = objs
                 elif operation == "add" or operation == "update":
-                    objs = cls.get_or_upsert_m2o_objs(
-                        obj, field, values, data, operation, info, Model
-                    )
+                    objs = cls.get_or_upsert_m2o_objs(obj, field, values, data, operation, info, Model)
                     many_to_one_to_add[name] += objs
                 else:
                     many_to_one_to_remove[name] += cls.resolve_ids(values)
@@ -759,7 +691,7 @@ class DjangoCudBase(Mutation):
                     field.add(*objs)
                 else:
                     # Remove the related objects by deletion, and set the new ones.
-                    field.exclude(id__in=[obj.id for obj in objs]).delete()
+                    field.exclude(pk__in=[obj.pk for obj in objs]).delete()
                     getattr(obj, name).add(*objs)
 
         for name, objs in many_to_one_to_add.items():
@@ -770,11 +702,11 @@ class DjangoCudBase(Mutation):
             if hasattr(field, "remove"):
                 # The field is nullable, and we simply remove the relation
                 related_name = Model._meta.get_field(name).remote_field.name
-                getattr(obj, name).filter(id__in=objs).update(**{related_name: None})
+                getattr(obj, name).filter(pk__in=objs).update(**{related_name: None})
             else:
                 # Only nullable foreign key reverse rels have the remove method.
                 # For other's we have to delete the relations
-                getattr(obj, name).filter(id__in=objs).delete()
+                getattr(obj, name).filter(pk__in=objs).delete()
 
         for name, objs in many_to_many_to_set.items():
             if objs is not None:
@@ -796,9 +728,7 @@ class DjangoCudBase(Mutation):
     def check_permissions(cls, root, info, *args, **kwargs) -> None:
         get_permissions = getattr(cls, "get_permissions", None)
         if not callable(get_permissions):
-            raise TypeError(
-                "The `get_permissions` attribute of a mutation must be callable."
-            )
+            raise TypeError("The `get_permissions` attribute of a mutation must be callable.")
 
         permissions = cls.get_permissions(root, info, *args, **kwargs)
 

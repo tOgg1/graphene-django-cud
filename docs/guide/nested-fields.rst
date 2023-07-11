@@ -153,7 +153,7 @@ Cat objects to be added by id.
 Many to many extras
 ~~~~~~~~~~~~~~~~~~~
 
-The ``many_to_one_extras`` field is a dictionary containing information
+The ``many_to_many_extras`` field is a dictionary containing information
 regarding how to handle many to many relations. Suppose we have the
 ``Cat`` model as above, and a ``Dog`` model like:
 
@@ -357,6 +357,29 @@ The argument names can also be customized:
 The name of the argument will be ``killEnemies`` instead of the default
 ``enemiesKill``. The name will be translated from snake\_case to
 camelCase as per usual.
+
+Excluding fields
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, all fields are included in the input type. However, you can
+exclude fields by using the ``exclude_fields`` attribute:
+
+.. code:: python
+
+    class CreateDogMutation(DjangoCreateMutation):
+        class Meta:
+            model = Dog
+            many_to_many_extras = {
+                "enemies": {
+                    "exact": {
+                        "type": "CreateCatInput",
+                        "exclude_fields": ("name",),
+                    },
+                }
+            }
+
+This will exclude the ``name`` field from the input type.
+
 
 Deep nested arguments
 ~~~~~~~~~~~~~~~~~~~~~

@@ -18,8 +18,7 @@ from graphene_django_cud.util import disambiguate_id
 class TestDeleteMutation(TestCase):
     def test_mutate__object_exists__deletes_object(self):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class DeleteCatMutation(DjangoDeleteMutation):
             class Meta:
@@ -46,7 +45,9 @@ class TestDeleteMutation(TestCase):
         """
         result = schema.execute(
             mutation,
-            variables={"id": to_global_id("CatNode", cat.id),},
+            variables={
+                "id": to_global_id("CatNode", cat.id),
+            },
             context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
@@ -57,8 +58,7 @@ class TestDeleteMutation(TestCase):
 
     def test_mutate__object_does_not_exist__returns_found_false_and_null_id(self):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class DeleteCatMutation(DjangoDeleteMutation):
             class Meta:
@@ -82,7 +82,9 @@ class TestDeleteMutation(TestCase):
         """
         result = schema.execute(
             mutation,
-            variables={"id": to_global_id("CatNode", 1),},
+            variables={
+                "id": to_global_id("CatNode", 1),
+            },
             context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
@@ -92,8 +94,7 @@ class TestDeleteMutation(TestCase):
 
     def test_muate__user_misses_permission__fails(self):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class DeleteCatMutation(DjangoDeleteMutation):
             class Meta:

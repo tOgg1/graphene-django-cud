@@ -36,8 +36,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         self,
     ):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class CreateUserMutation(DjangoCreateMutation):
             class Meta:
@@ -53,7 +52,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
-                $input: CreateUserInput! 
+                $input: CreateUserInput!
             ){
                 createUser(input: $input){
                     user{
@@ -83,8 +82,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
 
     def test_many_to_one_extras__set_exact_by_id__sets_by_id(self):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class CreateUserMutation(DjangoCreateMutation):
             class Meta:
@@ -101,7 +99,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
-                $input: CreateUserInput! 
+                $input: CreateUserInput!
             ){
                 createUser(input: $input){
                     user{
@@ -132,8 +130,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
 
     def test_many_to_one_extras__add_by_id__adds_by_id(self):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class CreateUserMutation(DjangoCreateMutation):
             class Meta:
@@ -150,7 +147,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
-                $input: CreateUserInput! 
+                $input: CreateUserInput!
             ){
                 createUser(input: $input){
                     user{
@@ -181,8 +178,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
 
     def test_many_to_one_extras__add_by_input__adds_by_input(self):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class CreateCatMutation(DjangoCreateMutation):
             class Meta:
@@ -203,7 +199,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
         schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateUser(
-                $input: CreateUserInput! 
+                $input: CreateUserInput!
             ){
                 createUser(input: $input){
                     user{
@@ -237,8 +233,7 @@ class TestUpdateWithOneToOneField(TestCase):
     def test__one_to_one_relation_exists__updates_specified_fields(self):
 
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class UpdateDogMutation(DjangoUpdateMutation):
             class Meta:
@@ -263,7 +258,7 @@ class TestUpdateWithOneToOneField(TestCase):
                         id
                         registration{
                             id
-                            registrationNumber 
+                            registrationNumber
                         }
                     }
                 }
@@ -284,7 +279,6 @@ class TestUpdateWithOneToOneField(TestCase):
             },
             context=Dict(user=user),
         )
-        print(result)
         self.assertIsNone(result.errors)
         data = Dict(result.data)
         self.assertIsNone(result.errors)
@@ -296,8 +290,7 @@ class TestUpdateWithOneToOneField(TestCase):
 
     def test__reverse_one_to_one_exists__updates_specified_fields(self):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class UpdateDogRegistrationMutation(DjangoUpdateMutation):
             class Meta:
@@ -309,9 +302,7 @@ class TestUpdateWithOneToOneField(TestCase):
 
         user = UserFactory.create()
         dog = DogFactory.create(breed="HUSKY")
-        dog_registration = DogRegistration.objects.create(
-            dog=dog, registration_number="1234"
-        )
+        dog_registration = DogRegistration.objects.create(dog=dog, registration_number="1234")
 
         schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
@@ -350,15 +341,11 @@ class TestUpdateWithOneToOneField(TestCase):
         )
         self.assertIsNone(result.errors)
         data = Dict(result.data)
-        self.assertEqual(
-            "LABRADOR", data.updateDogRegistration.dogRegistration.dog.breed
-        )
+        self.assertEqual("LABRADOR", data.updateDogRegistration.dogRegistration.dog.breed)
 
-        print(dog.breed, type(dog.breed))
         # Load from database
         dog_registration.refresh_from_db()
         dog.refresh_from_db()
-        print(dog.breed, type(dog.breed))
 
         self.assertEqual(dog.breed, "LABRADOR")
 
@@ -366,8 +353,7 @@ class TestUpdateWithOneToOneField(TestCase):
 class TestCreateWithOneToOneField(TestCase):
     def test__one_to_one_relation_exists__creates_specified_fields(self):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class CreateDogMutation(DjangoCreateMutation):
             class Meta:
@@ -389,7 +375,7 @@ class TestCreateWithOneToOneField(TestCase):
                         id
                         registration{
                             id
-                            registrationNumber 
+                            registrationNumber
                         }
                     }
                 }
@@ -422,8 +408,7 @@ class TestCreateWithOneToOneField(TestCase):
 
     def test__reverse_one_to_one_exists__updates_specified_fields(self):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class CreateDogRegistrationMutation(DjangoCreateMutation):
             class Meta:
@@ -482,9 +467,7 @@ class TestCreateWithOneToOneField(TestCase):
         self.assertEqual("12345", dog_registration.registrationNumber)
 
         # Load from database
-        dog_registration = DogRegistration.objects.get(
-            pk=disambiguate_id(dog_registration.id)
-        )
+        dog_registration = DogRegistration.objects.get(pk=disambiguate_id(dog_registration.id))
         dog = getattr(dog_registration, "dog", None)
         self.assertIsNotNone(dog)
         self.assertEqual(dog.name, "Sparky")
@@ -494,8 +477,7 @@ class TestCreateWithOneToOneField(TestCase):
 class TestCreateWithPlainManyToOneRelation(TestCase):
     def test__many_to_one_relation_exists__creates_specified_fields(self):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class CreateUserMutation(DjangoCreateMutation):
             class Meta:
@@ -523,7 +505,7 @@ class TestCreateWithPlainManyToOneRelation(TestCase):
                                 }
                             }
                         }
-                    } 
+                    }
                 }
             }
         """
@@ -544,9 +526,7 @@ class TestCreateWithPlainManyToOneRelation(TestCase):
         self.assertIsNone(result.errors)
         data = Dict(result.data)
         self.assertIsNone(result.errors)
-        self.assertEqual(
-            to_global_id("CatNode", cat.id), data.createUser.user.cats.edges[0].node.id
-        )
+        self.assertEqual(to_global_id("CatNode", cat.id), data.createUser.user.cats.edges[0].node.id)
 
         new_user = User.objects.get(pk=disambiguate_id(data.createUser.user.id))
 
@@ -558,8 +538,7 @@ class TestCreateWithPlainManyToOneRelation(TestCase):
 class TestCreateWithPlainManyToManyRelation(TestCase):
     def test__many_to_one_relation_exists__creates_specified_fields(self):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class CreateDogMutation(DjangoCreateMutation):
             class Meta:
@@ -608,9 +587,7 @@ class TestCreateWithPlainManyToManyRelation(TestCase):
         self.assertIsNone(result.errors)
         data = Dict(result.data)
         self.assertIsNone(result.errors)
-        self.assertEqual(
-            to_global_id("CatNode", cat.id), data.createDog.dog.enemies.edges[0].node.id
-        )
+        self.assertEqual(to_global_id("CatNode", cat.id), data.createDog.dog.enemies.edges[0].node.id)
 
         new_dog = Dog.objects.get(pk=disambiguate_id(data.createDog.dog.id))
 
@@ -624,8 +601,7 @@ class TestCreateMutationCustomFields(TestCase):
         self,
     ):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class CreateDogMutation(DjangoCreateMutation):
             class Meta:
@@ -647,7 +623,7 @@ class TestCreateMutationCustomFields(TestCase):
         schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateDog(
-                $input: CreateDogInput! 
+                $input: CreateDogInput!
             ){
                 createDog(input: $input){
                     dog{
@@ -696,8 +672,7 @@ class TestCreateMutationCustomFields(TestCase):
 class TestCreateWithManyToManyThroughModel(TestCase):
     def test__creating_a_related_entity_with_a_through_model__works_as_intended(self):
         # This registers the UserNode type
-        # noinspection PyUnresolvedReferences
-        from .schema import UserNode
+        from .schema import UserNode  # noqa: F401
 
         class CreateCatMutation(DjangoCreateMutation):
             class Meta:
@@ -719,7 +694,7 @@ class TestCreateWithManyToManyThroughModel(TestCase):
         schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
             mutation CreateCat(
-                $input: CreateCatInput! 
+                $input: CreateCatInput!
             ){
                 createCat(input: $input){
                     cat{

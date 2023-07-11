@@ -1,12 +1,25 @@
 # Changelog
 
+## Version 0.11.0
+
+* Fix graphene-django 3.x compatibility issues (thanks @sjdemartini, @wito-alex).
+* Improve documentation (thanks @sjdemartini, @Plebbimon).
+* Add `perform_delete` override to `DjangoDeleteMutation` (thanks @calummackervoy). This allows for better soft deletes.
+* Add `get_return_id` override to `DjangoBatchDeleteMutation`, enabling ID overwrites (thanks @rymanso).
+* Fix compatability issues with custom pks (thanks @NwawelAIroume).
+* Bump some package versions.
+* Some general project and file clean up.
+* Remove debug prints. Pardon all the mlogs.
+
 ## Version 0.10.0
+
 * Put `select_for_update` behind a new option `use_select_for_update`, which is enabled by default.
 * Rename `only_fields` -> `fields` and `exclude_fields` -> `exclude`. Alias the old names but add deprecation warnings.
 * Make the library graphene(-django) 3.x compatible.
 * Respect required_fields in Patch and BatchPatch mutations (thanks @mbuvarp).
 
 ## Version 0.9.1
+
 * Improve atomicity of patch/update-calls (thanks @keithhackbarth)
 * Improve documentation
 * Security-critical package updates
@@ -15,7 +28,7 @@
 * (BREAKING) Ensure inputs are sent to all after_mutate hooks.
 
 ## Version 0.8.1
-* (BREAKING) DjangoDeleteMutation now returns three id fields: deletedId, deletedRawId and deletedInputId. The default behaviour of deletedId is now to return a global id if the associated model type has a GlobalIDField for the "id" field. 
+* (BREAKING) DjangoDeleteMutation now returns three id fields: deletedId, deletedRawId and deletedInputId. The default behaviour of deletedId is now to return a global id if the associated model type has a GlobalIDField for the "id" field.
 
 ## Version 0.8.0
 * Add customisation of resolving IDs via the resolve_id(s) methods (@bjmc)
@@ -185,4 +198,3 @@ Initial release, add core and classes:
  * DjangoUpdateMutation
  * DjangoDeleteMutation
  * DjangoBatchDeleteMutation
- 

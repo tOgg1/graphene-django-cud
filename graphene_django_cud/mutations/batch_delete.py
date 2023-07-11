@@ -2,6 +2,7 @@ from collections import OrderedDict
 from typing import Iterable
 
 import graphene
+from graphene import GlobalID
 from graphene.types.mutation import MutationOptions
 from graphene.types.utils import yank_fields_from_attrs
 from graphene.utils.str_converters import to_snake_case
@@ -33,6 +34,9 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
         **kwargs,
     ):
         registry = get_global_registry()
+        model_type = registry.get_type_for_model(model)
+
+        assert model_type, f"Model type must be registered for model {model}"
 
         if not return_field_name:
             return_field_name = to_snake_case(model.__name__)
@@ -48,14 +52,24 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
             _meta = DjangoBatchDeleteMutationOptions(cls)
 
         _meta.model = model
+        _meta.model_type = model_type
         _meta.fields = yank_fields_from_attrs(output_fields, _as=graphene.Field)
         _meta.return_field_name = return_field_name
         _meta.permissions = permissions
-        _meta.login_required = login_required or (
-            _meta.permissions and len(_meta.permissions) > 0
-        )
+        _meta.login_required = login_required or (_meta.permissions and len(_meta.permissions) > 0)
 
         super().__init_subclass_with_meta__(arguments=arguments, _meta=_meta, **kwargs)
+
+    @classmethod
+    def get_return_id(cls, id):
+        model_type = cls._meta.model_type
+
+        id_field = model_type._meta.fields.get("id", None)
+
+        if isinstance(id_field, GlobalID):
+            return to_global_id(cls._meta.model_type._meta.name, id)
+        else:
+            return id
 
     @classmethod
     def get_permissions(cls, root, info, input) -> Iterable[str]:
@@ -100,7 +114,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
 
         cls.validate(root, info, ids)
 
-        qs_to_delete = cls.get_queryset(root, info, ids).filter(id__in=ids)
+        qs_to_delete = cls.get_queryset(root, info, ids).filter(pk__in=ids)
 
         updated_qs = cls.before_save(root, info, ids, qs_to_delete)
 
@@ -108,15 +122,10 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
             qs_to_delete = updated_qs
 
         # Find out which (global) ids are deleted, and which were not found.
-        deleted_ids = [
-            to_global_id(get_global_registry().get_type_for_model(Model).__name__, id)
-            for id in qs_to_delete.values_list("id", flat=True)
-        ]
+        deleted_ids = [cls.get_return_id(id) for id in qs_to_delete.values_list("id", flat=True)]
 
-        all_global_ids = [
-            to_global_id(get_global_registry().get_type_for_model(Model).__name__, id)
-            for id in ids
-        ]
+        all_global_ids = [cls.get_return_id(id) for id in ids]
+
 
         missed_ids = list(set(all_global_ids).difference(deleted_ids))
 

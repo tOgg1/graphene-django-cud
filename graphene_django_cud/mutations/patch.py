@@ -1,4 +1,3 @@
-
 from graphene_django.utils import get_model_fields
 
 from .update import DjangoUpdateMutation
@@ -21,7 +20,7 @@ class DjangoPatchMutation(DjangoUpdateMutation):
         optional_fields=None,
         required_fields=None,
         type_name=None,
-        **kwargs
+        **kwargs,
     ):
         all_field_names = tuple(name for name, _ in get_model_fields(model))
 
@@ -39,5 +38,5 @@ class DjangoPatchMutation(DjangoUpdateMutation):
             optional_fields=optional_fields,
             required_fields=required_fields,
             type_name=input_type_name,
-            **kwargs
+            **kwargs,
         )

@@ -336,4 +336,3 @@ The mutation returns two fields for resolving:
             }
         }
     }
-

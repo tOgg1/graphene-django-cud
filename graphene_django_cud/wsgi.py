@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'graphene_django_cud.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "graphene_django_cud.settings")
 
 application = get_wsgi_application()
