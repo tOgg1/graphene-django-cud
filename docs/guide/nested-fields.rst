@@ -283,6 +283,61 @@ populator of the relationship.
 If you don't have an existing type for creating a user, e.g. the "CreateCatInput" we used above,
 you can set the type to "auto", which will create a new type.
 
+Many to many with `through` models
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Using `graphene-django-cud`, a `through` model is more akin to a many to one relationship, as it is
+an intermediate model that connects two other models with itself.
+
+If you have a many to many relationship with a `through` model, you can use
+a `many_to_one_extras` field to specify how to handle the `through` model.
+There's also usually no need to specify the `many_to_many_extras` field, as
+the `through` model will be used instead.
+
+Suppose we have a `Dog` model with a many to many relationship
+with a `Cat` model, but we want to keep track of the number of times a dog
+has fought a cat. We can do this with a `through` model:
+
+.. code:: python
+
+    class Dog(models.Model):
+        owner = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+        name = models.TextField()
+        fights = models.ManyToManyField(Cat, through='Fight')
+
+    class Fight(models.Model):
+        dog = models.ForeignKey(Dog, on_delete=models.CASCADE, related_name='fights')
+        cat = models.ForeignKey(Cat, on_delete=models.CASCADE, related_name='fights')
+        times = models.IntegerField(default=0)
+
+We can then create a mutation to create a dog, and add a fight to it:
+
+.. code:: python
+
+    class CreateDogMutation(DjangoCreateMutation):
+        class Meta:
+            model = Dog
+            many_to_one_extras = {
+                'fights': {
+                    'exact': {"type": "auto"}
+                }
+            }
+
+This will infer the dog's ID, and allows us to create a fight in the same
+mutation:
+
+.. code::
+
+    mutation {
+        createDog(input: {
+            name: "Buster",
+            fights: [{cat: "Q2F0Tm9kZTox", times: 1}]
+        }}){
+            dog{
+                ...DogInfo
+            }
+        }
+    }
+
 One to one extras
 ~~~~~~~~~~~~~~~~~
 
