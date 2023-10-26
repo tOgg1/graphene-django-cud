@@ -48,9 +48,10 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
         optional_fields=None,
         required_fields=(),
         field_types=None,
-        auto_context_fields={},
+            auto_context_fields=None,
         **kwargs,
     ):
+
         registry = get_global_registry()
         model_type = registry.get_type_for_model(model)
 
@@ -76,6 +77,9 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
                 "`exclude_fields` is deprecated in favor of `exclude`",
                 DeprecationWarning,
             )
+
+        if auto_context_fields is None:
+            auto_context_fields = {}
 
         input_arguments = get_filter_fields_input_args(filter_fields, model)
 
