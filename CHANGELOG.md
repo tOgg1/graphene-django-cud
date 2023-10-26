@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 0.11.1
+
+* Make required_fields and optional_fields handle None values more gracefully.
+* Remove mutable default arguments for auto_context_fields
+
 ## Version 0.11.0
 
 * Fix graphene-django 3.x compatibility issues (thanks @sjdemartini, @wito-alex).
