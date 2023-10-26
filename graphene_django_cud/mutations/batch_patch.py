@@ -17,8 +17,8 @@ class DjangoBatchPatchMutation(DjangoBatchUpdateMutation):
         cls,
         _meta=None,
         model=None,
-            optional_fields=(),
-            required_fields=(),
+            optional_fields=None,
+            required_fields=None,
         type_name=None,
         **kwargs,
     ):
@@ -35,8 +35,8 @@ class DjangoBatchPatchMutation(DjangoBatchUpdateMutation):
         return super().__init_subclass_with_meta__(
             _meta=_meta,
             model=model,
-            optional_fields=optional_fields,
-            required_fields=required_fields,
+            optional_fields=optional_fields or (),
+            required_fields=required_fields or (),
             type_name=input_type_name,
             **kwargs,
         )

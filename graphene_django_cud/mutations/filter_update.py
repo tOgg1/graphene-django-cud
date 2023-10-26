@@ -45,7 +45,7 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
         only_fields=(),  # Deprecated in favor of `fields`
         exclude=(),
         exclude_fields=(),  # Deprecated in favor of `exclude`
-            optional_fields=(),
+            optional_fields=None,  # Explicitly defaulted to None here and handled below.
         required_fields=(),
         field_types=None,
             auto_context_fields=None,
