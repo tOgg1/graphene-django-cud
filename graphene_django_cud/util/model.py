@@ -135,6 +135,9 @@ def get_input_fields_for_model(
             # Or when there is no back reference.
             continue
 
+        optional_fields = optional_fields or ()
+        required_fields = required_fields or ()
+
         required = None
         if name in optional_fields:
             required = False
