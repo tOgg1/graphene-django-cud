@@ -285,13 +285,14 @@ you can set the type to "auto", which will create a new type.
 
 Many to many with `through` models
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Using `graphene-django-cud`, a `through` model is more akin to a many to one relationship, as it is
-an intermediate model that connects two other models with itself.
+The way Django handles a `through` model internally is functionally similar to using many to one relationships. This
+implies that the more convienient option is to use `many_to_one_extras` instead of `many_to_many_extras` when dealing
+with `through` models.
 
 If you have a many to many relationship with a `through` model, you can use
 a `many_to_one_extras` field to specify how to handle the `through` model.
-There's also usually no need to specify the `many_to_many_extras` field, as
-the `through` model will be used instead.
+Due to how the m2m fields are automatically generated using the input schema, it is recommended to use the
+`many_to_one_extras` field instead of the `many_to_many_extras` field.
 
 Suppose we have a `Dog` model with a many to many relationship
 with a `Cat` model, but we want to keep track of the number of times a dog
