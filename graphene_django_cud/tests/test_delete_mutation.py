@@ -9,9 +9,10 @@ from graphene_django_cud.tests.factories import (
     UserWithPermissionsFactory,
     CatFactory,
     UserFactory,
+    FishFactory,
 )
 from graphene_django_cud.tests.dummy_query import DummyQuery
-from graphene_django_cud.tests.models import Cat
+from graphene_django_cud.tests.models import Cat, Fish
 from graphene_django_cud.util import disambiguate_id
 
 
@@ -128,3 +129,41 @@ class TestDeleteMutation(TestCase):
         )
         self.assertIsNotNone(result.errors)
         self.assertIn("Not permitted", str(result.errors))
+
+    def test__deleting_a_record_with_uuid_pk__with_pk_as_str(self):
+        # This register the FishNode type
+        from .schema import FishNode  # noqa: F401
+
+        class DeleteFishMutation(DjangoDeleteMutation):
+            class Meta:
+                model = Fish
+
+        class Mutations(graphene.ObjectType):
+            delete_fish = DeleteFishMutation.Field()
+
+        user = UserFactory.create()
+        fish = FishFactory.create()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+        mutation = """
+            mutation DeleteFish(
+                $id: ID!
+            ){
+                deleteFish(id: $id) {
+                    found
+                    deletedId
+                }
+            }
+        """
+
+        # Excluded use of `to_global_id` and cast UUID to str to match some
+        # real-world mutation scenarios.
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": str(fish.id)
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+        self.assertEqual(Fish.objects.count(), 0)

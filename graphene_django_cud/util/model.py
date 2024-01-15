@@ -42,7 +42,10 @@ def disambiguate_id(ambiguous_id: Union[int, float, str, uuid.UUID]):
 
     if isinstance(ambiguous_id, str):
         try:
-            return from_global_id(ambiguous_id)[1]
+            _id = from_global_id(ambiguous_id)[1]
+
+            if _id:
+                return _id
         except (ValueError, TypeError, binascii.Error):
             pass
 
@@ -134,6 +137,9 @@ def get_input_fields_for_model(
             # in there. Or when we exclude this field in exclude_fields.
             # Or when there is no back reference.
             continue
+
+        optional_fields = optional_fields or ()
+        required_fields = required_fields or ()
 
         required = None
         if name in optional_fields:

@@ -5,7 +5,14 @@ from django.contrib.auth.models import Permission
 from django.db import models
 from factory.django import DjangoModelFactory
 
-from graphene_django_cud.tests.models import User, Cat, Dog, Mouse, DogRegistration
+from graphene_django_cud.tests.models import (
+    User,
+    Cat,
+    Dog,
+    Mouse,
+    DogRegistration,
+    Fish,
+)
 
 
 class UserFactory(DjangoModelFactory):
@@ -104,3 +111,10 @@ class MouseFactory(DjangoModelFactory):
         model = Mouse
 
     name = "mouse"
+
+
+class FishFactory(DjangoModelFactory):
+    class Meta:
+        model = Fish
+
+    name = "Koi"

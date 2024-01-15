@@ -36,7 +36,7 @@ class DjangoBatchUpdateMutation(DjangoCudBase):
         exclude_fields=(),  # Deprecated in favor of `exclude`
         optional_fields=(),
         required_fields=(),
-        auto_context_fields={},
+            auto_context_fields=None,
         return_field_name=None,
         many_to_many_extras=None,
         foreign_key_extras=None,

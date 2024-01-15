@@ -10,9 +10,10 @@ from graphene_django_cud.tests.factories import (
     UserFactory,
     CatFactory,
     DogFactory,
+    FishFactory,
 )
 from graphene_django_cud.tests.dummy_query import DummyQuery
-from graphene_django_cud.tests.models import User, Cat, Dog, DogRegistration
+from graphene_django_cud.tests.models import User, Cat, Dog, DogRegistration, Fish
 from graphene_django_cud.util import disambiguate_id
 
 
@@ -736,3 +737,47 @@ class TestCreateWithManyToManyThroughModel(TestCase):
             cat["catUserRelations"]["edges"][0]["node"]["user"]["id"],
             to_global_id("UserNode", other_user.id),
         )
+
+
+class TestCreateUuidPk(TestCase):
+    def test__creating_a_record_with_uuid_pk(self):
+        # This register the FishNode type
+        from .schema import FishNode  # noqa: F401
+
+        class CreateFishMutation(DjangoCreateMutation):
+            class Meta:
+                model = Fish
+
+        class Mutations(graphene.ObjectType):
+            create_fish = CreateFishMutation.Field()
+        
+        user = UserFactory.create()
+        fish = FishFactory.build()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+        mutation = """
+            mutation CreateFish(
+                $input: CreateFishInput!
+            ){
+                createFish(input: $input) {
+                    fish {
+                        id
+                        name
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "input": {
+                    "name": fish.name
+                }
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+
+        data = Dict(result.data)
+        self.assertEqual(data.createFish.fish.name, fish.name)
