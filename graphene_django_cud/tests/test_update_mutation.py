@@ -11,8 +11,9 @@ from graphene_django_cud.tests.factories import (
     UserWithPermissionsFactory,
     DogFactory,
     MouseFactory,
+    FishFactory,
 )
-from graphene_django_cud.tests.models import User, Cat, Dog
+from graphene_django_cud.tests.models import User, Cat, Dog, Fish
 from graphene_django_cud.util import disambiguate_id
 from graphene_django_cud.tests.dummy_query import DummyQuery
 
@@ -483,6 +484,53 @@ class TestUpdateMutation(TestCase):
             context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
+
+    def test__updating_a_record_with_uuid_pk__with_pk_as_str(self):
+        # This register the FishNode type
+        from .schema import FishNode  # noqa: F401
+
+        class UpdateFishMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Fish
+
+        class Mutations(graphene.ObjectType):
+            update_fish = UpdateFishMutation.Field()
+
+        user = UserFactory.create()
+        fish = FishFactory.create()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+        mutation = """
+            mutation UpdateFish(
+                $id: ID!
+                $input: UpdateFishInput!
+            ){
+                updateFish(id: $id, input: $input) {
+                    fish {
+                        id
+                        name
+                    }
+                }
+            }
+        """
+
+        # Excluded use of `to_global_id` and cast UUID to str to match some
+        # real-world mutation scenarios.
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": str(fish.id),
+                "input": {
+                    "name": "Fugu"
+                }
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+
+        data = Dict(result.data)
+        self.assertNotEqual(data.updateFish.fish.name, fish.name)
+        self.assertEqual(data.updateFish.fish.name, "Fugu")
 
 
 class TestUpdateMutationManyToManyOnReverseField(TestCase):
