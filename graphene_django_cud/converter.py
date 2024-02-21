@@ -158,9 +158,11 @@ def convert_django_field_with_choices(
             else:
                 # Fetch the actual converted Choices class. We have to do this with a slightly shady usage of
                 # the protected "_of_type" property of the NonNull type.
-                UnderlyingEnumCls = existing_conversion_in_registry.type._of_type if isinstance( # noqa
-                    existing_conversion_in_registry.type,
-                    NonNull) else existing_conversion_in_registry.type
+                UnderlyingEnumCls = (
+                    existing_conversion_in_registry.type._of_type
+                    if isinstance(existing_conversion_in_registry.type, NonNull)  # noqa
+                    else existing_conversion_in_registry.type
+                )
 
                 # Return the converted field with the correct description and required value.
                 return UnderlyingEnumCls(description=field.help_text, required=is_required(field, required))
@@ -177,12 +179,12 @@ def convert_django_field_with_choices(
 
 @singledispatch
 def convert_django_field_to_input(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     raise Exception("Don't know how to convert the Django field %s (%s)" % (field, field.__class__))
 
@@ -195,12 +197,12 @@ def convert_django_field_to_input(
 @convert_django_field_to_input.register(models.GenericIPAddressField)
 @convert_django_field_to_input.register(models.FilePathField)
 def convert_field_to_string_extended(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return String(description=field.help_text, required=is_required(field, required))
 
@@ -208,12 +210,12 @@ def convert_field_to_string_extended(
 @convert_django_field_to_input.register(models.OneToOneField)
 @convert_django_field_to_input.register(models.OneToOneRel)
 def convert_one_to_one_field(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     type_name = field_one_to_one_extras.get("type", "ID") if field_one_to_one_extras else "ID"
     if type_name == "ID":
@@ -240,12 +242,12 @@ def convert_one_to_one_field(
 @convert_django_field_to_input.register(models.AutoField)
 @convert_django_field_to_input.register(models.ForeignKey)
 def convert_field_to_id(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     # Call getattr here, as OneToOneRel does not carry the attribute whatsoeever.
     id_type = ID(
@@ -272,12 +274,12 @@ def convert_field_to_id(
 
 @convert_django_field_to_input.register(models.UUIDField)
 def convert_field_to_uuid(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return UUID(description=field.help_text, required=is_required(field, required))
 
@@ -288,24 +290,24 @@ def convert_field_to_uuid(
 @convert_django_field_to_input.register(models.BigIntegerField)
 @convert_django_field_to_input.register(models.IntegerField)
 def convert_field_to_int(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return Int(description=field.help_text, required=is_required(field, required))
 
 
 @convert_django_field_to_input.register(models.BooleanField)
 def convert_field_to_boolean(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     if is_required(field, required):
         return NonNull(Boolean, description=field.help_text)
@@ -316,60 +318,60 @@ def convert_field_to_boolean(
 
 @convert_django_field_to_input.register(models.NullBooleanField)
 def convert_field_to_nullboolean(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return Boolean(description=field.help_text, required=is_required(field, required))
 
 
 @convert_django_field_to_input.register(models.FloatField)
 def convert_field_to_float(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return Float(description=field.help_text, required=is_required(field, required))
 
 
 @convert_django_field_to_input.register(models.DecimalField)
 def convert_field_to_decimal(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return Decimal(description=field.help_text, required=is_required(field, required))
 
 
 @convert_django_field_to_input.register(models.DurationField)
 def convert_field_to_time_delta(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return TimeDelta(description=field.help_text, required=is_required(field, required))
 
 
 @convert_django_field_to_input.register(models.DateTimeField)
 def convert_datetime_to_string(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     # We only render DateTimeFields with auto_now[_add] if they are explicitly required or not
     if required is None and (getattr(field, "auto_now", None) or getattr(field, "auto_now_add", None)):
@@ -380,12 +382,12 @@ def convert_datetime_to_string(
 
 @convert_django_field_to_input.register(models.DateField)
 def convert_date_to_string(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     # We only render DateFields with auto_now[_add] if they are explicitly required or not
     if required is None and (getattr(field, "auto_now", None) or getattr(field, "auto_now_add", None)):
@@ -396,12 +398,12 @@ def convert_date_to_string(
 
 @convert_django_field_to_input.register(models.TimeField)
 def convert_time_to_string(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return Time(description=field.help_text, required=is_required(field, required))
 
@@ -410,12 +412,12 @@ def convert_time_to_string(
 @convert_django_field_to_input.register(models.ManyToManyRel)
 @convert_django_field_to_input.register(models.ManyToOneRel)
 def convert_many_to_many_field(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     # Use getattr on help_text here as ManyToOnRel does not possess this.
     list_id_type = List(
@@ -446,12 +448,12 @@ def convert_many_to_many_field(
 
 @convert_django_field_to_input.register(ArrayField)
 def convert_postgres_array_to_list(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     base_type = convert_django_field_to_input(field.base_field)
     if not isinstance(base_type, (List, NonNull)):
@@ -462,24 +464,24 @@ def convert_postgres_array_to_list(
 @convert_django_field_to_input.register(HStoreField)
 @convert_django_field_to_input.register(models.JSONField)
 def convert_posgres_field_to_string(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return JSONString(description=field.help_text, required=is_required(field, required))
 
 
 @convert_django_field_to_input.register(RangeField)
 def convert_postgres_range_to_string(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     inner_type = convert_django_field_to_input(field.base_field)
     if not isinstance(inner_type, (List, NonNull)):
@@ -490,11 +492,11 @@ def convert_postgres_range_to_string(
 @convert_django_field_to_input.register(FileField)
 @convert_django_field_to_input.register(ImageField)
 def convert_file_field_to_upload(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     return Upload(required=is_required(field, required))

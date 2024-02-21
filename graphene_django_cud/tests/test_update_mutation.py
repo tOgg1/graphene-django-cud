@@ -518,12 +518,7 @@ class TestUpdateMutation(TestCase):
         # real-world mutation scenarios.
         result = schema.execute(
             mutation,
-            variables={
-                "id": str(fish.id),
-                "input": {
-                    "name": "Fugu"
-                }
-            },
+            variables={"id": str(fish.id), "input": {"name": "Fugu"}},
             context=Dict(user=user),
         )
         self.assertIsNone(result.errors)

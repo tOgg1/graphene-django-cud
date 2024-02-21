@@ -109,7 +109,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
 
         cls.check_permissions(root, info, ids)
 
-        Model = cls._meta.model # noqa
+        Model = cls._meta.model  # noqa
         ids = cls.resolve_ids(ids)
 
         cls.validate(root, info, ids)
@@ -125,7 +125,6 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
         deleted_ids = [cls.get_return_id(id) for id in qs_to_delete.values_list("id", flat=True)]
 
         all_global_ids = [cls.get_return_id(id) for id in ids]
-
 
         missed_ids = list(set(all_global_ids).difference(deleted_ids))
 

@@ -160,9 +160,7 @@ class TestDeleteMutation(TestCase):
         # real-world mutation scenarios.
         result = schema.execute(
             mutation,
-            variables={
-                "id": str(fish.id)
-            },
+            variables={"id": str(fish.id)},
             context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
