@@ -117,12 +117,12 @@ def convert_choices_field(field, choices, required=None):
 
 
 def convert_django_field_with_choices(
-        field,
-        registry=None,
-        required=None,
-        field_many_to_many_extras=None,
-        field_foreign_key_extras=None,
-        field_one_to_one_extras=None,
+    field,
+    registry=None,
+    required=None,
+    field_many_to_many_extras=None,
+    field_foreign_key_extras=None,
+    field_one_to_one_extras=None,
 ):
     choices = getattr(field, "choices", None)
 
