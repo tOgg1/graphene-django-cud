@@ -8,7 +8,6 @@
 #
 # From the last point, users of this module are expected to discard any field returning None
 from functools import singledispatch
-from typing import Union
 
 import graphql
 from django.db import models
@@ -31,7 +30,6 @@ from graphene import (
     Dynamic,
     Decimal,
 )
-from graphene.types import enum
 from graphene.types.json import JSONString
 from graphene_django.compat import ArrayField, HStoreField, RangeField
 from graphene_file_upload.scalars import Upload

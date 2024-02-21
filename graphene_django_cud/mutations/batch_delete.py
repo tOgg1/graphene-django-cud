@@ -109,7 +109,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
 
         cls.check_permissions(root, info, ids)
 
-        Model = cls._meta.model
+        Model = cls._meta.model # noqa
         ids = cls.resolve_ids(ids)
 
         cls.validate(root, info, ids)
