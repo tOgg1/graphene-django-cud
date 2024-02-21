@@ -750,7 +750,7 @@ class TestCreateUuidPk(TestCase):
 
         class Mutations(graphene.ObjectType):
             create_fish = CreateFishMutation.Field()
-        
+
         user = UserFactory.create()
         fish = FishFactory.build()
 
@@ -770,11 +770,7 @@ class TestCreateUuidPk(TestCase):
 
         result = schema.execute(
             mutation,
-            variables={
-                "input": {
-                    "name": fish.name
-                }
-            },
+            variables={"input": {"name": fish.name}},
             context=Dict(user=user),
         )
         self.assertIsNone(result.errors)
