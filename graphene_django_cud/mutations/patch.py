@@ -17,8 +17,8 @@ class DjangoPatchMutation(DjangoUpdateMutation):
         cls,
         _meta=None,
         model=None,
-            optional_fields=None,
-            required_fields=None,
+        optional_fields=None,
+        required_fields=None,
         type_name=None,
         **kwargs,
     ):

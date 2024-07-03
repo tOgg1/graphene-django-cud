@@ -1,3 +1,4 @@
+import uuid
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -59,3 +60,8 @@ class CatUserRelation(models.Model):
 
     class Meta:
         unique_together = (("cat", "user"),)
+
+
+class Fish(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    name = models.CharField(max_length=40, blank=False, null=False)

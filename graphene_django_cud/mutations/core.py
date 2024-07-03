@@ -378,7 +378,11 @@ class DjangoCudBase(Mutation):
             model_field_values[name + "_id"] = obj_id
 
         # Foreign keys are added, we are ready to create our object
-        obj = Model.objects.create(**model_field_values)
+        obj = Model(**model_field_values)
+
+        cls.before_create_obj(info, input, obj)
+
+        obj.save()
 
         # Handle one to one rels
         if len(one_to_one_rels) > 0:
@@ -408,7 +412,10 @@ class DjangoCudBase(Mutation):
 
                 setattr(obj, name, new_value)
 
-            obj.save()
+                # This is only needed for the case where we are getting an id, and not calling
+                # the `create_or_update_one_to_one_relation` method.
+                # Pending a proper code cleanup, this is a temporary fix.
+                obj.save()
 
         # Handle extras fields
         for name, extras in many_to_many_extras.items():
@@ -755,6 +762,10 @@ class DjangoCudBase(Mutation):
 
     @classmethod
     def after_mutate(cls, root, info, *args, **kwargs):
+        return None
+
+    @classmethod
+    def before_create_obj(cls, info, input, obj):
         return None
 
     @classmethod

@@ -18,6 +18,7 @@ from graphene_django_cud.tests.models import (
     Mouse,
     DogRegistration,
     CatUserRelation,
+    Fish,
 )
 
 
@@ -57,18 +58,26 @@ class CatUserRelationNode(DjangoObjectType):
         interfaces = (Node,)
 
 
+class FishNode(DjangoObjectType):
+    class Meta:
+        model = Fish
+        interfaces = (Node,)
+
+
 class Query(graphene.ObjectType):
     user = Node.Field(UserNode)
     cat = Node.Field(CatNode)
     dog = Node.Field(DogNode)
     mice = Node.Field(MouseNode)
     cat_user_relation = Node.Field(CatUserRelationNode)
+    fish = Node.Field(FishNode)
 
     all_users = DjangoConnectionField(UserNode)
     all_cats = DjangoConnectionField(CatNode)
     all_dogs = DjangoConnectionField(DogNode)
     all_mice = DjangoConnectionField(MouseNode)
     all_cat_user_relations = DjangoConnectionField(CatUserRelationNode)
+    all_fish = DjangoConnectionField(FishNode)
 
 
 class CreateUserMutation(DjangoCreateMutation):
@@ -251,6 +260,21 @@ class FilterUpdateDogMutation(DjangoFilterUpdateMutation):
         filter_fields = ("name", "name__startswith")
 
 
+class CreateFishMutation(DjangoCreateMutation):
+    class Meta:
+        model = Fish
+
+
+class UpdateFishMutation(DjangoUpdateMutation):
+    class Meta:
+        model = Fish
+
+
+class DeleteFishMutation(DjangoDeleteMutation):
+    class Meta:
+        model = Fish
+
+
 class Mutations(graphene.ObjectType):
 
     create_user = CreateUserMutation.Field()
@@ -281,6 +305,10 @@ class Mutations(graphene.ObjectType):
     update_mouse = UpdateMouseMutation.Field()
     delete_mouse = DeleteMouseMutation.Field()
     batch_delete_mouse = FilterDeleteMouseMutation.Field()
+
+    create_fish = CreateFishMutation.Field()
+    update_fish = UpdateFishMutation.Field()
+    delete_fish = DeleteFishMutation.Field(0)
 
 
 schema = Schema(query=Query, mutation=Mutations)

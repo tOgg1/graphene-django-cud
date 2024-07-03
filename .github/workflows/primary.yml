@@ -10,21 +10,18 @@ on:
 jobs:
   test:
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
-        poetry-version: ["1.3.1"]
+        python-version: [ "3.9", "3.10", "3.11", "3.12" ]
+        poetry-version: [ "1.8.3" ]
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Run image
-        uses: abatilo/actions-poetry@v2.2.0
-        with:
-          poetry-version: ${{ matrix.poetry-version }}
-
+      - uses: actions/checkout@v4
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'poetry'
@@ -36,23 +33,23 @@ jobs:
   release:
     needs: test
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       TWINE_USERNAME: __token__
       TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.9
+          python-version: 3.12
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
       - name: Install dependencies
         run: |
           pip install twine
-          pip install poetry==1.1.4
           pip install wheel
-          poetry config virtualenvs.create false
-          poetry install --no-interaction
+          poetry install
       - name: Build package
         run: make build
       - name: Publish package

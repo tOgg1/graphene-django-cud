@@ -42,7 +42,10 @@ def disambiguate_id(ambiguous_id: Union[int, float, str, uuid.UUID]):
 
     if isinstance(ambiguous_id, str):
         try:
-            return from_global_id(ambiguous_id)[1]
+            _id = from_global_id(ambiguous_id)[1]
+
+            if _id:
+                return _id
         except (ValueError, TypeError, binascii.Error):
             pass
 
