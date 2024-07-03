@@ -412,6 +412,11 @@ class DjangoCudBase(Mutation):
 
                 setattr(obj, name, new_value)
 
+                # This is only needed for the case where we are getting an id, and not calling
+                # the `create_or_update_one_to_one_relation` method.
+                # Pending a proper code cleanup, this is a temporary fix.
+                obj.save()
+
         # Handle extras fields
         for name, extras in many_to_many_extras.items():
             field = Model._meta.get_field(name)
