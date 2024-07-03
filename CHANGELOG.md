@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 0.12.0
+
+* More documentation improvements (@Plebbimon).
+* Add "before_create_obj" hook, that allows to hook into the creation of an object before it is saved to the database (
+  @hansegucker).
+* Update `dismabiguate_id` to handle UUIDs (@M69k65y).
+
 ## Version 0.11.1
 
 * Make required_fields and optional_fields handle None values more gracefully.

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "graphene-django-cud"
-version = "0.11.0"
+version = "0.12.0"
 description = ""
 authors = ["Tormod Haugland <tormod.haugland@gmail.com>"]
 license = "MIT"
