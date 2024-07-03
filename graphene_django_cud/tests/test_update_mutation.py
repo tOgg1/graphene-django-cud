@@ -13,7 +13,7 @@ from graphene_django_cud.tests.factories import (
     MouseFactory,
     FishFactory,
 )
-from graphene_django_cud.tests.models import User, Cat, Dog, Fish
+from graphene_django_cud.tests.models import User, Cat, Dog, Fish, DogRegistration
 from graphene_django_cud.util import disambiguate_id
 from graphene_django_cud.tests.dummy_query import DummyQuery
 
@@ -1616,3 +1616,123 @@ class TestUpdateMutationCustomFields(TestCase):
 
         dog.refresh_from_db()
         self.assertEqual(1, dog.bark_count)
+
+
+class TestUpdateWithOneToOneField(TestCase):
+    def test__one_to_one_relation_exists__updates_specified_fields(self):
+        # This registers the UserNode type
+        from .schema import UserNode  # noqa: F401
+
+        class UpdateDogMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Dog
+                one_to_one_extras = {"registration": {"type": "auto"}}
+
+        class Mutations(graphene.ObjectType):
+            update_dog = UpdateDogMutation.Field()
+
+        user = UserFactory.create()
+        dog = DogFactory.create()
+        DogRegistration.objects.create(dog=dog, registration_number="1234")
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+        mutation = """
+            mutation UpdateDog(
+                $id: ID!,
+                $input: UpdateDogInput!
+            ){
+                updateDog(id: $id, input: $input){
+                    dog{
+                        id
+                        registration{
+                            id
+                            registrationNumber
+                        }
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("DogNode", dog.id),
+                "input": {
+                    "name": dog.name,
+                    "breed": dog.breed,
+                    "tag": dog.tag,
+                    "owner": to_global_id("UserNode", dog.owner.id),
+                    "registration": {"registrationNumber": "12345"},
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        self.assertIsNone(result.errors)
+        self.assertEqual("12345", data.updateDog.dog.registration.registrationNumber)
+
+        # Load from database
+        dog.refresh_from_db()
+        self.assertEqual(dog.registration.registration_number, "12345")
+
+    def test__reverse_one_to_one_exists__updates_specified_fields(self):
+        # This registers the UserNode type
+        from .schema import UserNode  # noqa: F401
+
+        class UpdateDogRegistrationMutation(DjangoUpdateMutation):
+            class Meta:
+                model = DogRegistration
+                one_to_one_extras = {"dog": {"type": "auto"}}
+
+        class Mutations(graphene.ObjectType):
+            update_dog_registration = UpdateDogRegistrationMutation.Field()
+
+        user = UserFactory.create()
+        dog = DogFactory.create(breed="HUSKY")
+        dog_registration = DogRegistration.objects.create(dog=dog, registration_number="1234")
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+        mutation = """
+            mutation UpdateDogRegistration(
+                $id: ID!,
+                $input: UpdateDogRegistrationInput!
+            ){
+                updateDogRegistration(id: $id, input: $input){
+                    dogRegistration{
+                        id
+                        registrationNumber
+                        dog{
+                            id
+                            breed
+                        }
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("DogRegistrationNode", dog_registration.id),
+                "input": {
+                    "registrationNumber": dog_registration.registration_number,
+                    "dog": {
+                        "name": dog.name,
+                        "breed": "LABRADOR",
+                        "tag": dog.tag,
+                        "owner": to_global_id("UserNode", dog.owner.id),
+                    },
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        self.assertEqual("LABRADOR", data.updateDogRegistration.dogRegistration.dog.breed)
+
+        # Load from database
+        dog_registration.refresh_from_db()
+        dog.refresh_from_db()
+
+        self.assertEqual(dog.breed, "LABRADOR")
