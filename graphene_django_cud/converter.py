@@ -463,7 +463,7 @@ def convert_postgres_array_to_list(
 
 @convert_django_field_to_input.register(HStoreField)
 @convert_django_field_to_input.register(models.JSONField)
-def convert_posgres_field_to_string(
+def convert_postgres_json_or_hstore_field_to_string(
     field,
     registry=None,
     required=None,
