@@ -1,5 +1,8 @@
+from unittest.mock import patch
+
 import graphene
 from addict import Dict
+from django.conf import settings
 from django.test import TestCase
 from graphene import ResolveInfo
 from graphene import Schema
@@ -13,7 +16,7 @@ from graphene_django_cud.tests.factories import (
     DogFactory,
     FishFactory,
 )
-from graphene_django_cud.tests.models import User, Cat, Dog, DogRegistration, Fish
+from graphene_django_cud.tests.models import User, Cat, Dog, DogRegistration, Fish, Mouse
 from graphene_django_cud.util import disambiguate_id
 
 
@@ -30,6 +33,296 @@ def mock_info(context=None):
         variable_values=None,
         context=context,
     )
+
+
+class TestCreateMutation(TestCase):
+    def test__calling_create_mutation__creates_object(self):
+        # This registers the UserNode type
+        from .schema import UserNode  # noqa: F401
+
+        class CreateMouseMutation(DjangoCreateMutation):
+            class Meta:
+                model = Mouse
+
+        class Mutations(graphene.ObjectType):
+            create_mouse = CreateMouseMutation.Field()
+
+        user = UserFactory.create()
+        cat_one = CatFactory.create()
+        cat_two = CatFactory.create()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+        mutation = """
+            mutation CreateMouse(
+                $input: CreateMouseInput!
+            ){
+                createMouse(input: $input){
+                    mouse{
+                        id
+                        name
+                        keeper{
+                            id
+                        }
+                        predators{
+                            edges{
+                                node{
+                                    id
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        """
+        result = schema.execute(
+            mutation,
+            variables={
+                "input": {
+                    "name": "Mickey",
+                    "keeper": to_global_id("UserNode", user.id),
+                    "predators": [to_global_id("CatNode", cat_one.id), to_global_id("CatNode", cat_two.id)],
+                },
+            },
+            context=Dict(user=1),
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        keeper = data.createMouse.mouse.keeper
+        predators = list(map(lambda edge: edge.node, data.createMouse.mouse.predators.edges))
+
+        self.assertIsNone(result.errors)
+        self.assertEqual("Mickey", data.createMouse.mouse.name)
+        self.assertEqual(to_global_id("UserNode", user.id), keeper.id)
+        self.assertEqual(2, len(predators))
+        self.assertEqual(to_global_id("CatNode", cat_one.id), predators[0].id)
+        self.assertEqual(to_global_id("CatNode", cat_two.id), predators[1].id)
+
+    def test__use_id_suffixes_for_fk__creates_correct_object(self):
+        # This registers the UserNode type
+        from .schema import UserNode  # noqa: F401
+
+        class CreateMouseMutation(DjangoCreateMutation):
+            class Meta:
+                model = Mouse
+                use_id_suffixes_for_fk = True
+
+        class Mutations(graphene.ObjectType):
+            create_mouse = CreateMouseMutation.Field()
+
+        user = UserFactory.create()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+        mutation = """
+            mutation CreateMouse(
+                $input: CreateMouseInput!
+            ){
+                createMouse(input: $input){
+                    mouse{
+                        id
+                        name
+                        keeper {
+                            id
+                        }
+                    }
+                }
+            }
+        """
+        result = schema.execute(
+            mutation,
+            variables={
+                "input": {
+                    "name": "Mickey",
+                    "keeperId": to_global_id("UserNode", user.id),
+                },
+            },
+            context=Dict(user=1),
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        self.assertIsNone(result.errors)
+        self.assertEqual("Mickey", data.createMouse.mouse.name)
+        self.assertEqual(to_global_id("UserNode", 1), data.createMouse.mouse.keeper.id)
+
+    def test__use_id_suffixes_for_m2m__creates_correct_object(self):
+        # This registers the UserNode type
+        from .schema import UserNode  # noqa: F401
+
+        class CreateMouseMutation(DjangoCreateMutation):
+            class Meta:
+                model = Mouse
+                use_id_suffixes_for_m2m = True
+
+        class Mutations(graphene.ObjectType):
+            create_mouse = CreateMouseMutation.Field()
+
+        cat_one = CatFactory.create()
+        cat_two = CatFactory.create()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+        mutation = """
+            mutation CreateMouse(
+                $input: CreateMouseInput!
+            ){
+                createMouse(input: $input){
+                    mouse{
+                        id
+                        name
+                        predators{
+                            edges{
+                                node{
+                                    id
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        """
+        result = schema.execute(
+            mutation,
+            variables={
+                "input": {
+                    "name": "Mickey",
+                    "predatorsIds": [to_global_id("CatNode", cat_one.id), to_global_id("CatNode", cat_two.id)],
+                },
+            },
+            context=Dict(user=1),
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        predators = list(map(lambda edge: edge.node, data.createMouse.mouse.predators.edges))
+
+        self.assertIsNone(result.errors)
+        self.assertEqual("Mickey", data.createMouse.mouse.name)
+        self.assertEqual(2, len(predators))
+        self.assertEqual(to_global_id("CatNode", cat_one.id), predators[0].id)
+        self.assertEqual(to_global_id("CatNode", cat_two.id), predators[1].id)
+
+    def test__django_settings_use_id_suffixes__uses_suffixes(self):
+        # This registers the UserNode type
+        from .schema import UserNode  # noqa: F401
+
+        settings.GRAPHENE_DJANGO_CUD_USE_ID_SUFFIXES_FOR_FK = True
+        settings.GRAPHENE_DJANGO_CUD_USE_ID_SUFFIXES_FOR_M2M = True
+
+        class CreateMouseMutation(DjangoCreateMutation):
+            class Meta:
+                model = Mouse
+                use_id_suffixes_for_fk = True
+                use_id_suffixes_for_m2m = True
+
+        class Mutations(graphene.ObjectType):
+            create_mouse = CreateMouseMutation.Field()
+
+        cat_one = CatFactory.create()
+        cat_two = CatFactory.create()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+        mutation = """
+            mutation CreateMouse(
+                $input: CreateMouseInput!
+            ){
+                createMouse(input: $input){
+                    mouse{
+                        id
+                        name
+                        keeper{
+                            id
+                        }
+                        predators{
+                            edges{
+                                node{
+                                    id
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        """
+        result = schema.execute(
+            mutation,
+            variables={
+                "input": {
+                    "name": "Mickey",
+                    "keeperId": to_global_id("UserNode", 1),
+                    "predatorsIds": [to_global_id("CatNode", cat_one.id), to_global_id("CatNode", cat_two.id)],
+                },
+            },
+            context=Dict(user=1),
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        keeper = data.createMouse.mouse.keeper
+        predators = list(map(lambda edge: edge.node, data.createMouse.mouse.predators.edges))
+
+        self.assertIsNone(result.errors)
+        self.assertEqual("Mickey", data.createMouse.mouse.name)
+        self.assertEqual(to_global_id("UserNode", 1), keeper.id)
+        self.assertEqual(2, len(predators))
+        self.assertEqual(to_global_id("CatNode", cat_one.id), predators[0].id)
+        self.assertEqual(to_global_id("CatNode", cat_two.id), predators[1].id)
+
+    def test__arbitrary_field_name_mapping__uses_new_field_names(self):
+        # This registers the UserNode type
+        from .schema import UserNode  # noqa: F401
+
+        class CreateMouseMutation(DjangoCreateMutation):
+            class Meta:
+                model = Mouse
+                field_name_mappings = {"keeper": "keeper_id", "predators": "predator_ids", "name": "research_tag"}
+
+        class Mutations(graphene.ObjectType):
+            create_mouse = CreateMouseMutation.Field()
+
+        cat_one = CatFactory.create()
+        cat_two = CatFactory.create()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+        mutation = """
+            mutation CreateMouse(
+                $input: CreateMouseInput!
+            ){
+                createMouse(input: $input){
+                    mouse{
+                        id
+                        name
+                        keeper{
+                            id
+                        }
+                        predators{
+                            edges{
+                                node{
+                                    id
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        """
+        result = schema.execute(
+            mutation,
+            variables={
+                "input": {
+                    "researchTag": "Mickey",
+                    "keeperId": to_global_id("UserNode", 1),
+                    "predatorIds": [to_global_id("CatNode", cat_one.id), to_global_id("CatNode", cat_two.id)],
+                },
+            },
+            context=Dict(user=1),
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        keeper = data.createMouse.mouse.keeper
+        predators = list(map(lambda edge: edge.node, data.createMouse.mouse.predators.edges))
+
+        self.assertIsNone(result.errors)
+        self.assertEqual("Mickey", data.createMouse.mouse.name)
+        self.assertEqual(to_global_id("UserNode", 1), keeper.id)
+        self.assertEqual(2, len(predators))
+        self.assertEqual(to_global_id("CatNode", cat_one.id), predators[0].id)
+        self.assertEqual(to_global_id("CatNode", cat_two.id), predators[1].id)
 
 
 class TestCreateMutationManyToOneExtras(TestCase):
@@ -282,7 +575,6 @@ class TestCreateWithOneToOneField(TestCase):
         dog = getattr(dog_registration, "dog", None)
         self.assertIsNotNone(dog)
         self.assertEqual(dog.id, dog.id)
-
 
     def test__one_to_one_relation_exists__creates_specified_fields(self):
         # This registers the UserNode type

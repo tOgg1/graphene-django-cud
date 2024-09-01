@@ -3,16 +3,19 @@ from collections import OrderedDict
 from typing import Iterable
 
 import graphene
+from django.conf import settings
 from django.db import transaction
 from graphene import InputObjectType
 from graphene.types.utils import yank_fields_from_attrs
 from graphene.utils.str_converters import to_snake_case
 from graphene_django.registry import get_global_registry
+from graphene_django.utils import get_model_fields
 from graphql import GraphQLError
 
+from graphene_django_cud.consts import USE_ID_SUFFIXES_FOR_FK_SETTINGS_KEY, USE_ID_SUFFIXES_FOR_M2M_SETTINGS_KEY
 from graphene_django_cud.mutations.core import DjangoCudBase, DjangoCudBaseOptions
 from graphene_django_cud.registry import get_type_meta_registry
-from graphene_django_cud.util import get_input_fields_for_model
+from graphene_django_cud.util import get_input_fields_for_model, apply_field_name_mappings
 
 
 class DjangoCreateMutationOptions(DjangoCudBaseOptions):
@@ -25,28 +28,31 @@ class DjangoCreateMutation(DjangoCudBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-        cls,
-        _meta=None,
-        model=None,
-        permissions=None,
-        login_required=None,
-        fields=(),
-        only_fields=(),  # Deprecated in favor of `fields`
-        exclude=(),
-        exclude_fields=(),  # Deprecated in favor of `exclude`
-        optional_fields=(),
-        required_fields=(),
-        auto_context_fields=None,
-        return_field_name=None,
-        many_to_many_extras=None,
-        foreign_key_extras=None,
-        many_to_one_extras=None,
-        one_to_one_extras=None,
-        type_name=None,
-        field_types=None,
-        ignore_primary_key=True,
-        custom_fields=None,
-        **kwargs,
+            cls,
+            _meta=None,
+            model=None,
+            permissions=None,
+            login_required=None,
+            fields=(),
+            only_fields=(),  # Deprecated in favor of `fields`
+            exclude=(),
+            exclude_fields=(),  # Deprecated in favor of `exclude`
+            optional_fields=(),
+            required_fields=(),
+            auto_context_fields=None,
+            return_field_name=None,
+            many_to_many_extras=None,
+            foreign_key_extras=None,
+            many_to_one_extras=None,
+            one_to_one_extras=None,
+            type_name=None,
+            field_types=None,
+            ignore_primary_key=True,
+            custom_fields=None,
+            use_id_suffixes_for_fk=getattr(settings, USE_ID_SUFFIXES_FOR_FK_SETTINGS_KEY, None),
+            use_id_suffixes_for_m2m=getattr(settings, USE_ID_SUFFIXES_FOR_M2M_SETTINGS_KEY, None),
+            field_name_mappings=None,
+            **kwargs,
     ):
         registry = get_global_registry()
         meta_registry = get_type_meta_registry()
@@ -69,6 +75,9 @@ class DjangoCreateMutation(DjangoCudBase):
 
         if custom_fields is None:
             custom_fields = {}
+
+        if field_name_mappings is None:
+            field_name_mappings = {}
 
         assert model_type, f"Model type must be registered for model {model}"
 
@@ -94,7 +103,14 @@ class DjangoCreateMutation(DjangoCudBase):
 
         input_type_name = type_name or f"Create{model.__name__}Input"
 
-        model_fields = get_input_fields_for_model(
+        field_name_mappings = apply_field_name_mappings(
+            get_model_fields(model),
+            use_id_suffixes_for_fk,
+            use_id_suffixes_for_m2m,
+            field_name_mappings
+        )
+
+        input_fields = get_input_fields_for_model(
             model,
             fields,
             exclude,
@@ -107,12 +123,13 @@ class DjangoCreateMutation(DjangoCudBase):
             parent_type_name=input_type_name,
             field_types=field_types,
             ignore_primary_key=ignore_primary_key,
+            field_name_mappings=field_name_mappings,
         )
 
         for name, field in custom_fields.items():
-            model_fields[name] = field
+            input_fields[name] = field
 
-        InputType = type(input_type_name, (InputObjectType,), model_fields)
+        InputType = type(input_type_name, (InputObjectType,), input_fields)
 
         # Register meta-data
         meta_registry.register(
@@ -126,6 +143,9 @@ class DjangoCreateMutation(DjangoCudBase):
                 "foreign_key_extras": foreign_key_extras,
                 "one_to_one_extras": one_to_one_extras,
                 "field_types": field_types or {},
+                "use_id_suffixes_for_fk": use_id_suffixes_for_fk,
+                "use_id_suffixes_for_m2m": use_id_suffixes_for_m2m,
+                "field_name_mappings": field_name_mappings,
             },
         )
 
@@ -150,6 +170,9 @@ class DjangoCreateMutation(DjangoCudBase):
         _meta.many_to_one_extras = many_to_one_extras
         _meta.foreign_key_extras = foreign_key_extras
         _meta.one_to_one_extras = one_to_one_extras
+        _meta.use_id_suffixes_for_fk = use_id_suffixes_for_fk
+        _meta.use_id_suffixes_for_m2m = use_id_suffixes_for_m2m
+        _meta.field_name_mappings = field_name_mappings
 
         _meta.field_types = field_types or {}
         _meta.InputType = InputType
@@ -206,6 +229,7 @@ class DjangoCreateMutation(DjangoCudBase):
                 cls._meta.foreign_key_extras,
                 cls._meta.many_to_one_extras,
                 cls._meta.one_to_one_extras,
+                cls._meta.field_name_mappings,
                 Model,
             )
             updated_obj = cls.before_save(root, info, input, obj)

@@ -13,7 +13,7 @@ from graphene_django_cud.tests.factories import (
     MouseFactory,
     FishFactory,
 )
-from graphene_django_cud.tests.models import User, Cat, Dog, Fish, DogRegistration
+from graphene_django_cud.tests.models import User, Cat, Dog, Fish, DogRegistration, Mouse
 from graphene_django_cud.util import disambiguate_id
 from graphene_django_cud.tests.dummy_query import DummyQuery
 
@@ -41,6 +41,154 @@ class TestUpdateMutation(TestCase):
         class UpdateMutation(DjangoUpdateMutation):
             class Meta:
                 model = User
+
+    def test__calling_update_mutation__updates_object(self):
+        # This registers the UserNode type
+        from .schema import UserNode  # noqa: F401
+
+        class UpdateCatMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Cat
+
+        class Mutations(graphene.ObjectType):
+            update_cat = UpdateCatMutation.Field()
+
+        user = UserFactory.create()
+        cat = CatFactory.create()
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+        mutation = """
+            mutation UpdateCat(
+                $id: ID!,
+                $input: UpdateCatInput!
+            ){
+                updateCat(id: $id, input: $input){
+                    cat{
+                        id
+                        name
+                    }
+                }
+            }
+        """
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("CatNode", cat.id),
+                "input": {"name": "Name", "owner": to_global_id("UserNode", user.id)},
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        self.assertIsNone(result.errors)
+        self.assertEqual("Name", data.updateCat.cat.name)
+
+    def test__use_id_suffixes_for_fk__updates_correct_object(self):
+        # This registers the UserNode type
+        from .schema import UserNode  # noqa: F401
+
+        class UpdateMouseMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Mouse
+                use_id_suffixes_for_fk = True
+
+        class Mutations(graphene.ObjectType):
+            update_mouse = UpdateMouseMutation.Field()
+
+        user = UserFactory.create()
+        mouse = MouseFactory.create()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+        mutation = """
+            mutation UpdateMouse(
+                $id: ID!,
+                $input: UpdateMouseInput!
+            ){
+                updateMouse(id: $id, input: $input){
+                    mouse{
+                        id
+                        name
+                        keeper{
+                            id
+                        }
+                    }
+                }
+            }
+        """
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("MouseNode", mouse.id),
+                "input": {
+                    "name": "Mickey",
+                    "keeperId": to_global_id("UserNode", user.id),
+                },
+            },
+            context=Dict(user=user),
+        )
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        self.assertIsNone(result.errors)
+        self.assertEqual("Mickey", data.updateMouse.mouse.name)
+        self.assertEqual(to_global_id("UserNode", user.id), data.updateMouse.mouse.keeper.id)
+
+    def test__use_id_suffixes_for_m2m__updates_correct_object(self):
+        # This registers the UserNode type
+        from .schema import UserNode  # noqa: F401
+
+        class UpdateMouseMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Mouse
+                use_id_suffixes_for_m2m = True
+
+        class Mutations(graphene.ObjectType):
+            update_mouse = UpdateMouseMutation.Field()
+
+        mouse = MouseFactory.create()
+        cat_one = CatFactory.create()
+        cat_two = CatFactory.create()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+        mutation = """
+            mutation UpdateMouse(
+                $id: ID!,
+                $input: UpdateMouseInput!
+            ){
+                updateMouse(id: $id, input: $input){
+                    mouse{
+                        id
+                        name
+                        predators{
+                            edges{
+                                node{
+                                    id
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        """
+        result = schema.execute(
+            mutation,
+            variables={
+                "id": to_global_id("MouseNode", mouse.id),
+                "input": {
+                    "name": "Mickey",
+                    "predatorsIds": [to_global_id("CatNode", cat_one.id), to_global_id("CatNode", cat_two.id)],
+                },
+            },
+            context=Dict(user=1),
+        )
+
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+
+        self.assertIsNone(result.errors)
+        self.assertEqual("Mickey", data.updateMouse.mouse.name)
+        self.assertEqual(2, len(data.updateMouse.mouse.predators.edges))
+        self.assertEqual(to_global_id("CatNode", cat_one.id), data.updateMouse.mouse.predators.edges[0].node.id)
+        self.assertEqual(to_global_id("CatNode", cat_two.id), data.updateMouse.mouse.predators.edges[1].node.id)
+
 
     def test_permissions__user_has_no_permission__returns_error(self):
         # This registers the UserNode type
