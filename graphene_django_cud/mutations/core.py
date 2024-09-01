@@ -1,5 +1,5 @@
 import enum
-from typing import Iterable, Union
+from typing import Iterable, Union, Sized
 
 from django.db import models
 from graphene import Mutation
@@ -42,6 +42,7 @@ class DjangoCudBase(Mutation):
                 input_type_meta.get("foreign_key_extras", {}),
                 input_type_meta.get("many_to_one_extras", {}),
                 input_type_meta.get("one_to_one_extras", {}),
+                input_type_meta.get("field_name_mappings", {}),
                 field.related_model,
             )
             return related_obj.pk
@@ -62,6 +63,7 @@ class DjangoCudBase(Mutation):
                 input_type_meta.get("foreign_key_extras", {}),
                 input_type_meta.get("many_to_one_extras", {}),
                 input_type_meta.get("one_to_one_extras", {}),
+                input_type_meta.get("field_name_mappings", {}),
                 field.related_model,
             )
         else:
@@ -74,6 +76,7 @@ class DjangoCudBase(Mutation):
                 input_type_meta.get("foreign_key_extras", {}),
                 input_type_meta.get("many_to_one_extras", {}),
                 input_type_meta.get("one_to_one_extras", {}),
+                input_type_meta.get("field_name_mappings", {}),
                 field.related_model,
             )
             obj.save()
@@ -121,6 +124,10 @@ class DjangoCudBase(Mutation):
                         **input_type_meta.get("one_to_one_extras", {}),
                         **data.get("one_to_one_extras", {}),
                     },
+                    {
+                        **input_type_meta.get("field_name_mappings", {}),
+                        **data.get("field_name_mappings", {}),
+                    },
                     field.related_model,
                 )
             results.append(related_obj)
@@ -161,6 +168,10 @@ class DjangoCudBase(Mutation):
                     **input_type_meta.get("one_to_one_extras", {}),
                     **data.get("one_to_one_extras", {}),
                 }
+                field_name_mappings = {
+                    **input_type_meta.get("field_name_mappings", {}),
+                    **data.get("field_name_mappings", {}),
+                }
 
                 if field_type == "auto":
                     # In this case, a new type has been created for us. Let's first find its name,
@@ -180,6 +191,7 @@ class DjangoCudBase(Mutation):
                         foreign_key_extras,
                         many_to_one_extras,
                         one_to_one_extras,
+                        field_name_mappings,
                         field.related_model,
                     )
                     results.append(related_obj)
@@ -193,6 +205,7 @@ class DjangoCudBase(Mutation):
                         foreign_key_extras,
                         many_to_one_extras,
                         one_to_one_extras,
+                        field_name_mappings,
                         field.related_model,
                     )
                     results.append(related_obj)
@@ -221,6 +234,7 @@ class DjangoCudBase(Mutation):
         foreign_key_extras,
         many_to_one_extras,
         one_to_one_extras,
+        field_name_mappings,
         Model,
     ):
         id = cls.resolve_id(input.get("id"))
@@ -236,6 +250,7 @@ class DjangoCudBase(Mutation):
                 foreign_key_extras,
                 many_to_one_extras,
                 one_to_one_extras,
+                field_name_mappings,
                 Model,
             )
             obj.save()
@@ -249,6 +264,7 @@ class DjangoCudBase(Mutation):
                 foreign_key_extras,
                 many_to_one_extras,
                 one_to_one_extras,
+                field_name_mappings,
                 Model,
             )
 
@@ -262,6 +278,7 @@ class DjangoCudBase(Mutation):
         foreign_key_extras,
         many_to_one_extras,
         one_to_one_extras,
+        field_name_mappings,
         Model,
     ):
         many_to_many_to_add = {}
@@ -282,7 +299,13 @@ class DjangoCudBase(Mutation):
             if hasattr(info.context, context_name):
                 model_field_values[field_name] = getattr(info.context, context_name)
 
+        # The mappings are provided {model_name: input_name}, so here we need to get the reverse
+        reverse_field_name_mappings = dict(zip(field_name_mappings.values(), field_name_mappings.keys()))
+
         for name, value in super(type(input), input).items():
+
+            name = reverse_field_name_mappings.get(name, name)
+
             # Handle these separately
             if (
                 name in many_to_many_extras_field_names
@@ -330,7 +353,7 @@ class DjangoCudBase(Mutation):
                 elif isinstance(field, models.OneToOneField):
                     # If the value is an integer or a string, we assume it is an ID
                     if isinstance(value, str) or isinstance(value, int):
-                        name = getattr(field, "db_column", None) or name + "_id"
+                        name = cls.get_fk_like_id_field_name(field, name)
                         new_value = cls.resolve_id(value)
                     else:
                         # We can use create obj directly here, as we know the foreign object does
@@ -345,6 +368,7 @@ class DjangoCudBase(Mutation):
                             extra_data.get("foreign_key_extras", {}),
                             extra_data.get("many_to_one_extras", {}),
                             extra_data.get("one_to_one_extras", {}),
+                            extra_data.get("field_name_mappings", {}),
                             field.related_model,
                         )
                 elif isinstance(field, models.OneToOneRel) or isinstance(field, models.ForeignKey):
@@ -353,7 +377,7 @@ class DjangoCudBase(Mutation):
                     if name in auto_context_fields:
                         del model_field_values[name]
 
-                    name = getattr(field, "db_column", None) or name + "_id"
+                    name = cls.get_fk_like_id_field_name(field, name)
                     new_value = cls.resolve_id(value)
                 elif field_is_many_to_many:
                     new_value = cls.resolve_ids(value)
@@ -527,6 +551,7 @@ class DjangoCudBase(Mutation):
         foreign_key_extras,
         many_to_one_extras,
         one_to_one_extras,
+        field_name_mappings,
         Model,
     ):
 
@@ -543,11 +568,16 @@ class DjangoCudBase(Mutation):
         )  # The layout is the same as for m2m
         foreign_key_extras_field_names = get_fk_all_extras_field_names(foreign_key_extras)
 
+        reverse_field_name_mappings = dict(zip(field_name_mappings.values(), field_name_mappings.keys()))
+
         for field_name, context_name in auto_context_fields.items():
             if hasattr(info.context, context_name):
                 setattr(obj, field_name, getattr(info.context, context_name))
 
         for name, value in super(type(input), input).items():
+
+            name = reverse_field_name_mappings.get(name, name)
+
             # Handle these separately
             if (
                 name in many_to_many_extras_field_names
@@ -585,7 +615,7 @@ class DjangoCudBase(Mutation):
                 elif isinstance(field, models.OneToOneField):
                     # If the value is an integer or a string, we assume it is an ID
                     if isinstance(value, str) or isinstance(value, int):
-                        name = getattr(field, "db_column", None) or name + "_id"
+                        name = cls.get_fk_like_id_field_name(field, name)
                         new_value = cls.resolve_id(value)
                     else:
                         extra_data = one_to_one_extras.get(name, {})
@@ -595,7 +625,7 @@ class DjangoCudBase(Mutation):
                 elif isinstance(field, models.OneToOneRel):
                     # If the value is an integer or a string, we assume it is an ID
                     if isinstance(value, str) or isinstance(value, int):
-                        name = getattr(field, "db_column", None) or name + "_id"
+                        name = cls.get_fk_like_id_field_name(field, name)
                         new_value = cls.resolve_id(value)
                     else:
                         extra_data = one_to_one_extras.get(name, {})
@@ -608,7 +638,7 @@ class DjangoCudBase(Mutation):
                     if name in auto_context_fields:
                         setattr(obj, name, None)
 
-                    name = getattr(field, "db_column", None) or name + "_id"
+                    name = cls.get_fk_like_id_field_name(field, name)
                     new_value = cls.resolve_id(value)
                 elif field_is_many_to_many:
                     new_value = cls.resolve_ids(value)
@@ -728,7 +758,7 @@ class DjangoCudBase(Mutation):
         return obj
 
     @classmethod
-    def get_permissions(cls, root, info, *args, **kwargs) -> Iterable[str]:
+    def get_permissions(cls, root, info, *args, **kwargs):
         return cls._meta.permissions
 
     @classmethod
@@ -776,6 +806,24 @@ class DjangoCudBase(Mutation):
     def resolve_ids(cls, ids):
         return disambiguate_ids(ids)
 
+    @staticmethod
+    def get_fk_like_id_field_name(field, name):
+        """
+        Returns the correct field name to use for a foreign key like (FK or OneToOne) field when
+        settings its "_id" field. If the field has a "db_column" attribute, that is used, otherwise
+        the name is suffixed with "_id".
+
+        If the name already ends with "_id", it is returned as is.
+        """
+        db_column = getattr(field, "db_column", None)
+        if db_column:
+            return db_column
+
+        if name.endswith("_id"):
+            return name
+        else:
+            return name + "_id"
+
 
 class DjangoCudBaseOptions(MutationOptions):
     model = None
@@ -805,3 +853,9 @@ class DjangoCudBaseOptions(MutationOptions):
     field_types = None
 
     custom_fields = None
+
+    use_id_suffixes_for_fk = None
+    use_id_suffixes_for_m2m = None
+
+    field_name_mappings = None
+

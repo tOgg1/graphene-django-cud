@@ -83,22 +83,43 @@ def overload_nested_fields(nested_fields):
         return {}
 
 
+def apply_field_name_mappings(model_fields, use_id_suffixes_for_fk, use_id_suffixes_for_m2m, field_name_mappings=None):
+    field_name_mappings = field_name_mappings or {}
+
+    if use_id_suffixes_for_fk is None and use_id_suffixes_for_m2m is None and len(field_name_mappings) == 0:
+        return {}
+
+    for name, field in model_fields:
+        if use_id_suffixes_for_fk and isinstance(field, models.ForeignKey):
+            new_name = field_name_mappings.get(name, name + "_id")
+            field_name_mappings[name] = new_name
+        elif use_id_suffixes_for_m2m and (
+                isinstance(field, models.ManyToManyField) or isinstance(field, models.ManyToManyRel)):
+            new_name = field_name_mappings.get(name, name + "_ids")
+            field_name_mappings[name] = new_name
+
+    return field_name_mappings
+
+
 def get_input_fields_for_model(
-    model,
-    fields,
-    exclude,
-    optional_fields=(),
-    required_fields=(),
-    many_to_many_extras=None,
-    foreign_key_extras=None,
-    many_to_one_extras=None,
-    one_to_one_extras=None,
-    parent_type_name="",
-    field_types=None,
-    ignore_primary_key=True,
+        model,
+        fields,
+        exclude,
+        optional_fields=(),
+        required_fields=(),
+        many_to_many_extras=None,
+        foreign_key_extras=None,
+        many_to_one_extras=None,
+        one_to_one_extras=None,
+        parent_type_name="",
+        field_types=None,
+        ignore_primary_key=True,
+        field_name_mappings=None,
 ) -> OrderedDict:
     registry = get_global_registry()
     meta_registry = get_type_meta_registry()
+    field_name_mappings = field_name_mappings or {}
+
     model_fields = get_model_fields(model)
 
     many_to_many_extras = resolve_many_to_many_extra_auto_field_names(
@@ -118,6 +139,8 @@ def get_input_fields_for_model(
         # We ignore the primary key
         if getattr(field, "primary_key", False) and ignore_primary_key:
             continue
+
+        mapped_name = field_name_mappings.get(name, name)
 
         # If the field has an override, use that
         if name in field_types:
@@ -155,7 +178,9 @@ def get_input_fields_for_model(
             foreign_key_extras.get(name, {}),
             one_to_one_extras.get(name, {}),
         )
-        converted_input_fields[name] = converted
+
+        # Note: We use the mapped named here, as this is the final input name that will be exposed in the API.
+        converted_input_fields[mapped_name] = converted
 
         if type(field) in (models.OneToOneRel, models.OneToOneField):
             one_to_one_fields.append(field)
@@ -194,6 +219,7 @@ def get_input_fields_for_model(
             data.get("many_to_one_extras"),
             parent_type_name=type_name,
             field_types=data.get("field_types"),
+            field_name_mappings=data.get("field_name_mappings"),
         )
 
         InputType = type(type_name, (InputObjectType,), foreign_key_converted_fields)
@@ -229,6 +255,7 @@ def get_input_fields_for_model(
             data.get("many_to_one_extras"),
             parent_type_name=type_name,
             field_types=data.get("field_types"),
+            field_name_mappings=data.get("field_name_mappings"),
         )
 
         InputType = type(type_name, (InputObjectType,), one_to_one_converted_fields)
@@ -491,7 +518,7 @@ def resolve_many_to_many_extra_auto_field_names(many_to_many_extras, model, pare
                     # Add auto marker. This will become important when actually creating the types
                     "auto": True,
                     "type": f"{parent_type_name or ''}"
-                    f"{operation_name.capitalize()}{model.__name__}{to_camel_case(name).capitalize()}",
+                            f"{operation_name.capitalize()}{model.__name__}{to_camel_case(name).capitalize()}",
                 }
             else:
                 new_extras[extra_name] = data
@@ -516,7 +543,7 @@ def resolve_many_to_one_extra_auto_field_names(many_to_one_extras, model, parent
                     **data,
                     "auto": True,
                     "type": f"{parent_type_name or ''}"
-                    f"{operation_name.capitalize()}{model.__name__}{to_camel_case(name).capitalize()}",
+                            f"{operation_name.capitalize()}{model.__name__}{to_camel_case(name).capitalize()}",
                 }
             else:
                 new_extras[extra_name] = data
