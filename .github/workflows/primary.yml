@@ -2,10 +2,10 @@ name: Test and push
 
 on:
   push:
-    branches: [ develop, master ]
+    branches: [ develop, main ]
     tags: [ v* ]
   pull_request:
-    branches: [ develop, master ]
+    branches: [ develop, main ]
 
 jobs:
   test:
@@ -30,27 +30,3 @@ jobs:
       - name: Test with coverage
         run: |
           make test-cov
-  release:
-    needs: test
-    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
-    runs-on: ubuntu-22.04
-    env:
-      TWINE_USERNAME: __token__
-      TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.12
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-      - name: Install dependencies
-        run: |
-          pip install twine
-          pip install wheel
-          poetry install
-      - name: Build package
-        run: make build
-      - name: Publish package
-        run: make release
