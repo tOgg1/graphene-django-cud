@@ -3,6 +3,10 @@
 ## Version 0.13.0
 
 * Add support for field name mappings.
+* Add `use_id_suffixes_for_fk` and `use_id_suffixes_for_m2m` settings for quick addition of `_id` suffixes to foreign
+  keys and `_ids` for many to many fields.
+* Added the options `GRAPHENE_DJANGO_CUD_USE_ID_SUFFIXES_FOR_FK` and `GRAPHENE_DJANGO_CUD_USE_ID_SUFFIXES_FOR_M2M` to
+  enable these settings globally.
 
 ## Version 0.12.0
 
