@@ -25,7 +25,7 @@ from pygments.token import *
 from sphinx.highlighting import lexers
 
 project = "graphene-django-cud"
-copyright = "2021, Tormod Haugland"
+copyright = "2021-2024, Tormod Haugland"
 author = "Tormod Haugland"
 
 # The full version, including alpha/beta/rc tags

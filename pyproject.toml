@@ -18,6 +18,9 @@ factory_boy = "^3.2"
 addict = "^2.2"
 pytest-cov = "^4.1"
 
+[tool.poetry.group.dev.dependencies]
+sphinx-rtd-theme = "^2.0.0"
+
 [tool.black]
 line-length = 120
 target-version = ['py38']
