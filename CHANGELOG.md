@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 0.13.0
+
+* Add support for field name mappings.
+
 ## Version 0.12.0
 
 * More documentation improvements (@Plebbimon).
