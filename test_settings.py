@@ -51,4 +51,4 @@ AUTH_USER_MODEL = "tests.User"
 
 STATIC_URL = "/static/"
 STATIC_ROOT = "static/"
-ROOT_URLCONF = "graphene_django_cud.tests.urls"
+ROOT_URLCONF = "graphene_django_cud.urls"

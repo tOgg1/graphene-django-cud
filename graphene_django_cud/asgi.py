@@ -9,8 +9,8 @@ https://docs.djangoproject.com/en/2.1/howto/deployment/wsgi/
 
 import os
 
-from django.core.wsgi import get_wsgi_application
+from django_ws import get_websocket_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "graphene_django_cud.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "test_settings")
 
-application = get_wsgi_application()
+application = get_websocket_application()

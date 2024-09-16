@@ -6,12 +6,14 @@ authors = ["Tormod Haugland <tormod.haugland@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.10"
 graphene-django = "^3.0"
 graphene-file-upload = "^1.2"
+graphene-luna = "^1.0.0"
+gunicorn = "^23.0.0"
 
 [tool.poetry.dev-dependencies]
-django = "^3.2"
+django = "^5.1.1"
 pytest = "^7.4"
 pytest-django = "^4.0"
 factory_boy = "^3.2"
@@ -20,6 +22,8 @@ pytest-cov = "^4.1"
 
 [tool.poetry.group.dev.dependencies]
 sphinx-rtd-theme = "^2.0.0"
+uvicorn = "^0.30.6"
+gunicorn = "^23.0.0"
 
 [tool.black]
 line-length = 120
