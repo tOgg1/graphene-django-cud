@@ -99,8 +99,6 @@ class DjangoDeleteSubscription(DjangoCudSubscriptionBase):
             ]
         )
 
-        print(kwargs, args, deleted_id)
-
         if deleted_id is None:
             logger.warning("Received a delete signal for a model without an instance or an id being passed to the "
                            "signal handler. Are you using a compatible signal? Read the documentation for "

@@ -63,10 +63,9 @@ class DjangoSignalSubscription(DjangoCudSubscriptionBase):
         super().__init_subclass_with_meta__(_meta=_meta, **kwargs)
 
     @classmethod
-    def handle_signal(cls, *args, **kwargs):
+    def handle_signal(cls, **kwargs):
         data_item = {
             **kwargs,
-            "args": args,
         }
         for subscriber in cls.subscribers:
             async_to_sync(subscriber)(data_item)
