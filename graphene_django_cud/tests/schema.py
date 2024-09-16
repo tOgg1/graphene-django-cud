@@ -1,4 +1,9 @@
+import asyncio
+import random
+
 import graphene
+from asgiref.sync import sync_to_async
+from django.dispatch import Signal
 from graphene import Node, Schema
 from graphene_django import DjangoObjectType, DjangoConnectionField
 
@@ -11,6 +16,11 @@ from graphene_django_cud.mutations import (
     DjangoBatchCreateMutation,
 )
 from graphene_django_cud.mutations.filter_update import DjangoFilterUpdateMutation
+from graphene_django_cud.signals import post_create_mutation, post_update_mutation, post_delete_mutation
+from graphene_django_cud.subscriptions.create import DjangoCreateSubscription
+from graphene_django_cud.subscriptions.delete import DjangoDeleteSubscription
+from graphene_django_cud.subscriptions.signal import DjangoSignalSubscription
+from graphene_django_cud.subscriptions.update import DjangoUpdateSubscription
 from graphene_django_cud.tests.models import (
     User,
     Cat,
@@ -275,8 +285,20 @@ class DeleteFishMutation(DjangoDeleteMutation):
         model = Fish
 
 
-class Mutations(graphene.ObjectType):
+test_signal = Signal()
 
+
+class FireRandomSignal(graphene.Mutation):
+    ok = graphene.Boolean()
+
+    @classmethod
+    def mutate(cls, root, info):
+        test_signal.send(sender=cls, value=random.randint(0, 100))
+
+        return cls(ok=True)
+
+
+class Mutations(graphene.ObjectType):
     create_user = CreateUserMutation.Field()
 
     batch_create_user = BatchCreateUserMutation.Field()
@@ -310,5 +332,73 @@ class Mutations(graphene.ObjectType):
     update_fish = UpdateFishMutation.Field()
     delete_fish = DeleteFishMutation.Field(0)
 
+    fire_random_signal = FireRandomSignal.Field()
 
-schema = Schema(query=Query, mutation=Mutations)
+
+class FishCreatedSubscription(DjangoCreateSubscription):
+    class Meta:
+        model = Fish
+
+
+class CatCreatedSubscription(DjangoCreateSubscription):
+    class Meta:
+        model = Cat
+        signal = post_create_mutation
+
+    # noinspection PyStatementEffect
+    @classmethod
+    def handle_object_created(cls, sender, instance: Cat, *args, **kwargs):
+        cat = Cat.objects.select_related("owner").prefetch_related("enemies").get(pk=instance.pk)
+
+        return cat
+
+
+class CatUpdatedSubscription(DjangoUpdateSubscription):
+    class Meta:
+        model = Cat
+        signal = post_update_mutation
+
+    # noinspection PyStatementEffect
+    @classmethod
+    def handle_object_updated(cls, sender, instance: Cat, *args, **kwargs):
+        cat = Cat.objects.select_related("owner").prefetch_related("enemies").get(pk=instance.pk)
+
+        return cat
+
+
+class CatDeletedSubscription(DjangoDeleteSubscription):
+    class Meta:
+        model = Cat
+        signal = post_delete_mutation
+
+
+class RandomSignalFiredSubscription(DjangoSignalSubscription):
+    lets_go = graphene.String()
+
+    @classmethod
+    def transform_signal_data(cls, data):
+        return {"lets_go": f"go {data.get('value', 0)}"}
+
+    class Meta:
+        signal = test_signal
+
+
+def get_random_fish():
+    return random.choice(list(Fish.objects.all()))
+
+
+def get_random_cat():
+    return random.choice(list(Cat.objects.all()))
+
+
+class Subscription(graphene.ObjectType):
+    fish_created = FishCreatedSubscription.Field()
+    cat_created = CatCreatedSubscription.Field()
+
+    cat_updated = CatUpdatedSubscription.Field()
+
+    cat_deleted = CatDeletedSubscription.Field()
+    test_signal_fired = RandomSignalFiredSubscription.Field()
+
+
+schema = Schema(query=Query, mutation=Mutations, subscription=Subscription)
