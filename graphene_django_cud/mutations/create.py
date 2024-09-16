@@ -15,6 +15,7 @@ from graphql import GraphQLError
 from graphene_django_cud.consts import USE_ID_SUFFIXES_FOR_FK_SETTINGS_KEY, USE_ID_SUFFIXES_FOR_M2M_SETTINGS_KEY
 from graphene_django_cud.mutations.core import DjangoCudBase, DjangoCudBaseOptions
 from graphene_django_cud.registry import get_type_meta_registry
+from graphene_django_cud.signals import post_create_mutation
 from graphene_django_cud.util import get_input_fields_for_model, apply_field_name_mappings
 
 
@@ -239,5 +240,7 @@ class DjangoCreateMutation(DjangoCudBase):
 
         return_data = {cls._meta.return_field_name: obj}
         cls.after_mutate(root, info, input, obj, return_data)
+
+        post_create_mutation.send(sender=Model, instance=obj)
 
         return cls(**return_data)

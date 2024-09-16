@@ -15,6 +15,7 @@ from graphql import GraphQLError
 from graphene_django_cud.consts import USE_ID_SUFFIXES_FOR_M2M_SETTINGS_KEY, USE_ID_SUFFIXES_FOR_FK_SETTINGS_KEY
 from graphene_django_cud.mutations.core import DjangoCudBase, DjangoCudBaseOptions
 from graphene_django_cud.registry import get_type_meta_registry
+from graphene_django_cud.signals import post_batch_update_mutation
 from graphene_django_cud.util import get_input_fields_for_model, apply_field_name_mappings
 
 
@@ -272,4 +273,7 @@ class DjangoBatchUpdateMutation(DjangoCudBase):
 
         return_data = {cls._meta.return_field_name: updated_objs}
         cls.after_mutate(root, info, input, updated_objs, return_data)
+
+        post_batch_update_mutation.send(sender=Model, instances=updated_objs)
+
         return cls(**return_data)

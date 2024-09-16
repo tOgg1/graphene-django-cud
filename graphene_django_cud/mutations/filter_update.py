@@ -13,6 +13,7 @@ from graphene_django.utils import get_model_fields
 from graphql import GraphQLError
 
 from graphene_django_cud.mutations.core import DjangoCudBase, meta_registry
+from graphene_django_cud.signals import post_filter_update_mutation
 from graphene_django_cud.util import (
     get_filter_fields_input_args,
     get_input_fields_for_model,
@@ -240,4 +241,6 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
         filter_qs.update(**data)
 
         cls.after_mutate(root, info, filter, data, filter_qs)
+        post_filter_update_mutation.send(sender=Model, instances=filter_qs, data=data)
+
         return cls(updated_objects=filter_qs, updated_count=filter_qs.count())

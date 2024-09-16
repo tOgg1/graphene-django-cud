@@ -12,6 +12,7 @@ from graphql import GraphQLError
 from graphql_relay import to_global_id
 
 from graphene_django_cud.mutations.core import DjangoCudBase
+from graphene_django_cud.signals import post_delete_mutation
 
 
 class DjangoDeleteMutationOptions(MutationOptions):
@@ -26,15 +27,15 @@ class DjangoDeleteMutation(DjangoCudBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-        cls,
-        _meta=None,
-        model=None,
-        permissions=None,
-        login_required=None,
-        only_fields=(),
-        exclude_fields=(),
-        return_field_name=None,
-        **kwargs,
+            cls,
+            _meta=None,
+            model=None,
+            permissions=None,
+            login_required=None,
+            only_fields=(),
+            exclude_fields=(),
+            return_field_name=None,
+            **kwargs,
     ):
         registry = get_global_registry()
         model_type = registry.get_type_for_model(model)
@@ -131,6 +132,9 @@ class DjangoDeleteMutation(DjangoCudBase):
             raw_id = obj.pk
             cls.perform_delete(obj)
             cls.after_mutate(root, info, id, True)
+
+            post_delete_mutation.send(sender=cls._meta.model, id=return_id, raw_id=raw_id, deleted_input_id=id)
+
             return cls(
                 found=True,
                 deleted_raw_id=raw_id,

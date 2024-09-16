@@ -12,6 +12,7 @@ from graphql import GraphQLError
 from graphql_relay import to_global_id
 
 from graphene_django_cud.mutations.core import DjangoCudBase
+from graphene_django_cud.signals import post_filter_update_mutation, post_filter_delete_mutation
 from graphene_django_cud.util import get_filter_fields_input_args
 
 
@@ -167,5 +168,6 @@ class DjangoFilterDeleteMutation(DjangoCudBase):
         deletion_count, _ = filter_qs.delete()
 
         cls.after_mutate(root, info, input, deletion_count, ids)
+        post_filter_delete_mutation.send(sender=Model, ids=ids)
 
         return cls(deletion_count=deletion_count, deleted_ids=ids)

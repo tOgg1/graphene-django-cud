@@ -11,6 +11,7 @@ from graphql import GraphQLError
 from graphql_relay import to_global_id
 
 from graphene_django_cud.mutations.core import DjangoCudBase
+from graphene_django_cud.signals import post_batch_delete_mutation
 
 
 class DjangoBatchDeleteMutationOptions(MutationOptions):
@@ -131,6 +132,7 @@ class DjangoBatchDeleteMutation(DjangoCudBase):
         deletion_count, _ = qs_to_delete.delete()
 
         cls.after_mutate(root, info, ids, deletion_count, deleted_ids)
+        post_batch_delete_mutation.send(sender=Model, ids=ids, deletion_count=deletion_count, deleted_ids=deleted_ids)
 
         return cls(
             deletion_count=deletion_count,
