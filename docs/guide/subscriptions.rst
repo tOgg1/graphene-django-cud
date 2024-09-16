@@ -273,9 +273,10 @@ By default, the library will use the `post_save`/`post_delete` signal to send da
 any source are picked up.
 
 However, this has the downside that it will fire multiple times for create and update mutations, as typically multiple
-save calls are made during the course of an average mutation. In addition, it will before the totality of a mutation's
-effects have been applied. For instance, during a create mutation, the first `post_save` signal will be fired before
-any many to one or many to many relations have been created. So these relations will not be available to the client.
+save calls are made during the course of an average mutation. The first of these calls will fire before the totality
+of a mutation's effects have been applied. For instance, during a create mutation, the first `post_save` signal will be
+fired before any many-to-one or many-to-many relations have been created. Hence, none of these relations will be
+available to the client.
 
 To handle this, you can use the :ref:`Library specific signals<signals>` instead, which will fire only when a mutation
 is completed. The downside of this is that you will not pick up on general create/update/delete signals from other
