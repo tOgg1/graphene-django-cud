@@ -27,6 +27,7 @@ helper classes designed to fast-track creation of create, update and delete muta
    guide/custom-fields
    guide/reusing-types
    guide/limitations
+   guide/subscriptions
 
 
 .. toctree::
