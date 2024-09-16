@@ -262,7 +262,7 @@ calls to the queryset:
             return cat
 
 
-You can also use this handle-methods to transform or manipulate the data in any way you like. Note that that handlers
+You can also use these methods to transform or manipulate the data in any way you like. Note that that handlers
 are running in a synchronous context.
 
 
@@ -332,7 +332,7 @@ Make sure you take a look at the current implementations of these to get an idea
 
 Using the library signals by default
 ---------------------------------------
-You can enable the :ref:`library signals<signals>` by adding the following to your settings:
+You can enable the :ref:`library signals<signals>` globally (and by default), by adding the following to your settings:
 
 .. code:: python
 
