@@ -6,7 +6,7 @@ authors = ["Tormod Haugland <tormod.haugland@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 graphene-django = "^3.0"
 graphene-file-upload = "^1.2"
 
