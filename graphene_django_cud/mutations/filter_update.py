@@ -130,7 +130,9 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
 
         output_fields = OrderedDict()
         output_fields["updated_count"] = graphene.Int()
-        output_fields["updated_objects"] = graphene.List(model_type, required=required_output_field)
+        output_fields["updated_objects"] = graphene.List(
+            model_type if not required_output_field else graphene.NonNull(model_type), required=required_output_field
+        )
 
         if _meta is None:
             _meta = DjangoFilterUpdateMutationOptions(cls)

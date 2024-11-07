@@ -142,7 +142,9 @@ class DjangoBatchUpdateMutation(DjangoCudBase):
         arguments = OrderedDict(input=graphene.List(InputType, required=True))
 
         output_fields = OrderedDict()
-        output_fields[return_field_name] = graphene.List(model_type, required=required_output_field)
+        output_fields[return_field_name] = graphene.List(
+            model_type if not required_output_field else graphene.NonNull(model_type), required=required_output_field
+        )
 
         if _meta is None:
             _meta = DjangoBatchUpdateMutationOptions(cls)
