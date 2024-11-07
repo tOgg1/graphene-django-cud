@@ -27,6 +27,10 @@ def get_introspected_field_kind(schema: Schema, mutation_name: str, field_name: 
 
 def get_introspected_list_field_item_kind(schema: Schema, mutation_name: str, field_name: str):
     field = get_introspected_field(schema, mutation_name, field_name)
-    kind = field.get("type", {}).get("ofType", {}).get("ofType", {}).get("kind", None)
+    field_of_type = field.get("type", {}).get("ofType", {})
+    if field_of_type.get("kind", None) != "LIST":
+        return None
+
+    kind = field_of_type.get("ofType", {}).get("kind", None)
 
     return kind
