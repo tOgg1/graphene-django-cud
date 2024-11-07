@@ -8,6 +8,7 @@ from graphene_django_cud.mutations.batch_patch import DjangoBatchPatchMutation
 from graphene_django_cud.tests.factories import DogFactory, UserFactory
 from graphene_django_cud.tests.dummy_query import DummyQuery
 from graphene_django_cud.tests.models import Dog
+from graphene_django_cud.tests.util import get_introspected_field_kind, get_introspected_list_field_item_kind
 
 
 class TestBatchPatchMutation(TestCase):
@@ -152,3 +153,42 @@ class TestBatchPatchMutationRequiredFields(TestCase):
         self.dog2.refresh_from_db()
         self.assertEqual(self.dog1.owner.id, self.user2.id)
         self.assertEqual(self.dog2.owner.id, self.user1.id)
+
+
+class TestBatchPatchMutationRequiredOutputField(TestCase):
+    def test__batch_patch_mutation_with_required_output_field(self):
+        # This register the DogNode type
+        from .schema import DogNode  # noqa: F401
+
+        class BatchPatchDogMutation(DjangoBatchPatchMutation):
+            class Meta:
+                model = Dog
+                required_output_field = True
+
+        class Mutations(graphene.ObjectType):
+            batch_patch_dog = BatchPatchDogMutation.Field()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+
+        field_kind = get_introspected_field_kind(schema, "BatchPatchDogMutation", "dogs")
+        self.assertEqual(field_kind, "NON_NULL")
+
+        field_item_kind = get_introspected_list_field_item_kind(schema, "BatchPatchDogMutation", "dogs")
+        self.assertEqual(field_item_kind, "NON_NULL")
+
+    def test__batch_patch_mutation_without_required_output_field(self):
+        # This register the DogNode type
+        from .schema import DogNode  # noqa: F401
+
+        class BatchPatchDogMutation(DjangoBatchPatchMutation):
+            class Meta:
+                model = Dog
+                required_output_field = False
+
+        class Mutations(graphene.ObjectType):
+            batch_patch_dog = BatchPatchDogMutation.Field()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+
+        field_kind = get_introspected_field_kind(schema, "BatchPatchDogMutation", "dogs")
+        self.assertNotEqual(field_kind, "NON_NULL")

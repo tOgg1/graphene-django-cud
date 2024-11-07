@@ -7,6 +7,7 @@ from graphene_django_cud.mutations.filter_update import DjangoFilterUpdateMutati
 from graphene_django_cud.tests.factories import DogFactory, UserFactory
 from graphene_django_cud.tests.dummy_query import DummyQuery
 from graphene_django_cud.tests.models import Dog
+from graphene_django_cud.tests.util import get_introspected_field_kind, get_introspected_list_field_item_kind
 
 
 class TestFilterUpdateMutation(TestCase):
@@ -59,3 +60,44 @@ class TestFilterUpdateMutation(TestCase):
 
         dog.refresh_from_db()
         self.assertEqual("New tag", dog.tag)
+
+
+class TestUpdateMutationRequiredOutputField(TestCase):
+    def test__update_mutation_required_output_field(self):
+        # This register the DogNode type
+        from .schema import DogNode  # noqa: F401
+
+        class FilterUpdateDogMutation(DjangoFilterUpdateMutation):
+            class Meta:
+                model = Dog
+                filter_fields = ("name", "name__startswith")
+                required_output_field = True
+
+        class Mutations(graphene.ObjectType):
+            filter_update_dog = FilterUpdateDogMutation.Field()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+
+        field_kind = get_introspected_field_kind(schema, "FilterUpdateDogMutation", "updatedObjects")
+        self.assertEqual(field_kind, "NON_NULL")
+
+        field_item_kind = get_introspected_list_field_item_kind(schema, "FilterUpdateDogMutation", "updatedObjects")
+        self.assertEqual(field_item_kind, "NON_NULL")
+
+    def test__update_mutation_without_required_output_field(self):
+        # This register the DogNode type
+        from .schema import DogNode  # noqa: F401
+
+        class FilterUpdateDogMutation(DjangoFilterUpdateMutation):
+            class Meta:
+                model = Dog
+                filter_fields = ("name", "name__startswith")
+                required_output_field = False
+
+        class Mutations(graphene.ObjectType):
+            filter_update_dog = FilterUpdateDogMutation.Field()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+
+        field_kind = get_introspected_field_kind(schema, "FilterUpdateDogMutation", "updatedObjects")
+        self.assertNotEqual(field_kind, "NON_NULL")

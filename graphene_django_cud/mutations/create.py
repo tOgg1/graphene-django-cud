@@ -46,6 +46,7 @@ class DjangoCreateMutation(DjangoCudBase):
         field_types=None,
         ignore_primary_key=True,
         custom_fields=None,
+        required_output_field=False,
         **kwargs,
     ):
         registry = get_global_registry()
@@ -134,7 +135,7 @@ class DjangoCreateMutation(DjangoCudBase):
         arguments = OrderedDict(input=InputType(required=True))
 
         output_fields = OrderedDict()
-        output_fields[return_field_name] = graphene.Field(model_type)
+        output_fields[return_field_name] = graphene.Field(model_type, required=required_output_field)
 
         if _meta is None:
             _meta = DjangoCreateMutationOptions(cls)
