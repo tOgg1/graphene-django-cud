@@ -14,6 +14,7 @@ from graphene_django_cud.tests.factories import (
     FishFactory,
 )
 from graphene_django_cud.tests.models import User, Cat, Dog, Fish, DogRegistration
+from graphene_django_cud.tests.util import get_introspected_field_kind
 from graphene_django_cud.util import disambiguate_id
 from graphene_django_cud.tests.dummy_query import DummyQuery
 
@@ -1753,19 +1754,8 @@ class TestUpdateMutationRequiredOutputField(TestCase):
 
         schema = Schema(query=DummyQuery, mutation=Mutations)
 
-        introspected = schema.introspect()
-        introspected_types = introspected.get("__schema", {}).get("types", [])
-        introspected_mutation = next(
-            filter(lambda t: t.get("name", None) == "UpdateDogMutation", introspected_types), {}
-        )
-
-        self.assertIsNotNone(introspected_mutation)
-
-        introspected_fields = introspected_mutation.get("fields", [])
-        introspected_field = next(filter(lambda f: f.get("name", None) == "dog", introspected_fields), {})
-        introspected_field_type = introspected_field.get("type", {}).get("kind", None)
-
-        self.assertEqual(introspected_field_type, "NON_NULL")
+        field_kind = get_introspected_field_kind(schema, "UpdateDogMutation", "dog")
+        self.assertEqual(field_kind, "NON_NULL")
 
     def test__update_mutation_without_required_output_field(self):
         # This register the DogNode type
@@ -1781,16 +1771,5 @@ class TestUpdateMutationRequiredOutputField(TestCase):
 
         schema = Schema(query=DummyQuery, mutation=Mutations)
 
-        introspected = schema.introspect()
-        introspected_types = introspected.get("__schema", {}).get("types", [])
-        introspected_mutation = next(
-            filter(lambda t: t.get("name", None) == "UpdateDogMutation", introspected_types), {}
-        )
-
-        self.assertIsNotNone(introspected_mutation)
-
-        introspected_fields = introspected_mutation.get("fields", [])
-        introspected_field = next(filter(lambda f: f.get("name", None) == "dog", introspected_fields), {})
-        introspected_field_type = introspected_field.get("type", {}).get("kind", None)
-
-        self.assertNotEqual(introspected_field_type, "NON_NULL")
+        field_kind = get_introspected_field_kind(schema, "UpdateDogMutation", "dog")
+        self.assertNotEqual(field_kind, "NON_NULL")
