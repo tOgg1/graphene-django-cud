@@ -46,6 +46,7 @@ class DjangoBatchCreateMutation(DjangoCudBase):
         use_type_name=None,
         field_types=None,
         custom_fields=None,
+        required_output_field=False,
         **kwargs,
     ):
         registry = get_global_registry()
@@ -140,7 +141,7 @@ class DjangoBatchCreateMutation(DjangoCudBase):
         arguments = OrderedDict(input=graphene.List(InputType, required=True))
 
         output_fields = OrderedDict()
-        output_fields[return_field_name] = graphene.List(model_type)
+        output_fields[return_field_name] = graphene.List(model_type, required=required_output_field)
 
         if _meta is None:
             _meta = DjangoBatchCreateMutationOptions(cls)
