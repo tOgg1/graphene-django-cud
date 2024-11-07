@@ -74,3 +74,61 @@ class TestBatchUpdateMutation(TestCase):
         dog_2.refresh_from_db()
         self.assertEqual("New name 1", dog_1.name)
         self.assertEqual("New name 2", dog_2.name)
+
+
+class TestBatchUpdateMutationRequiredOutputField(TestCase):
+    def test__patch_mutation_with_required_output_field(self):
+        # This register the DogNode type
+        from .schema import DogNode  # noqa: F401
+
+        class BatchUpdateDogMutation(DjangoBatchUpdateMutation):
+            class Meta:
+                model = Dog
+                required_output_field = True
+
+        class Mutations(graphene.ObjectType):
+            batch_update_dog = BatchUpdateDogMutation.Field()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+
+        introspected = schema.introspect()
+        introspected_types = introspected.get("__schema", {}).get("types", [])
+        introspected_mutation = next(
+            filter(lambda t: t.get("name", None) == "BatchUpdateDogMutation", introspected_types), {}
+        )
+
+        self.assertIsNotNone(introspected_mutation)
+
+        introspected_fields = introspected_mutation.get("fields", [])
+        introspected_field = next(filter(lambda f: f.get("name", None) == "dogs", introspected_fields), {})
+        introspected_field_type = introspected_field.get("type", {}).get("kind", None)
+
+        self.assertEqual(introspected_field_type, "NON_NULL")
+
+    def test__patch_mutation_without_required_output_field(self):
+        # This register the DogNode type
+        from .schema import DogNode  # noqa: F401
+
+        class BatchUpdateDogMutation(DjangoBatchUpdateMutation):
+            class Meta:
+                model = Dog
+                required_output_field = False
+
+        class Mutations(graphene.ObjectType):
+            batch_update_dog = BatchUpdateDogMutation.Field()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+
+        introspected = schema.introspect()
+        introspected_types = introspected.get("__schema", {}).get("types", [])
+        introspected_mutation = next(
+            filter(lambda t: t.get("name", None) == "BatchUpdateDogMutation", introspected_types), {}
+        )
+
+        self.assertIsNotNone(introspected_mutation)
+
+        introspected_fields = introspected_mutation.get("fields", [])
+        introspected_field = next(filter(lambda f: f.get("name", None) == "dogs", introspected_fields), {})
+        introspected_field_type = introspected_field.get("type", {}).get("kind", None)
+
+        self.assertNotEqual(introspected_field_type, "NON_NULL")

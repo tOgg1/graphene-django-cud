@@ -34,7 +34,7 @@ def mock_info(context=None):
 
 class TestCreateMutationManyToOneExtras(TestCase):
     def test_many_to_one_extras__auto_calling_mutation_with_setting_field__does_nothing(
-            self,
+        self,
     ):
         # This registers the UserNode type
         from .schema import UserNode  # noqa: F401
@@ -233,8 +233,6 @@ class TestCreateMutationManyToOneExtras(TestCase):
 class TestCreateWithOneToOneField(TestCase):
     def test__one_to_one__without_extra__assigns_field(self):
         # This registers the UserNode type
-        from .schema import UserNode
-
         class CreateDogRegistrationMutation(DjangoCreateMutation):
             class Meta:
                 model = DogRegistration
@@ -277,12 +275,12 @@ class TestCreateWithOneToOneField(TestCase):
         self.assertEqual("12345", data.createDogRegistration.dogRegistration.registrationNumber)
 
         dog_registration = DogRegistration.objects.get(
-            pk=disambiguate_id(data.createDogRegistration.dogRegistration.id))
+            pk=disambiguate_id(data.createDogRegistration.dogRegistration.id)
+        )
         self.assertEqual(dog_registration.registration_number, "12345")
         dog = getattr(dog_registration, "dog", None)
         self.assertIsNotNone(dog)
         self.assertEqual(dog.id, dog.id)
-
 
     def test__one_to_one_relation_exists__creates_specified_fields(self):
         # This registers the UserNode type
@@ -532,7 +530,7 @@ class TestCreateWithPlainManyToManyRelation(TestCase):
 
 class TestCreateMutationCustomFields(TestCase):
     def test_custom_field__separate_from_model_fields__adds_new_field_which_can_be_handled(
-            self,
+        self,
     ):
         # This registers the UserNode type
         from .schema import UserNode  # noqa: F401
@@ -710,3 +708,61 @@ class TestCreateUuidPk(TestCase):
 
         data = Dict(result.data)
         self.assertEqual(data.createFish.fish.name, fish.name)
+
+
+class TestCreateMutationRequiredOutputField(TestCase):
+    def test__creating_a_record_with_required_output_field(self):
+        # This register the FishNode type
+        from .schema import FishNode  # noqa: F401
+
+        class CreateFishMutation(DjangoCreateMutation):
+            class Meta:
+                model = Fish
+                required_output_field = True
+
+        class Mutations(graphene.ObjectType):
+            create_fish = CreateFishMutation.Field()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+
+        introspected = schema.introspect()
+        introspected_types = introspected.get("__schema", {}).get("types", [])
+        introspected_mutation = next(
+            filter(lambda t: t.get("name", None) == "CreateFishMutation", introspected_types), {}
+        )
+
+        self.assertIsNotNone(introspected_mutation)
+
+        introspected_fields = introspected_mutation.get("fields", [])
+        introspected_field = next(filter(lambda f: f.get("name", None) == "fish", introspected_fields), {})
+        introspected_field_type = introspected_field.get("type", {}).get("kind", None)
+
+        self.assertEqual(introspected_field_type, "NON_NULL")
+
+    def test__creating_a_record_without_required_output_field(self):
+        # This register the FishNode type
+        from .schema import FishNode  # noqa: F401
+
+        class CreateFishMutation(DjangoCreateMutation):
+            class Meta:
+                model = Fish
+                required_output_field = False
+
+        class Mutations(graphene.ObjectType):
+            create_fish = CreateFishMutation.Field()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+
+        introspected = schema.introspect()
+        introspected_types = introspected.get("__schema", {}).get("types", [])
+        introspected_mutation = next(
+            filter(lambda t: t.get("name", None) == "CreateFishMutation", introspected_types), {}
+        )
+
+        self.assertIsNotNone(introspected_mutation)
+
+        introspected_fields = introspected_mutation.get("fields", [])
+        introspected_field = next(filter(lambda f: f.get("name", None) == "fish", introspected_fields), {})
+        introspected_field_type = introspected_field.get("type", {}).get("kind", None)
+
+        self.assertNotEqual(introspected_field_type, "NON_NULL")

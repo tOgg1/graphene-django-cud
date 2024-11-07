@@ -1736,3 +1736,61 @@ class TestUpdateWithOneToOneField(TestCase):
         dog.refresh_from_db()
 
         self.assertEqual(dog.breed, "LABRADOR")
+
+
+class TestUpdateMutationRequiredOutputField(TestCase):
+    def test__update_mutation_required_output_field(self):
+        # This register the DogNode type
+        from .schema import DogNode  # noqa: F401
+
+        class UpdateDogMutation(DjangoUpdateMutation):
+            class Meta:
+                model = Dog
+                required_output_field = True
+
+        class Mutations(graphene.ObjectType):
+            update_dog = UpdateDogMutation.Field()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+
+        introspected = schema.introspect()
+        introspected_types = introspected.get("__schema", {}).get("types", [])
+        introspected_mutation = next(
+            filter(lambda t: t.get("name", None) == "UpdateDogMutation", introspected_types), {}
+        )
+
+        self.assertIsNotNone(introspected_mutation)
+
+        introspected_fields = introspected_mutation.get("fields", [])
+        introspected_field = next(filter(lambda f: f.get("name", None) == "dog", introspected_fields), {})
+        introspected_field_type = introspected_field.get("type", {}).get("kind", None)
+
+        self.assertEqual(introspected_field_type, "NON_NULL")
+
+    def test__update_mutation_without_required_output_field(self):
+        # This register the DogNode type
+        from .schema import DogNode  # noqa: F401
+
+        class UpdateDogMutation(DjangoCreateMutation):
+            class Meta:
+                model = Dog
+                required_output_field = False
+
+        class Mutations(graphene.ObjectType):
+            update_dog = UpdateDogMutation.Field()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+
+        introspected = schema.introspect()
+        introspected_types = introspected.get("__schema", {}).get("types", [])
+        introspected_mutation = next(
+            filter(lambda t: t.get("name", None) == "UpdateDogMutation", introspected_types), {}
+        )
+
+        self.assertIsNotNone(introspected_mutation)
+
+        introspected_fields = introspected_mutation.get("fields", [])
+        introspected_field = next(filter(lambda f: f.get("name", None) == "dog", introspected_fields), {})
+        introspected_field_type = introspected_field.get("type", {}).get("kind", None)
+
+        self.assertNotEqual(introspected_field_type, "NON_NULL")
