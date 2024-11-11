@@ -191,7 +191,7 @@ def get_input_fields_for_model(
         field: models.ForeignKey = fields_lookup.get(name)
 
         if field is None:
-            raise ValueError(f"Error adding extras for {name} in model f{model}. Field {name} does not exist.")
+            raise ValueError(f"Error adding extras for {name} in model {model}. Field {name} does not exist.")
 
         type_name = data.get("type")
 
@@ -231,7 +231,7 @@ def get_input_fields_for_model(
         field: Union[models.OneToOneRel, models.OneToOneField] = fields_lookup.get(name)
 
         if field is None:
-            raise ValueError(f"Error adding extras for {name} in model f{model}. Field {name} does not exist.")
+            raise ValueError(f"Error adding extras for {name} in model {model}. Field {name} does not exist.")
 
         type_name = data.get("type")
 
@@ -266,7 +266,7 @@ def get_input_fields_for_model(
     for name, extras in many_to_many_extras.items():
         field: Optional[Union[models.ManyToManyField, models.ManyToManyRel]] = fields_lookup.get(name)
         if field is None:
-            raise GraphQLError(f"Error adding extras for {name} in model f{model}. Field {name} does not exist.")
+            raise GraphQLError(f"Error adding extras for {name} in model {model}. Field {name} does not exist.")
 
         for extra_name, data in extras.items():
 
@@ -283,7 +283,7 @@ def get_input_fields_for_model(
     for name, extras in many_to_one_extras.items():
         field: models.ManyToOneRel = fields_lookup.get(name)
         if field is None:
-            raise GraphQLError(f"Error adding extras for {name} in model f{model}. Field {name} does not exist.")
+            raise GraphQLError(f"Error adding extras for {name} in model {model}. Field {name} does not exist.")
 
         for extra_name, data in extras.items():
 
