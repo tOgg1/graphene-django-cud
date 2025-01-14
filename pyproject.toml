@@ -13,7 +13,7 @@ graphene-luna = "^1.0.0"
 gunicorn = "^23.0.0"
 
 [tool.poetry.dev-dependencies]
-django = "^5.1.1"
+django = "^5.1.5"
 pytest = "^7.4"
 pytest-django = "^4.0"
 factory_boy = "^3.2"
