@@ -805,3 +805,5 @@ class DjangoCudBaseOptions(MutationOptions):
     field_types = None
 
     custom_fields = None
+
+    required_output_field = None

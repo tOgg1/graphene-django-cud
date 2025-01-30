@@ -23,6 +23,7 @@ helper classes designed to fast-track creation of create, update and delete muta
    guide/naming
    guide/field-types
    guide/custom-fields
+   guide/required-output-field
    guide/reusing-types
    guide/limitations
 

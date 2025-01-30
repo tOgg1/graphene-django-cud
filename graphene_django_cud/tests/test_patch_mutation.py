@@ -14,6 +14,7 @@ from graphene_django_cud.tests.factories import (
 )
 from graphene_django_cud.tests.dummy_query import DummyQuery
 from graphene_django_cud.tests.models import User, Cat, Dog
+from graphene_django_cud.tests.util import get_introspected_field_kind
 from graphene_django_cud.util import disambiguate_id
 
 
@@ -1621,3 +1622,39 @@ class TestPatchMutationRequiredFields(TestCase):
 
         self.dog.refresh_from_db()
         self.assertEqual(self.dog.owner.id, self.user2.id)
+
+
+class TestPatchMutationRequiredOutputField(TestCase):
+    def test__patch_mutation_with_required_output_field(self):
+        # This register the DogNode type
+        from .schema import DogNode  # noqa: F401
+
+        class PatchDogMutation(DjangoPatchMutation):
+            class Meta:
+                model = Dog
+                required_output_field = True
+
+        class Mutations(graphene.ObjectType):
+            patch_dog = PatchDogMutation.Field()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+
+        field_kind = get_introspected_field_kind(schema, "PatchDogMutation", "dog")
+        self.assertEqual(field_kind, "NON_NULL")
+
+    def test__patch_mutation_without_required_output_field(self):
+        # This register the DogNode type
+        from .schema import DogNode  # noqa: F401
+
+        class PatchDogMutation(DjangoPatchMutation):
+            class Meta:
+                model = Dog
+                required_output_field = False
+
+        class Mutations(graphene.ObjectType):
+            patch_dog = PatchDogMutation.Field()
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+
+        field_kind = get_introspected_field_kind(schema, "PatchDogMutation", "dog")
+        self.assertNotEqual(field_kind, "NON_NULL")
