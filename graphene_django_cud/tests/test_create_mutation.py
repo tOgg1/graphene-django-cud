@@ -522,6 +522,75 @@ class TestCreateMutationManyToOneExtras(TestCase):
 
         self.assertEqual(user.cats.all().count(), 5)
 
+    def test_many_to_one__add_objects_that_already_exists__upserts(self):
+        # This registers the UserNode type
+        from .schema import UserNode  # noqa: F401
+
+        class CreateUserMutation(DjangoCreateMutation):
+            class Meta:
+                model = User
+                exclude = ("password",)
+                many_to_one_extras = {"cats": {"exact": {"type": "auto"}}}
+
+            @classmethod
+            def before_mutate(cls, root, info, input):
+                input["password"] = "password"
+                return input
+
+        class Mutations(graphene.ObjectType):
+            create_user = CreateUserMutation.Field()
+
+        user = UserFactory.build()
+        cat = CatFactory.create(
+            name="Cat Damon"
+        )
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+        mutation = """
+            mutation CreateUser(
+                $input: CreateUserInput!
+            ){
+                createUser(input: $input){
+                    user{
+                        id
+                        cats{
+                            edges{
+                                node{
+                                    id
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        """
+        result = schema.execute(
+            mutation,
+            variables={
+                "input": {
+                    "username": user.username,
+                    "email": user.email,
+                    "firstName": user.first_name,
+                    "lastName": user.last_name,
+                    "cats": [
+                        {
+                            "id": to_global_id("CatNode", cat.id),
+                            "name": "Katt Williams"
+                        }
+                    ],
+                },
+            },
+            context=Dict(user=user),
+        )
+        cat.refresh_from_db()
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+        user = User.objects.get(pk=disambiguate_id(data.createUser.user.id))
+        self.assertEqual(user.cats.all().count(), 1)
+        self.assertEqual(user.cats.first().name, "Katt Williams")
+        self.assertEqual(cat.name, "Katt Williams")
+        self.assertEqual(Cat.objects.all().count(), 1)
+
 
 class TestCreateWithOneToOneField(TestCase):
     def test__one_to_one__without_extra__assigns_field(self):

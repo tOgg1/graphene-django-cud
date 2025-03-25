@@ -115,6 +115,7 @@ def get_input_fields_for_model(
         field_types=None,
         ignore_primary_key=True,
         field_name_mappings=None,
+        force_optional_primary_key=False,
 ) -> OrderedDict:
     registry = get_global_registry()
     meta_registry = get_type_meta_registry()
@@ -136,8 +137,10 @@ def get_input_fields_for_model(
     fields_lookup = {}
 
     for name, field in model_fields:
-        # We ignore the primary key
-        if getattr(field, "primary_key", False) and ignore_primary_key:
+        is_primary_key = getattr(field, "primary_key", False)
+
+        # We ignore the primary key we are told not to.
+        if is_primary_key and ignore_primary_key:
             continue
 
         mapped_name = field_name_mappings.get(name, name)
@@ -169,6 +172,9 @@ def get_input_fields_for_model(
             required = False
         elif name in required_fields:
             required = True
+
+        if is_primary_key and force_optional_primary_key:
+            required = False
 
         converted = convert_django_field_with_choices(
             field,
@@ -337,7 +343,8 @@ def convert_many_to_many_like_field(data, name, extra_name, parent_type_name, fi
             parent_type_name=type_name,
             field_types=data.get("field_types"),
             # Don't ignore the primary key on updates
-            ignore_primary_key=operation_name != "update",
+            ignore_primary_key=operation_name != "update" and operation_name != "exact",
+            force_optional_primary_key=operation_name == "exact",
         )
         InputType = type(type_name, (InputObjectType,), converted_fields)
         registry.register_converted_field(field, InputType)
