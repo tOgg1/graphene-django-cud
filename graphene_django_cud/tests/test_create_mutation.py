@@ -327,7 +327,7 @@ class TestCreateMutation(TestCase):
 
 class TestCreateMutationManyToOneExtras(TestCase):
     def test_many_to_one_extras__auto_calling_mutation_with_setting_field__does_nothing(
-            self,
+        self,
     ):
         # This registers the UserNode type
         from .schema import UserNode  # noqa: F401
@@ -541,9 +541,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
             create_user = CreateUserMutation.Field()
 
         user = UserFactory.build()
-        cat = CatFactory.create(
-            name="Cat Damon"
-        )
+        cat = CatFactory.create(name="Cat Damon")
 
         schema = Schema(query=DummyQuery, mutation=Mutations)
         mutation = """
@@ -572,12 +570,7 @@ class TestCreateMutationManyToOneExtras(TestCase):
                     "email": user.email,
                     "firstName": user.first_name,
                     "lastName": user.last_name,
-                    "cats": [
-                        {
-                            "id": to_global_id("CatNode", cat.id),
-                            "name": "Katt Williams"
-                        }
-                    ],
+                    "cats": [{"id": to_global_id("CatNode", cat.id), "name": "Katt Williams"}],
                 },
             },
             context=Dict(user=user),
@@ -639,7 +632,8 @@ class TestCreateWithOneToOneField(TestCase):
         self.assertEqual("12345", data.createDogRegistration.dogRegistration.registrationNumber)
 
         dog_registration = DogRegistration.objects.get(
-            pk=disambiguate_id(data.createDogRegistration.dogRegistration.id))
+            pk=disambiguate_id(data.createDogRegistration.dogRegistration.id)
+        )
         self.assertEqual(dog_registration.registration_number, "12345")
         dog = getattr(dog_registration, "dog", None)
         self.assertIsNotNone(dog)
@@ -893,7 +887,7 @@ class TestCreateWithPlainManyToManyRelation(TestCase):
 
 class TestCreateMutationCustomFields(TestCase):
     def test_custom_field__separate_from_model_fields__adds_new_field_which_can_be_handled(
-            self,
+        self,
     ):
         # This registers the UserNode type
         from .schema import UserNode  # noqa: F401
@@ -1071,3 +1065,53 @@ class TestCreateUuidPk(TestCase):
 
         data = Dict(result.data)
         self.assertEqual(data.createFish.fish.name, fish.name)
+
+    def test_foreign_key_extras__with_relay_id__resolves_correctly(self):
+        """Test that foreign_key_extras with type ID resolves Relay global IDs correctly."""
+        from .schema import UserNode  # noqa: F401
+
+        class CreateCatMutation(DjangoCreateMutation):
+            class Meta:
+                model = Cat
+                foreign_key_extras = {"owner": {"type": "ID"}}
+
+        class Mutations(graphene.ObjectType):
+            create_cat = CreateCatMutation.Field()
+
+        user = UserFactory.create()
+        relay_id = to_global_id("UserNode", user.id)
+
+        schema = Schema(query=DummyQuery, mutation=Mutations)
+        mutation = """
+            mutation CreateCat(
+                $input: CreateCatInput!
+            ){
+                createCat(input: $input){
+                    cat{
+                        id
+                        name
+                        owner {
+                            id
+                        }
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(
+            mutation,
+            variables={
+                "input": {
+                    "name": "Felix",
+                    "owner": relay_id,
+                }
+            },
+            context=Dict(user=user),
+        )
+
+        self.assertIsNone(result.errors)
+        data = Dict(result.data)
+
+        cat = Cat.objects.get(pk=disambiguate_id(data.createCat.cat.id))
+        self.assertEqual(cat.owner.id, user.id)
+        self.assertEqual(cat.name, "Felix")

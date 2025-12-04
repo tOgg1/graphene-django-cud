@@ -30,7 +30,7 @@ class DjangoCudBase(Mutation):
         field_type = data.get("type", "ID")
 
         if field_type == "ID":
-            return value
+            return cls.resolve_id(value)
         else:
             input_type_meta = meta_registry.get_meta_for_type(field_type)
             # Create new obj
@@ -303,7 +303,6 @@ class DjangoCudBase(Mutation):
         reverse_field_name_mappings = dict(zip(field_name_mappings.values(), field_name_mappings.keys()))
 
         for name, value in super(type(input), input).items():
-
             name = reverse_field_name_mappings.get(name, name)
 
             # Handle these separately
@@ -410,7 +409,6 @@ class DjangoCudBase(Mutation):
 
         # Handle one to one rels
         if len(one_to_one_rels) > 0:
-
             for name, value in one_to_one_rels.items():
                 field = Model._meta.get_field(name)
                 new_value = value
@@ -554,7 +552,6 @@ class DjangoCudBase(Mutation):
         field_name_mappings,
         Model,
     ):
-
         many_to_many_to_add = {}
         many_to_many_to_remove = {}
         many_to_many_to_set = {}
@@ -575,7 +572,6 @@ class DjangoCudBase(Mutation):
                 setattr(obj, field_name, getattr(info.context, context_name))
 
         for name, value in super(type(input), input).items():
-
             name = reverse_field_name_mappings.get(name, name)
 
             # Handle these separately
@@ -858,4 +854,3 @@ class DjangoCudBaseOptions(MutationOptions):
     use_id_suffixes_for_m2m = None
 
     field_name_mappings = None
-
