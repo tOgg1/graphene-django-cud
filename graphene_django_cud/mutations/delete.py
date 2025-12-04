@@ -27,15 +27,15 @@ class DjangoDeleteMutation(DjangoCudBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            _meta=None,
-            model=None,
-            permissions=None,
-            login_required=None,
-            only_fields=(),
-            exclude_fields=(),
-            return_field_name=None,
-            **kwargs,
+        cls,
+        _meta=None,
+        model=None,
+        permissions=None,
+        login_required=None,
+        only_fields=(),
+        exclude_fields=(),
+        return_field_name=None,
+        **kwargs,
     ):
         registry = get_global_registry()
         model_type = registry.get_type_for_model(model)

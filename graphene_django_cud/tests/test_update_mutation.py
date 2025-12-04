@@ -189,7 +189,6 @@ class TestUpdateMutation(TestCase):
         self.assertEqual(to_global_id("CatNode", cat_one.id), data.updateMouse.mouse.predators.edges[0].node.id)
         self.assertEqual(to_global_id("CatNode", cat_two.id), data.updateMouse.mouse.predators.edges[1].node.id)
 
-
     def test_permissions__user_has_no_permission__returns_error(self):
         # This registers the UserNode type
         from .schema import UserNode  # noqa: F401

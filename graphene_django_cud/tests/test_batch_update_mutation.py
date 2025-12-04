@@ -149,10 +149,8 @@ class TestBatchUpdateMutation(TestCase):
                 model = Mouse
                 use_id_suffixes_for_m2m = True
 
-
         class Mutations(graphene.ObjectType):
             batch_update_mouse = BatchUpdateMouseMutation.Field()
-
 
         user = UserFactory.create()
         mouse_one = MouseFactory.create(name="Mickey", keeper=UserFactory.create())

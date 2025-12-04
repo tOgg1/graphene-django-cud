@@ -34,13 +34,13 @@ class DjangoDeleteSubscription(DjangoCudSubscriptionBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            _meta=None,
-            model=None,
-            permissions=None,
-            return_field_name=None,
-            signal=post_delete,
-            **kwargs,
+        cls,
+        _meta=None,
+        model=None,
+        permissions=None,
+        return_field_name=None,
+        signal=post_delete,
+        **kwargs,
     ):
         registry = get_global_registry()
         model_type = registry.get_type_for_model(model)
@@ -79,30 +79,28 @@ class DjangoDeleteSubscription(DjangoCudSubscriptionBase):
 
         Model = cls._meta.model
 
-        instance: Optional[Model] = kwargs.get("instance", None) or next(filter(
-            lambda x: isinstance(x, Model), args
-        ), None)
+        instance: Optional[Model] = kwargs.get("instance", None) or next(
+            filter(lambda x: isinstance(x, Model), args), None
+        )
 
-        deleted_id = get_any_of(
-            kwargs,
-            [
-                "pk",
-                "raw_id",
-                "input_id",
-                "id"
-            ]
-        ) if not instance else get_any_of(
-            instance,
-            [
-                "pk",
-                "id",
-            ]
+        deleted_id = (
+            get_any_of(kwargs, ["pk", "raw_id", "input_id", "id"])
+            if not instance
+            else get_any_of(
+                instance,
+                [
+                    "pk",
+                    "id",
+                ],
+            )
         )
 
         if deleted_id is None:
-            logger.warning("Received a delete signal for a model without an instance or an id being passed to the "
-                           "signal handler. Are you using a compatible signal? Read the documentation for "
-                           "graphene-django-cud for more information.")
+            logger.warning(
+                "Received a delete signal for a model without an instance or an id being passed to the "
+                "signal handler. Are you using a compatible signal? Read the documentation for "
+                "graphene-django-cud for more information."
+            )
             return
 
         new_deleted_id = cls.handle_object_deleted(sender, deleted_id, **kwargs)

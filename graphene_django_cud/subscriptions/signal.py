@@ -21,13 +21,13 @@ class DjangoSignalSubscription(DjangoCudSubscriptionBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            _meta=None,
-            permissions=None,
-            signal=None,
-            sender=None,
-            output=None,
-            **kwargs,
+        cls,
+        _meta=None,
+        permissions=None,
+        signal=None,
+        sender=None,
+        output=None,
+        **kwargs,
     ):
         if not _meta:
             _meta = DjangoSignalSubscriptionOptions(cls)

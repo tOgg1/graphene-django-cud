@@ -29,31 +29,31 @@ class DjangoCreateMutation(DjangoCudBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            _meta=None,
-            model=None,
-            permissions=None,
-            login_required=None,
-            fields=(),
-            only_fields=(),  # Deprecated in favor of `fields`
-            exclude=(),
-            exclude_fields=(),  # Deprecated in favor of `exclude`
-            optional_fields=(),
-            required_fields=(),
-            auto_context_fields=None,
-            return_field_name=None,
-            many_to_many_extras=None,
-            foreign_key_extras=None,
-            many_to_one_extras=None,
-            one_to_one_extras=None,
-            type_name=None,
-            field_types=None,
-            ignore_primary_key=True,
-            custom_fields=None,
-            use_id_suffixes_for_fk=getattr(settings, USE_ID_SUFFIXES_FOR_FK_SETTINGS_KEY, None),
-            use_id_suffixes_for_m2m=getattr(settings, USE_ID_SUFFIXES_FOR_M2M_SETTINGS_KEY, None),
-            field_name_mappings=None,
-            **kwargs,
+        cls,
+        _meta=None,
+        model=None,
+        permissions=None,
+        login_required=None,
+        fields=(),
+        only_fields=(),  # Deprecated in favor of `fields`
+        exclude=(),
+        exclude_fields=(),  # Deprecated in favor of `exclude`
+        optional_fields=(),
+        required_fields=(),
+        auto_context_fields=None,
+        return_field_name=None,
+        many_to_many_extras=None,
+        foreign_key_extras=None,
+        many_to_one_extras=None,
+        one_to_one_extras=None,
+        type_name=None,
+        field_types=None,
+        ignore_primary_key=True,
+        custom_fields=None,
+        use_id_suffixes_for_fk=getattr(settings, USE_ID_SUFFIXES_FOR_FK_SETTINGS_KEY, None),
+        use_id_suffixes_for_m2m=getattr(settings, USE_ID_SUFFIXES_FOR_M2M_SETTINGS_KEY, None),
+        field_name_mappings=None,
+        **kwargs,
     ):
         registry = get_global_registry()
         meta_registry = get_type_meta_registry()
@@ -105,10 +105,7 @@ class DjangoCreateMutation(DjangoCudBase):
         input_type_name = type_name or f"Create{model.__name__}Input"
 
         field_name_mappings = apply_field_name_mappings(
-            get_model_fields(model),
-            use_id_suffixes_for_fk,
-            use_id_suffixes_for_m2m,
-            field_name_mappings
+            get_model_fields(model), use_id_suffixes_for_fk, use_id_suffixes_for_m2m, field_name_mappings
         )
 
         input_fields = get_input_fields_for_model(

@@ -94,7 +94,8 @@ def apply_field_name_mappings(model_fields, use_id_suffixes_for_fk, use_id_suffi
             new_name = field_name_mappings.get(name, name + "_id")
             field_name_mappings[name] = new_name
         elif use_id_suffixes_for_m2m and (
-                isinstance(field, models.ManyToManyField) or isinstance(field, models.ManyToManyRel)):
+            isinstance(field, models.ManyToManyField) or isinstance(field, models.ManyToManyRel)
+        ):
             new_name = field_name_mappings.get(name, name + "_ids")
             field_name_mappings[name] = new_name
 
@@ -102,20 +103,20 @@ def apply_field_name_mappings(model_fields, use_id_suffixes_for_fk, use_id_suffi
 
 
 def get_input_fields_for_model(
-        model,
-        fields,
-        exclude,
-        optional_fields=(),
-        required_fields=(),
-        many_to_many_extras=None,
-        foreign_key_extras=None,
-        many_to_one_extras=None,
-        one_to_one_extras=None,
-        parent_type_name="",
-        field_types=None,
-        ignore_primary_key=True,
-        field_name_mappings=None,
-        force_optional_primary_key=False,
+    model,
+    fields,
+    exclude,
+    optional_fields=(),
+    required_fields=(),
+    many_to_many_extras=None,
+    foreign_key_extras=None,
+    many_to_one_extras=None,
+    one_to_one_extras=None,
+    parent_type_name="",
+    field_types=None,
+    ignore_primary_key=True,
+    field_name_mappings=None,
+    force_optional_primary_key=False,
 ) -> OrderedDict:
     registry = get_global_registry()
     meta_registry = get_type_meta_registry()
@@ -275,7 +276,6 @@ def get_input_fields_for_model(
             raise GraphQLError(f"Error adding extras for {name} in model {model}. Field {name} does not exist.")
 
         for extra_name, data in extras.items():
-
             argument_name = data.get("name", name + "_" + extra_name)
 
             # Override default
@@ -292,7 +292,6 @@ def get_input_fields_for_model(
             raise GraphQLError(f"Error adding extras for {name} in model {model}. Field {name} does not exist.")
 
         for extra_name, data in extras.items():
-
             argument_name = data.get("name", name + "_" + extra_name)
 
             # Override default
@@ -525,7 +524,7 @@ def resolve_many_to_many_extra_auto_field_names(many_to_many_extras, model, pare
                     # Add auto marker. This will become important when actually creating the types
                     "auto": True,
                     "type": f"{parent_type_name or ''}"
-                            f"{operation_name.capitalize()}{model.__name__}{to_camel_case(name).capitalize()}",
+                    f"{operation_name.capitalize()}{model.__name__}{to_camel_case(name).capitalize()}",
                 }
             else:
                 new_extras[extra_name] = data
@@ -550,7 +549,7 @@ def resolve_many_to_one_extra_auto_field_names(many_to_one_extras, model, parent
                     **data,
                     "auto": True,
                     "type": f"{parent_type_name or ''}"
-                            f"{operation_name.capitalize()}{model.__name__}{to_camel_case(name).capitalize()}",
+                    f"{operation_name.capitalize()}{model.__name__}{to_camel_case(name).capitalize()}",
                 }
             else:
                 new_extras[extra_name] = data

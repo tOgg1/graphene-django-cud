@@ -147,7 +147,6 @@ def convert_django_field_with_choices(
         existing_conversion_in_registry = registry.get_converted_field(field)
 
         if existing_conversion_in_registry:
-
             # This is the graphene-django 2.0 case
             if hasattr(existing_conversion_in_registry, "kwargs"):
                 existing_conversion_in_registry.kwargs["description"] = field.help_text
@@ -261,7 +260,6 @@ def convert_field_to_id(
     # Use the Input type node from registry in a dynamic type, and create a union with that
     # and the ID
     def dynamic_type():
-
         _type = registry.get_converted_field(_type_name)
 
         if not _type:

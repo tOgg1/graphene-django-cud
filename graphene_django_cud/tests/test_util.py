@@ -5,7 +5,6 @@ from graphene_django_cud.tests.models import Mouse
 
 
 class TestGetInputFieldsForModel(TestCase):
-
     def test__simple_model__returns_correct_fields(self):
         fields = get_input_fields_for_model(
             Mouse,
@@ -27,7 +26,7 @@ class TestGetInputFieldsForModel(TestCase):
             Mouse,
             ("name", "keeper", "predators"),
             (),
-            field_name_mappings={"keeper": "keeper_id", "predators": "predators_ids"}
+            field_name_mappings={"keeper": "keeper_id", "predators": "predators_ids"},
         )
 
         self.assertEqual(3, len(fields))

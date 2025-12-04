@@ -54,5 +54,7 @@ class DjangoCudSubscriptionBase(graphene.ObjectType):
     @classmethod
     async def subscribe(cls, *args, **kwargs):
         """Dummy subscribe method. Must be implemented by subclasses"""
-        raise NotImplementedError("`subscribe` must be implemented by the implementing subclass. "
-                                  "This is likely a bug in graphene-django-cud.")
+        raise NotImplementedError(
+            "`subscribe` must be implemented by the implementing subclass. "
+            "This is likely a bug in graphene-django-cud."
+        )

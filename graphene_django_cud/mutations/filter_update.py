@@ -52,7 +52,6 @@ class DjangoFilterUpdateMutation(DjangoCudBase):
         auto_context_fields=None,
         **kwargs,
     ):
-
         registry = get_global_registry()
         model_type = registry.get_type_for_model(model)
 

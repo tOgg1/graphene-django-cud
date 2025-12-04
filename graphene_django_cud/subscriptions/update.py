@@ -29,17 +29,15 @@ class DjangoUpdateSubscription(DjangoCudSubscriptionBase):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            _meta=None,
-            model=None,
-            permissions=None,
-            return_field_name=None,
-            signal=post_update_mutation if getattr(
-                settings,
-                USE_MUTATION_SIGNALS_FOR_SUBSCRIPTIONS_KEY,
-                False
-            ) else post_save,
-            **kwargs,
+        cls,
+        _meta=None,
+        model=None,
+        permissions=None,
+        return_field_name=None,
+        signal=post_update_mutation
+        if getattr(settings, USE_MUTATION_SIGNALS_FOR_SUBSCRIPTIONS_KEY, False)
+        else post_save,
+        **kwargs,
     ):
         registry = get_global_registry()
         model_type = registry.get_type_for_model(model)
